@@ -1,0 +1,166 @@
+syntax = "v1"
+
+info(
+	title: "order-address-api"
+	desc: "this is oreder and address api"
+	author: "Mr.satan"
+	email: "17854230834@163.com"
+	version: "1.0"
+)
+type AddressInfo {
+	Hash          string  `json:"hash"`
+	Label         string  `json:"label"`
+	Name          string  `json:"name"`
+	Gender        int64   `json:"gender"`
+	AddressPhone  string  `json:"addressPhone"`
+	PostCode      string  `json:"postCode"`
+	Province      string  `json:"province"`
+	City          string  `json:"city"`
+	Region        string  `json:"region"`
+	DetailAddress string  `json:"detailAddress"`
+	DetailName    string  `json:"detailName"`
+	RoomNumber    string  `json:"roomNumber"`
+	Latitude      float64 `json:"latitude"`
+	Longitude     float64 `json:"longitude"`
+	IsDefault     int64   `json:"isDefault"`
+	IsChanged     int     `json:"isChanged"`
+}
+
+type (
+	UpdateAddressRes {
+		OpenId          string         `json:"openId"`
+		Phone           string         `json:"phone"`
+		AddressInfoList []*AddressInfo `json:"addressInfoList"`
+	}
+	UpdateAddressRp {
+		Address []*AddressInfo `json:"address"`
+	}
+	UpdateAddressResp {
+		Code string           `json:"code"`
+		Msg  string           `json:"msg"`
+		Data *UpdateAddressRp `json:"data"`
+	}
+)
+
+type (
+	GetAddressRes {
+		OpenId string `json:"openId"`
+		Phone  string `json:"phone"`
+	}
+	GetAddressRp {
+		Address []*AddressInfo `json:"address"`
+	}
+	GetAddressResp {
+		Code string        `json:"code"`
+		Msg  string        `json:"msg"`
+		Data *GetAddressRp `json:"data"`
+	}
+)
+
+type (
+	ProductInfo {
+		ProductId int64 `json:"productId"`
+		// 购买商品的数量
+		Amount int `json:"amount"`
+		// 产品的ID
+		Product_title string `json:"productTitle"`
+		// 产品主标题
+		Picture string `json:"picture"`
+		// 产品图标
+		Status int `json:"status"`
+		// 产品状态 0->正常，1->下架，2->预约商品
+		Reserve_time string `json:"reserveTime"`
+		// 产品预售时间
+		Sale int `json:"sale"`
+		// 销量
+		Promotion_price float64 `json:"promotionPrice"`
+		// 出售价格
+		Original_price float64 `json:"originalPrice""`
+		// 市场价格
+		Cut_price float64 `json:"cutPrice""`
+		// 相比上月平均价格差额多少
+		Description string `json:"description"`
+		// 商品描述
+		Unit string `json:"unit"`
+		// 商品单位 斤，只，条
+		Weight float64 `json:"weight"`
+		// 商品重量
+		Attribute string `json:"attribute"`
+		// 商品属性，鲜活，冷冻，冰鲜
+	}
+	ShoppingCart {
+		GoodsList []*ProductInfo `json:"goodsList"`
+	}
+	ProductTiny {
+		PId    int64 `json:"pId"`
+		Amount int   `json:"amount"`
+	}
+	UpdateShoppingCartRes {
+		OpenId         string        `json:"openId"`
+		Phone          string        `json:"phone"`
+		ShopCartIdList []ProductTiny `json:"shopCartIdList"`
+	}
+	UpdateShoppingCartResp {
+		Code string        `json:"code"`
+		Msg  string        `json:"msg"`
+		Data *ShoppingCart `json:"data"`
+	}
+
+	GetShoppingCartRes {
+		OpenId string `json:"openId"`
+		Phone  string `json:"phone"`
+	}
+	GetShoppingCartResp {
+		Code string        `json:"code"`
+		Msg  string        `json:"msg"`
+		Data *ShoppingCart `json:"data"`
+	}
+)
+type (
+	RefreshResp {
+		Code string `json:"code"`
+		Msg  string `json:"msg"`
+	}
+)
+
+@server(
+	group: shoppingcart
+	prefix : shoppingcart
+	jwt : Auth
+	//    middleware : Limit_count
+)
+service oa-api {
+	@doc "获取购物车"
+	@handler getsc
+	post /getsc (GetShoppingCartRes) returns (GetShoppingCartResp)
+	@doc "更新购物车"
+	@handler updatesc
+	post /updatesc (UpdateShoppingCartRes) returns (UpdateShoppingCartResp)
+}
+
+@server(
+	group: address
+	prefix : address
+	jwt : Auth
+	//    middleware : Limit_count
+	
+)
+service oa-api {
+	@doc "更新收货地址"
+	@handler updateaddress
+	post /updateaddress (UpdateAddressRes) returns (UpdateAddressResp)
+	
+	@doc "获取收货地址"
+	@handler getaddress
+	post /getaddress (GetAddressRes) returns (GetAddressResp)
+}
+
+@server(
+	group: refresh
+	prefix : refresh
+)
+service oa-api {
+	@doc "刷新购物车商品列表(带商品数量)"
+	@handler refreshPL
+	get /refreshPL returns (RefreshResp)
+}

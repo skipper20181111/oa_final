@@ -104,3 +104,43 @@ type RefreshResp struct {
 	Code string `json:"code"`
 	Msg  string `json:"msg"`
 }
+
+type Orderinfo struct {
+	Phone           string       `json:"phone"`
+	OrderSn         string       `json:"orderSn"`
+	CreateTime      string       `json:"createTime"`
+	OriginalAmount  float64      `json:"originalAmount"`
+	PayAmount       float64      `json:"payAmount"`
+	FreightAmount   float64      `json:"freightAmount"`
+	OrderStatus     int64        `json:"orderStatus"`
+	DeliveryCompany string       `json:"deliveryCompany"`
+	DeliverySn      string       `json:"deliverySn"`
+	AutoConfirmDay  int64        `json:"autoConfirmDay"`
+	Address         *AddressInfo `json:"addressInfo"`
+	Note            string       `json:"note"`
+	ConfirmStatus   int64        `json:"confirmStatus"`
+	DeleteStatus    int64        `json:"deleteStatus"`
+	UseIntegration  int64        `json:"useIntegration"`
+	PaymentTime     string       `json:"paymentTime"`
+}
+
+type NewOrderRes struct {
+	OpenId string `json:"openId"`
+	Phone  string `json:"phone"`
+	Money  int64  `json:"money"`
+}
+
+type NewOrderRp struct {
+	Appid     string `json:"appid"`
+	TimeStamp string `json:"timeStamp"`
+	NonceStr  string `json:"nonceStr"`
+	Package   string `json:"package"`
+	SignType  string `json:"signType"`
+	PaySign   string `json:"paySign"`
+}
+
+type NewOrderResp struct {
+	Code string      `json:"code"`
+	Msg  string      `json:"msg"`
+	Data *NewOrderRp `json:"data"`
+}

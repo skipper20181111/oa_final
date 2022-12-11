@@ -1,11 +1,19 @@
 package svc
 
 import (
+	"context"
+	"crypto/rsa"
+	"github.com/wechatpay-apiv3/wechatpay-go/core"
+	"github.com/wechatpay-apiv3/wechatpay-go/core/cipher/decryptors"
+	"github.com/wechatpay-apiv3/wechatpay-go/core/cipher/encryptors"
+	"github.com/wechatpay-apiv3/wechatpay-go/core/downloader"
+	"github.com/wechatpay-apiv3/wechatpay-go/core/option"
+	"github.com/wechatpay-apiv3/wechatpay-go/utils"
 	"github.com/zeromicro/go-zero/core/collection"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"log"
 	"oa_final/cachemodel"
 	"oa_final/internal/config"
-
 	"time"
 )
 
@@ -17,6 +25,8 @@ type ServiceContext struct {
 	Product           cachemodel.ProductModel
 	LocalCache        *collection.Cache
 	UserAddressString cachemodel.UserAddressStringModel
+	Client            *core.Client
+	MchPrivateKey     *rsa.PrivateKey
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -24,11 +34,31 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	if err != nil {
 		panic(err)
 	}
+	// 使用 utils 提供的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
+	mchPrivateKey, err := utils.LoadPrivateKeyWithPath("etc/apiclient_key.pem")
+	//mchPrivateKey, err := utils.LoadPrivateKeyWithPath("C:\\Users\\17854\\Downloads\\host\\apiclient_key.pem")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// 使用商户私钥等初始化 client，并使它具有自动定时获取微信支付平台证书的能力
+	opts := []core.ClientOption{
+		option.WithWechatPayAutoAuthCipher(c.WxConf.MchID, c.WxConf.MchCertificateSerialNumber, mchPrivateKey, c.WxConf.MchAPIv3Key),
+		option.WithWechatPayCipher(
+			encryptors.NewWechatPayEncryptor(downloader.MgrInstance().GetCertificateVisitor(c.WxConf.MchID)),
+			decryptors.NewWechatPayDecryptor(mchPrivateKey),
+		),
+	}
+	client, err := core.NewClient(context.Background(), opts...)
+	if err != nil {
+		log.Fatalf("new wechat pay client err:%s", err)
+	}
 	return &ServiceContext{
 		Config:            c,
 		UserShopping:      cachemodel.NewUserShoppingCartModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		Product:           cachemodel.NewProductModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		LocalCache:        localCache,
 		UserAddressString: cachemodel.NewUserAddressStringModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
+		Client:            client,
+		MchPrivateKey:     mchPrivateKey,
 	}
 }

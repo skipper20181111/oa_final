@@ -7,12 +7,25 @@ import (
 	address "oa_final/internal/handler/address"
 	refresh "oa_final/internal/handler/refresh"
 	shoppingcart "oa_final/internal/handler/shoppingcart"
+	userorder "oa_final/internal/handler/userorder"
 	"oa_final/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/neworder",
+				Handler: userorder.NeworderHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/userorder"),
+	)
+
 	server.AddRoutes(
 		[]rest.Route{
 			{

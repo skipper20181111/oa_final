@@ -14,6 +14,9 @@ type Config struct {
 	DB struct {
 		DataSource string
 	}
-	Cache  cache.CacheConf
-	WxConf WxConf
+	Cache      cache.CacheConf
+	WxConf     WxConf
+	ServerInfo struct {
+		Url string
+	}
 }

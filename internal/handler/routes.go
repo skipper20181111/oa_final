@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	address "oa_final/internal/handler/address"
+	payrecall "oa_final/internal/handler/payrecall"
 	refresh "oa_final/internal/handler/refresh"
 	shoppingcart "oa_final/internal/handler/shoppingcart"
 	userorder "oa_final/internal/handler/userorder"
@@ -69,5 +70,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/refresh"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/tellmeso",
+				Handler: payrecall.TellmesoHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/payrecall"),
 	)
 }

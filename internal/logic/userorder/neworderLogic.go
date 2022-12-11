@@ -5,7 +5,6 @@ import (
 	"crypto"
 	CRand "crypto/rand"
 	"crypto/rsa"
-	"encoding/base64"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -13,7 +12,6 @@ import (
 	"math/rand"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
-	"strconv"
 	"time"
 )
 
@@ -42,7 +40,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 			Description: core.String("Image形象店-深圳腾大-QQ公仔"),
 			OutTradeNo:  core.String(randStr(32)),
 			Attach:      core.String("自定义数据说明" + randStr(5)),
-			NotifyUrl:   core.String("https://www.weixin.qq.com/wxpay/pay.php"),
+			NotifyUrl:   core.String(l.svcCtx.Config.ServerInfo.Url + "/payrecall/tellmeso"),
 			Amount: &jsapi.Amount{
 				Total: core.Int64(req.Money),
 			},
@@ -55,15 +53,14 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 		log.Println(payment, result)
 	} else {
 		log.Println(err)
+		return &types.NewOrderResp{Code: "4004", Msg: err.Error()}, nil
 	}
 	// 用于返回给前端调起支付的变量与签名串生成器
-	timestampsec := strconv.FormatInt(time.Now().Unix(), 10)
-	nonceStr := randStr(32)
+	timestampsec := *payment.TimeStamp
+	nonceStr := *payment.NonceStr
 	packagestr := *payment.Package
-	src := l.svcCtx.Config.WxConf.AppId + "\n" + timestampsec + "\n" + nonceStr + "\n" + packagestr + "\n"
-	sign, err := Sign(l.svcCtx.MchPrivateKey, src)
-	paySign := base64.StdEncoding.EncodeToString(sign)
-	signType := "RSA"
+	paySign := *payment.PaySign
+	signType := *payment.SignType
 	neworderrp := types.NewOrderRp{TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 }

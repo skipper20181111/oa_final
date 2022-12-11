@@ -2,6 +2,8 @@ Name: oa-api
 Host: 0.0.0.0
 Port: 8888
 
+ServerInfo:
+  Url: https://www.trueloveformoney.top:9443
 
 DB:
   DataSource: admin:konoYES864*^$@tcp(sh-cynosdbmysql-grp-iskwsv0c.sql.tencentcdb.com:23090)/dev?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
@@ -16,4 +18,8 @@ Auth:
 WxConf:
   Grant_type: authorization_code
   AppId: wxf840195161361912
+  MchID: "1635455881"                               # 商户号
+  MchCertificateSerialNumber: 7F250FB3FCB9208D50947C6646F6278419780AE5 # 商户证书序列号
+  #  mchCertificateSerialNumber: 56CC5998BACA29237A9FCB706B5804311A016778
+  MchAPIv3Key: CyLepExJOO7BvDwqIJcq7eK7xRATh0j9 # 商户APIv3密钥
   Secret: 2e1f60095087abb9ee921e4c2265f45b

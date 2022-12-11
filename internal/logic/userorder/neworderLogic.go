@@ -64,7 +64,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	sign, err := Sign(l.svcCtx.MchPrivateKey, src)
 	paySign := base64.StdEncoding.EncodeToString(sign)
 	signType := "RSA"
-	neworderrp := types.NewOrderRp{Appid: l.svcCtx.Config.WxConf.AppId, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
+	neworderrp := types.NewOrderRp{TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 }
 

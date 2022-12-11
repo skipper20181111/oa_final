@@ -131,7 +131,6 @@ type NewOrderRes struct {
 }
 
 type NewOrderRp struct {
-	Appid     string `json:"appid"`
 	TimeStamp string `json:"timeStamp"`
 	NonceStr  string `json:"nonceStr"`
 	Package   string `json:"package"`

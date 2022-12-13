@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/rsa"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
+	"github.com/wechatpay-apiv3/wechatpay-go/core/auth/verifiers"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/cipher/decryptors"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/cipher/encryptors"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/downloader"
+	"github.com/wechatpay-apiv3/wechatpay-go/core/notify"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/option"
 	"github.com/wechatpay-apiv3/wechatpay-go/utils"
 	"github.com/zeromicro/go-zero/core/collection"
@@ -27,6 +29,7 @@ type ServiceContext struct {
 	UserAddressString cachemodel.UserAddressStringModel
 	Client            *core.Client
 	MchPrivateKey     *rsa.PrivateKey
+	Handler           *notify.Handler
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -52,6 +55,17 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	if err != nil {
 		log.Fatalf("new wechat pay client err:%s", err)
 	}
+	ctx := context.Background()
+	// 1. 使用 `RegisterDownloaderWithPrivateKey` 注册下载器
+	err = downloader.MgrInstance().RegisterDownloaderWithPrivateKey(ctx, mchPrivateKey, c.WxConf.MchCertificateSerialNumber, c.WxConf.MchID, c.WxConf.MchAPIv3Key)
+	if err != nil {
+		log.Fatalf("new wechat verify hadler err:%s", err)
+	}
+	// 2. 获取商户号对应的微信支付平台证书访问器
+	certificateVisitor := downloader.MgrInstance().GetCertificateVisitor(c.WxConf.MchID)
+	// 3. 使用证书访问器初始化 `notify.Handler`
+	handler := notify.NewNotifyHandler(c.WxConf.MchAPIv3Key, verifiers.NewSHA256WithRSAVerifier(certificateVisitor))
+
 	return &ServiceContext{
 		Config:            c,
 		UserShopping:      cachemodel.NewUserShoppingCartModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
@@ -60,5 +74,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		UserAddressString: cachemodel.NewUserAddressStringModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		Client:            client,
 		MchPrivateKey:     mchPrivateKey,
+		Handler:           handler,
 	}
 }

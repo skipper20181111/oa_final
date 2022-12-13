@@ -3,7 +3,8 @@ package payrecall
 import (
 	"context"
 	"fmt"
-
+	"github.com/wechatpay-apiv3/wechatpay-go/core/notify"
+	"github.com/wechatpay-apiv3/wechatpay-go/services/payments"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 
@@ -24,8 +25,11 @@ func NewTellmesoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Tellmeso
 	}
 }
 
-func (l *TellmesoLogic) Tellmeso(req *types.TellMeSoRes) (resp *types.TellMeSoResp, err error) {
-	resourceinfo := req.Resource
-	fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   req:", req, "%%%%%%%%resourceinfo:", *resourceinfo)
+func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payments.Transaction) (resp *types.TellMeSoResp, err error) {
+	fmt.Println("************** START ******************")
+	fmt.Println(transaction)
+	fmt.Println(transaction.Amount)
+	fmt.Println(notifyReq)
+	fmt.Println("*************** END *******************")
 	return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil
 }

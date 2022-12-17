@@ -116,7 +116,6 @@ func db2orderinfo(order *cachemodel.UserOrder) *types.OrderInfo {
 	orderinfo.DeliveryCompany = order.DeliveryCompany
 	orderinfo.DeliverySn = order.DeliverySn
 	orderinfo.AutoConfirmDay = order.AutoConfirmDay
-
 	address := types.AddressInfo{}
 	json.Unmarshal([]byte(order.ReceiverInfo), &address)
 	orderinfo.Address = &address

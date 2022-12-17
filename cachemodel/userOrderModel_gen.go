@@ -30,6 +30,7 @@ type (
 		FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*UserOrder, error)
 		Update(ctx context.Context, data *UserOrder) error
 		Delete(ctx context.Context, id int64) error
+		FindAllByPhone(ctx context.Context, phone string) ([]*UserOrder, error)
 	}
 
 	defaultUserOrderModel struct {
@@ -147,7 +148,7 @@ func (m *defaultUserOrderModel) tableName() string {
 }
 
 func (m *defaultUserOrderModel) FindAllByPhone(ctx context.Context, phone string) ([]*UserOrder, error) {
-	query := fmt.Sprintf("select %s from %s where `phone` = ? ", userOrderRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? order by `create_order_time` DESC limit 10", userOrderRows, m.table)
 	var resp = make([]*UserOrder, 0)
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone)
 	switch err {

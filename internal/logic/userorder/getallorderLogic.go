@@ -2,7 +2,6 @@ package userorder
 
 import (
 	"context"
-
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 
@@ -24,7 +23,15 @@ func NewGetallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getal
 }
 
 func (l *GetallorderLogic) Getallorder(req *types.GetAllOrderRes) (resp *types.GetAllOrderResp, err error) {
-	// todo: add your logic here and delete this line
+	allorder, err := l.svcCtx.UserOrder.FindAllByPhone(l.ctx, req.Phone)
+	if err != nil {
+		return &types.GetAllOrderResp{Code: "4004", Msg: err.Error()}, nil
+	}
+	infos := make([]*types.OrderInfo, 0)
+	for _, order := range allorder {
+		orderinfo := db2orderinfo(order)
+		infos = append(infos, orderinfo)
+	}
 
-	return
+	return &types.GetAllOrderResp{Code: "10000", Msg: "success", Data: &types.GetAllOrderRp{OrderInfos: infos}}, nil
 }

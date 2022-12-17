@@ -83,6 +83,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 			},
 		},
 	)
+	defer result.Response.Body.Close()
 	if err == nil {
 		log.Println(payment, result)
 	} else {

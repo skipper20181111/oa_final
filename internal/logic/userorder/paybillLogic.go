@@ -48,6 +48,7 @@ func (l *PaybillLogic) Paybill(req *types.BillPayRes) (resp *types.BillPayResp, 
 			},
 		},
 	)
+	defer result.Response.Body.Close()
 	if err == nil {
 		log.Println(payment, result)
 	} else {

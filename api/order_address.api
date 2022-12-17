@@ -7,232 +7,8 @@ info(
 	email: "17854230834@163.com"
 	version: "1.0"
 )
+import "alltype.api"
 
-type (
-	ResourceInfo {
-		Algorithm      string `json:"algorithm"`
-		Ciphertext     string `json:"ciphertext"`
-		AssociatedData string `json:"associated_data"`
-		OriginalType   string `json:"original_type"`
-		Nonce          string `json:"nonce"`
-	}
-	TellMeSoRes {
-		Id           string        `json:"id"`
-		CreateTime   string        `json:"create_time"`
-		EventType    string        `json:"event_type"`
-		ResourceType string        `json:"resource_type"`
-		Summary      string        `json:"summary"`
-		Resource     *ResourceInfo `json:"resource"`
-	}
-	TellMeSoResp {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-	}
-
-	Payerinfo {
-		Openid string `json:"openid"`
-	}
-	Amountinfo {
-		Total         int64  `json:"total"`
-		PayerTotal    int64  `json:"payer_total"`
-		Currency      string `json:"currency"`
-		PayerCurrency string `json:"payer_currency"`
-	}
-	SceneInfo {
-		DeviceId string `json:"device_id"`
-	}
-	Goodsdetail {
-		GoodsId        string `json:"goods_id"`
-		Quantity       int64  `json:"quantity"`
-		UnitPrice      int64  `json:"unit_price"`
-		DiscountAmount int64  `json:"discount_amount"`
-		GoodsRemark    string `json:"goods_remark"`
-	}
-	PromotionDetail {
-		CouponId            string         `json:"coupon_id"`
-		Name                string         `json:"name"`
-		Scope               string         `json:"scope"`
-		Type                string         `json:"type"`
-		Amount              int64          `json:"amount"`
-		StockId             string         `json:"stock_id"`
-		WechatpayContribute int64          `json:"wechatpay_contribute"`
-		MerchantContribute  int64          `json:"merchant_contribute"`
-		OtherContribute     int64          `json:"other_contribute"`
-		Currency            string         `json:"currency"`
-		GoodsDetail         []*Goodsdetail `json:"goods_detail"`
-	}
-	SuccessInfo {
-		Appid           string             `json:"appid"`
-		Mchid           string             `json:"mchid"`
-		OutTradeNo      string             `json:"out_trade_no"`
-		TransactionId   string             `json:"transaction_id"`
-		TradeType       string             `json:"trade_type"`
-		TradeState      string             `json:"trade_state"`
-		TradeStateDesc  string             `json:"trade_state_desc"`
-		BankType        string             `json:"bank_type"`
-		Attach          string             `json:"attach"`
-		SuccessTime     string             `json:"success_time"`
-		Payer           *Payerinfo         `json:"payer"`
-		Amount          *Amountinfo        `json:"amount"`
-		Sceneinfo       *SceneInfo         `json:"scene_info"`
-		Promotiondetail []*PromotionDetail `json:"promotion_detail"`
-	}
-)
-
-type AddressInfo {
-	Hash          string  `json:"hash"`
-	Label         string  `json:"label"`
-	Name          string  `json:"name"`
-	Gender        int64   `json:"gender"`
-	AddressPhone  string  `json:"addressPhone"`
-	PostCode      string  `json:"postCode"`
-	Province      string  `json:"province"`
-	City          string  `json:"city"`
-	Region        string  `json:"region"`
-	DetailAddress string  `json:"detailAddress"`
-	DetailName    string  `json:"detailName"`
-	RoomNumber    string  `json:"roomNumber"`
-	Latitude      float64 `json:"latitude"`
-	Longitude     float64 `json:"longitude"`
-	IsDefault     int64   `json:"isDefault"`
-	IsChanged     int     `json:"isChanged"`
-}
-
-type (
-	UpdateAddressRes {
-		OpenId          string         `json:"openId"`
-		Phone           string         `json:"phone"`
-		AddressInfoList []*AddressInfo `json:"addressInfoList"`
-	}
-	UpdateAddressRp {
-		Address []*AddressInfo `json:"address"`
-	}
-	UpdateAddressResp {
-		Code string           `json:"code"`
-		Msg  string           `json:"msg"`
-		Data *UpdateAddressRp `json:"data"`
-	}
-)
-
-type (
-	GetAddressRes {
-		OpenId string `json:"openId"`
-		Phone  string `json:"phone"`
-	}
-	GetAddressRp {
-		Address []*AddressInfo `json:"address"`
-	}
-	GetAddressResp {
-		Code string        `json:"code"`
-		Msg  string        `json:"msg"`
-		Data *GetAddressRp `json:"data"`
-	}
-)
-
-type (
-	ProductInfo {
-		ProductId int64 `json:"productId"`
-		// 购买商品的数量
-		Amount int `json:"amount"`
-		// 产品的ID
-		Product_title string `json:"productTitle"`
-		// 产品主标题
-		Picture string `json:"picture"`
-		// 产品图标
-		Status int `json:"status"`
-		// 产品状态 0->正常，1->下架，2->预约商品
-		Reserve_time string `json:"reserveTime"`
-		// 产品预售时间
-		Sale int `json:"sale"`
-		// 销量
-		Promotion_price float64 `json:"promotionPrice"`
-		// 出售价格
-		Original_price float64 `json:"originalPrice""`
-		// 市场价格
-		Cut_price float64 `json:"cutPrice""`
-		// 相比上月平均价格差额多少
-		Description string `json:"description"`
-		// 商品描述
-		Unit string `json:"unit"`
-		// 商品单位 斤，只，条
-		Weight float64 `json:"weight"`
-		// 商品重量
-		Attribute string `json:"attribute"`
-		// 商品属性，鲜活，冷冻，冰鲜
-	}
-	ShoppingCart {
-		GoodsList []*ProductInfo `json:"goodsList"`
-	}
-	ProductTiny {
-		PId    int64 `json:"pId"`
-		Amount int   `json:"amount"`
-	}
-	UpdateShoppingCartRes {
-		OpenId         string        `json:"openId"`
-		Phone          string        `json:"phone"`
-		ShopCartIdList []ProductTiny `json:"shopCartIdList"`
-	}
-	UpdateShoppingCartResp {
-		Code string        `json:"code"`
-		Msg  string        `json:"msg"`
-		Data *ShoppingCart `json:"data"`
-	}
-
-	GetShoppingCartRes {
-		OpenId string `json:"openId"`
-		Phone  string `json:"phone"`
-	}
-	GetShoppingCartResp {
-		Code string        `json:"code"`
-		Msg  string        `json:"msg"`
-		Data *ShoppingCart `json:"data"`
-	}
-)
-type (
-	RefreshResp {
-		Code string `json:"code"`
-		Msg  string `json:"msg"`
-	}
-)
-type (
-	Orderinfo {
-		Phone           string       `json:"phone"`
-		OrderSn         string       `json:"orderSn"`
-		CreateTime      string       `json:"createTime"`
-		OriginalAmount  float64      `json:"originalAmount"`
-		PayAmount       float64      `json:"payAmount"`
-		FreightAmount   float64      `json:"freightAmount"`
-		OrderStatus     int64        `json:"orderStatus"`
-		DeliveryCompany string       `json:"deliveryCompany"`
-		DeliverySn      string       `json:"deliverySn"`
-		AutoConfirmDay  int64        `json:"autoConfirmDay"`
-		Address         *AddressInfo `json:"addressInfo"`
-		Note            string       `json:"note"`
-		ConfirmStatus   int64        `json:"confirmStatus"`
-		DeleteStatus    int64        `json:"deleteStatus"`
-		UseIntegration  int64        `json:"useIntegration"`
-		PaymentTime     string       `json:"paymentTime"`
-	}
-	NewOrderRes {
-		OpenId string `json:"openId"`
-		Phone  string `json:"phone"`
-		Money  int64  `json:"money"`
-		//        ProductTinyList []*ProductTiny `json:"productTinyList"`
-		//        Address *AddressInfo `json:"address"`
-	}
-	NewOrderRp {
-		TimeStamp string `json:"timeStamp"`
-		NonceStr  string `json:"nonceStr"`
-		Package   string `json:"package"`
-		SignType  string `json:"signType"`
-		PaySign   string `json:"paySign"`
-	}
-	NewOrderResp {
-		Code string      `json:"code"`
-		Msg  string      `json:"msg"`
-		Data *NewOrderRp `json:"data"`
-	}
-)
 @server(
 	group: userorder
 	prefix : userorder
@@ -240,21 +16,33 @@ type (
 	//    middleware : Limit_count
 )
 service oa-api {
+	@doc "结算接口"
+	@handler preneworder
+	post /preneworder (PreNewOrderRes) returns (PreNewOrderResp)
+	
 	@doc "新订单"
 	@handler neworder
 	post /neworder (NewOrderRes) returns (NewOrderResp)
 	
-	//	@doc "获取所有订单"
-	//	@handler getallorder
-	//	post /getallorder (GetAllOrderRes) returns (GetAllOrderResp)
-	//
-	//	@doc "获取单个订单"
-	//	@handler getorder
-	//	post /getorder (GetOrderRes) returns (GetOrderResp)
-	//
-	//	@doc "更改收货地址"
-	//	@handler changeorderaddress
-	//	post /changeorderaddress (ChangeOrdeRaddressRes) returns (ChangeOrdeRaddressResp)
+	@doc "自定义支付"
+	@handler paybill
+	post /paybill (BillPayRes) returns (BillPayResp)
+	
+	@doc "获取所有订单"
+	@handler getallorder
+	post /getallorder (GetAllOrderRes) returns (GetAllOrderResp)
+	
+	@doc "获取单个订单"
+	@handler getorder
+	post /getorder (GetOrderRes) returns (GetOrderResp)
+	
+	@doc "更改收货地址"
+	@handler changeorderaddress
+	post /changeorderaddress (ChangeOrdeRaddressRes) returns (ChangeOrdeRaddressResp)
+	
+	@doc "退货"
+	@handler cancelorder
+	post /cancelorder (CancelOrderRes) returns (CancelOrderResp)
 }
 
 @server(

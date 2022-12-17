@@ -23,60 +23,6 @@ type TellMeSoResp struct {
 	Message string `json:"message"`
 }
 
-type Payerinfo struct {
-	Openid string `json:"openid"`
-}
-
-type Amountinfo struct {
-	Total         int64  `json:"total"`
-	PayerTotal    int64  `json:"payer_total"`
-	Currency      string `json:"currency"`
-	PayerCurrency string `json:"payer_currency"`
-}
-
-type SceneInfo struct {
-	DeviceId string `json:"device_id"`
-}
-
-type Goodsdetail struct {
-	GoodsId        string `json:"goods_id"`
-	Quantity       int64  `json:"quantity"`
-	UnitPrice      int64  `json:"unit_price"`
-	DiscountAmount int64  `json:"discount_amount"`
-	GoodsRemark    string `json:"goods_remark"`
-}
-
-type PromotionDetail struct {
-	CouponId            string         `json:"coupon_id"`
-	Name                string         `json:"name"`
-	Scope               string         `json:"scope"`
-	Type                string         `json:"type"`
-	Amount              int64          `json:"amount"`
-	StockId             string         `json:"stock_id"`
-	WechatpayContribute int64          `json:"wechatpay_contribute"`
-	MerchantContribute  int64          `json:"merchant_contribute"`
-	OtherContribute     int64          `json:"other_contribute"`
-	Currency            string         `json:"currency"`
-	GoodsDetail         []*Goodsdetail `json:"goods_detail"`
-}
-
-type SuccessInfo struct {
-	Appid           string             `json:"appid"`
-	Mchid           string             `json:"mchid"`
-	OutTradeNo      string             `json:"out_trade_no"`
-	TransactionId   string             `json:"transaction_id"`
-	TradeType       string             `json:"trade_type"`
-	TradeState      string             `json:"trade_state"`
-	TradeStateDesc  string             `json:"trade_state_desc"`
-	BankType        string             `json:"bank_type"`
-	Attach          string             `json:"attach"`
-	SuccessTime     string             `json:"success_time"`
-	Payer           *Payerinfo         `json:"payer"`
-	Amount          *Amountinfo        `json:"amount"`
-	Sceneinfo       *SceneInfo         `json:"scene_info"`
-	Promotiondetail []*PromotionDetail `json:"promotion_detail"`
-}
-
 type AddressInfo struct {
 	Hash          string  `json:"hash"`
 	Label         string  `json:"label"`
@@ -181,32 +127,59 @@ type RefreshResp struct {
 	Msg  string `json:"msg"`
 }
 
-type Orderinfo struct {
-	Phone           string       `json:"phone"`
-	OrderSn         string       `json:"orderSn"`
-	CreateTime      string       `json:"createTime"`
-	OriginalAmount  float64      `json:"originalAmount"`
-	PayAmount       float64      `json:"payAmount"`
-	FreightAmount   float64      `json:"freightAmount"`
-	OrderStatus     int64        `json:"orderStatus"`
-	DeliveryCompany string       `json:"deliveryCompany"`
-	DeliverySn      string       `json:"deliverySn"`
-	AutoConfirmDay  int64        `json:"autoConfirmDay"`
-	Address         *AddressInfo `json:"addressInfo"`
-	Note            string       `json:"note"`
-	ConfirmStatus   int64        `json:"confirmStatus"`
-	DeleteStatus    int64        `json:"deleteStatus"`
-	UseIntegration  int64        `json:"useIntegration"`
-	PaymentTime     string       `json:"paymentTime"`
+type OrderInfo struct {
+	Phone           string         `json:"phone"`
+	OrderSn         string         `json:"orderSn"`
+	OutTradeNo      string         `json:"outTradeNo"`
+	TransactionId   string         `json:"transactionId"`
+	CreateTime      string         `json:"createTime"`
+	PidList         []*ProductTiny `json:"pidList"`
+	OriginalAmount  float64        `json:"originalAmount"`
+	PayAmount       float64        `json:"payAmount"`
+	FreightAmount   float64        `json:"freightAmount"`
+	OrderStatus     int64          `json:"orderStatus"`
+	DeliveryCompany string         `json:"deliveryCompany"`
+	DeliverySn      string         `json:"deliverySn"`
+	AutoConfirmDay  int64          `json:"autoConfirmDay"`
+	Address         *AddressInfo   `json:"addressInfo"`
+	Note            string         `json:"note"`
+	ConfirmStatus   int64          `json:"confirmStatus"`
+	DeleteStatus    int64          `json:"deleteStatus"`
+	UseIntegration  int64          `json:"useIntegration"`
+	PaymentTime     string         `json:"paymentTime"`
+	ModifyTime      string         `json:"modifyTime"`
 }
 
 type NewOrderRes struct {
+	OpenId          string         `json:"openId"`
+	Phone           string         `json:"phone"`
+	ProductTinyList []*ProductTiny `json:"productTinyList"`
+	Address         *AddressInfo   `json:"address"`
+	OrderNote       string         `json:"orderNote"` // 订单备注
+}
+
+type NewOrderRp struct {
+	OrderInfo *OrderInfo `json:"orderInfo"`
+	TimeStamp string     `json:"timeStamp"`
+	NonceStr  string     `json:"nonceStr"`
+	Package   string     `json:"package"`
+	SignType  string     `json:"signType"`
+	PaySign   string     `json:"paySign"`
+}
+
+type NewOrderResp struct {
+	Code string      `json:"code"`
+	Msg  string      `json:"msg"`
+	Data *NewOrderRp `json:"data"`
+}
+
+type BillPayRes struct {
 	OpenId string `json:"openId"`
 	Phone  string `json:"phone"`
 	Money  int64  `json:"money"`
 }
 
-type NewOrderRp struct {
+type BillPayRp struct {
 	TimeStamp string `json:"timeStamp"`
 	NonceStr  string `json:"nonceStr"`
 	Package   string `json:"package"`
@@ -214,8 +187,90 @@ type NewOrderRp struct {
 	PaySign   string `json:"paySign"`
 }
 
-type NewOrderResp struct {
+type BillPayResp struct {
+	Code string     `json:"code"`
+	Msg  string     `json:"msg"`
+	Data *BillPayRp `json:"data"`
+}
+
+type PreNewOrderRes struct {
+	OpenId          string         `json:"openId"`
+	Phone           string         `json:"phone"`
+	ProductTinyList []*ProductTiny `json:"productTinyList"`
+	Address         *AddressInfo   `json:"address"`
+}
+
+type PreNewOrderRp struct {
+	OrderInfo *OrderInfo `json:"orderInfo"`
+}
+
+type PreNewOrderResp struct {
+	Code string         `json:"code"`
+	Msg  string         `json:"msg"`
+	Data *PreNewOrderRp `json:"data"`
+}
+
+type GetAllOrderRes struct {
+	OpenId string `json:"openId"`
+	Phone  string `json:"phone"`
+}
+
+type GetAllOrderRp struct {
+	OrderInfos []*OrderInfo `json:"orderInfos"`
+}
+
+type GetAllOrderResp struct {
+	Code string         `json:"code"`
+	Msg  string         `json:"msg"`
+	Data *GetAllOrderRp `json:"data"`
+}
+
+type GetOrderRes struct {
+	OpenId  string `json:"openId"`
+	Phone   string `json:"phone"`
+	OrderSn string `json:"orderSn"`
+}
+
+type GetOrderRp struct {
+	OrderInfo *OrderInfo `json:"orderInfo"`
+}
+
+type GetOrderResp struct {
 	Code string      `json:"code"`
 	Msg  string      `json:"msg"`
-	Data *NewOrderRp `json:"data"`
+	Data *GetOrderRp `json:"data"`
+}
+
+type ChangeOrdeRaddressRes struct {
+	OpenId  string       `json:"openId"`
+	Phone   string       `json:"phone"`
+	OrderSn string       `json:"orderSn"`
+	Address *AddressInfo `json:"address"`
+}
+
+type ChangeOrdeRaddressRp struct {
+	OrderInfo *OrderInfo `json:"orderInfo"`
+}
+
+type ChangeOrdeRaddressResp struct {
+	Code string                `json:"code"`
+	Msg  string                `json:"msg"`
+	Data *ChangeOrdeRaddressRp `json:"data"`
+}
+
+type CancelOrderRes struct {
+	OpenId  string `json:"openId"`
+	Phone   string `json:"phone"`
+	OrderSn string `json:"orderSn"`
+}
+
+type CancelOrderRp struct {
+	BillNum   float64    `json:"billNum"`
+	OrderInfo *OrderInfo `json:"orderInfo"`
+}
+
+type CancelOrderResp struct {
+	Code string         `json:"code"`
+	Msg  string         `json:"msg"`
+	Data *CancelOrderRp `json:"data"`
 }

@@ -148,6 +148,8 @@ type (
     OrderInfo {
         Phone string `json:"phone"`
         OrderSn string `json:"orderSn"`
+        OutTradeNo string `json:"outTradeNo"`
+        TransactionId string `json:"transactionId"`
         CreateTime string `json:"createTime"`
         PidList []*ProductTiny `json:"pidList"`
         OriginalAmount float64 `json:"originalAmount"`
@@ -163,16 +165,23 @@ type (
         DeleteStatus int64 `json:"deleteStatus"`
         UseIntegration int64 `json:"useIntegration"`
         PaymentTime string `json:"paymentTime"`
+        ModifyTime string `json:"modifyTime"`
     }
     NewOrderRes {
         OpenId string `json:"openId"`
         Phone string `json:"phone"`
         ProductTinyList []*ProductTiny `json:"productTinyList"`
         Address *AddressInfo `json:"address"`
+        OrderNote string `json:"orderNote"` // 订单备注
     }
 
     NewOrderRp {
         OrderInfo *OrderInfo `json:"orderInfo"`
+        TimeStamp string `json:"timeStamp"`
+        NonceStr string `json:"nonceStr"`
+        Package string `json:"package"`
+        SignType string `json:"signType"`
+        PaySign string `json:"paySign"`
     }
     NewOrderResp {
         Code string `json:"code"`
@@ -184,6 +193,7 @@ type (
     BillPayRes {
         OpenId string `json:"openId"`
         Phone string `json:"phone"`
+        Money int64 `json:"money"`
     }
     BillPayRp {
         TimeStamp string `json:"timeStamp"`
@@ -195,6 +205,91 @@ type (
     BillPayResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
-        Data *NewOrderRp `json:"data"`
+        Data *BillPayRp `json:"data"`
     }
 )
+
+
+
+type (
+    PreNewOrderRes {
+        OpenId string `json:"openId"`
+        Phone string `json:"phone"`
+        ProductTinyList []*ProductTiny `json:"productTinyList"`
+        Address *AddressInfo `json:"address"`
+    }
+
+    PreNewOrderRp {
+        OrderInfo *OrderInfo `json:"orderInfo"`
+    }
+    PreNewOrderResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *PreNewOrderRp `json:"data"`
+    }
+)
+type (
+    GetAllOrderRes {
+        OpenId string `json:"openId"`
+        Phone string `json:"phone"`
+    }
+    GetAllOrderRp {
+        OrderInfos []*OrderInfo `json:"orderInfos"`
+    }
+    GetAllOrderResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetAllOrderRp `json:"data"`
+    }
+)
+type (
+    GetOrderRes {
+        OpenId string `json:"openId"`
+        Phone string `json:"phone"`
+        OrderSn string `json:"orderSn"`
+    }
+    GetOrderRp {
+        OrderInfo *OrderInfo `json:"orderInfo"`
+    }
+    GetOrderResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetOrderRp `json:"data"`
+    }
+)
+type (
+    ChangeOrdeRaddressRes {
+        OpenId string `json:"openId"`
+        Phone string `json:"phone"`
+        OrderSn string `json:"orderSn"`
+        Address *AddressInfo `json:"address"`
+    }
+    ChangeOrdeRaddressRp {
+        OrderInfo *OrderInfo `json:"orderInfo"`
+    }
+    ChangeOrdeRaddressResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *ChangeOrdeRaddressRp `json:"data"`
+    }
+)
+type (
+    CancelOrderRes {
+        OpenId string `json:"openId"`
+        Phone string `json:"phone"`
+        OrderSn string `json:"orderSn"`
+    }
+    CancelOrderRp {
+        BillNum float64 `json:"billNum"`
+        OrderInfo *OrderInfo `json:"orderInfo"`
+    }
+    CancelOrderResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *CancelOrderRp `json:"data"`
+    }
+)
+
+
+
+

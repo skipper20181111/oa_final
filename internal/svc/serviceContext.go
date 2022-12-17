@@ -25,6 +25,7 @@ type ServiceContext struct {
 	Config            config.Config
 	UserShopping      cachemodel.UserShoppingCartModel
 	Product           cachemodel.ProductModel
+	UserOrder         cachemodel.UserOrderModel
 	LocalCache        *collection.Cache
 	UserAddressString cachemodel.UserAddressStringModel
 	Client            *core.Client
@@ -75,5 +76,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Client:            client,
 		MchPrivateKey:     mchPrivateKey,
 		Handler:           handler,
+		UserOrder:         cachemodel.NewUserOrderModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

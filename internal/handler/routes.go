@@ -19,8 +19,38 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodPost,
+				Path:    "/preneworder",
+				Handler: userorder.PreneworderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/neworder",
 				Handler: userorder.NeworderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/paybill",
+				Handler: userorder.PaybillHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getallorder",
+				Handler: userorder.GetallorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getorder",
+				Handler: userorder.GetorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/changeorderaddress",
+				Handler: userorder.ChangeorderaddressHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/cancelorder",
+				Handler: userorder.CancelorderHandler(serverCtx),
 			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),

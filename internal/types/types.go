@@ -39,7 +39,6 @@ type AddressInfo struct {
 	Latitude      float64 `json:"latitude"`
 	Longitude     float64 `json:"longitude"`
 	IsDefault     int64   `json:"isDefault"`
-	IsChanged     int     `json:"isChanged"`
 }
 
 type UpdateAddressRes struct {

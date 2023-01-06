@@ -3,16 +3,15 @@ Host: 0.0.0.0
 Port: 8888
 
 ServerInfo:
-  Url: https://www.trueloveformoney.top:9443
+  Url: https://www.savemoneyisgood.top
 
 DB:
-  DataSource: admin:konoYES864*^$@tcp(sh-cynosdbmysql-grp-iskwsv0c.sql.tencentcdb.com:23090)/dev?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
+  DataSource: ${DbHost}
 Cache:
-  - Host: 49.235.97.223:20004
+  - Host: ${RedisHost}
     Pass:
-
 Auth:
-  AccessSecret: ae0536f9-6450-4606-8e13-5a19ed505da0
+  AccessSecret: qXTj90Mb3cWlKas9GZ96EjJRin8M5rG66cbo83a0V2jZCR3csXOHXk6HXb022CXboYZZr3Zbs3b17TsgBdRreYaPuI7QDKiwUgzxetcLFvtp9WrNipUCqpRISaeUsSwt
   AccessExpire: 172800
 
 WxConf:

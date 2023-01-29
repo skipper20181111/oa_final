@@ -70,7 +70,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config:            c,
 		UserShopping:      cachemodel.NewUserShoppingCartModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
-		Product:           cachemodel.NewProductModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
+		Product:           cachemodel.NewProductModel(sqlx.NewMysql(c.DB.DataSource)),
 		LocalCache:        localCache,
 		UserAddressString: cachemodel.NewUserAddressStringModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		Client:            client,

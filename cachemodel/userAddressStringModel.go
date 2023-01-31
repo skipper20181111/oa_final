@@ -1,9 +1,6 @@
 package cachemodel
 
-import (
-	"github.com/zeromicro/go-zero/core/stores/cache"
-	"github.com/zeromicro/go-zero/core/stores/sqlx"
-)
+import "github.com/zeromicro/go-zero/core/stores/sqlx"
 
 var _ UserAddressStringModel = (*customUserAddressStringModel)(nil)
 
@@ -20,8 +17,8 @@ type (
 )
 
 // NewUserAddressStringModel returns a model for the database table.
-func NewUserAddressStringModel(conn sqlx.SqlConn, c cache.CacheConf) UserAddressStringModel {
+func NewUserAddressStringModel(conn sqlx.SqlConn) UserAddressStringModel {
 	return &customUserAddressStringModel{
-		defaultUserAddressStringModel: newUserAddressStringModel(conn, c),
+		defaultUserAddressStringModel: newUserAddressStringModel(conn),
 	}
 }

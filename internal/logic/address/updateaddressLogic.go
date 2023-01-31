@@ -27,6 +27,24 @@ func NewUpdateaddressLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Upd
 }
 
 func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *types.UpdateAddressResp, err error) {
+	if len(req.AddressInfoList) != 0 {
+		count := 0
+		havedefalt := 0
+		for _, info := range req.AddressInfoList {
+			if havedefalt == 1 {
+				info.IsDefault = 0
+			} else {
+				if info.IsDefault == 1 {
+					count += 1
+					havedefalt = 1
+				}
+			}
+		}
+		if count == 0 {
+			req.AddressInfoList[0].IsDefault = 1
+		}
+	}
+
 	marshaledList, err := json.Marshal(req.AddressInfoList)
 	if utf8.RuneCountInString(string(marshaledList)) > 6144 {
 		return &types.UpdateAddressResp{Code: "4004", Msg: "超长"}, nil
@@ -36,7 +54,7 @@ func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *t
 		insert, err := l.svcCtx.UserAddressString.Insert(l.ctx, &cachemodel.UserAddressString{Phone: req.Phone, AddressString: string(marshaledList)})
 		if err != nil {
 			fmt.Println(insert, err, "插入失败了，猜测是网络问题")
-			return &types.UpdateAddressResp{Code: "10000", Msg: "猜测是网络问题"}, nil
+			return &types.UpdateAddressResp{Code: "4004", Msg: "猜测是网络问题"}, nil
 
 		}
 	}

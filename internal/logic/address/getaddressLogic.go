@@ -29,7 +29,7 @@ func (l *GetaddressLogic) Getaddress(req *types.GetAddressRes) (resp *types.GetA
 	findAddressListByPhone, err := l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, req.Phone)
 	if err != nil {
 		fmt.Println("##############", err.Error())
-		return &types.GetAddressResp{Code: "4004", Msg: "没有找到数据", Data: &types.GetAddressRp{}}, nil
+		return &types.GetAddressResp{Code: "10000", Msg: "success", Data: &types.GetAddressRp{Address: make([]*types.AddressInfo, 0)}}, nil
 
 	}
 	addressList := make([]*types.AddressInfo, 0)

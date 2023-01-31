@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
@@ -20,9 +19,6 @@ var (
 	userAddressStringRows                = strings.Join(userAddressStringFieldNames, ",")
 	userAddressStringRowsExpectAutoSet   = strings.Join(stringx.Remove(userAddressStringFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	userAddressStringRowsWithPlaceHolder = strings.Join(stringx.Remove(userAddressStringFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
-
-	cacheDevUserAddressStringIdPrefix    = "cache:dev:userAddressString:id:"
-	cacheDevUserAddressStringPhonePrefix = "cache:dev:userAddressString:phone:"
 )
 
 type (
@@ -36,7 +32,7 @@ type (
 	}
 
 	defaultUserAddressStringModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
@@ -47,35 +43,23 @@ type (
 	}
 )
 
-func newUserAddressStringModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultUserAddressStringModel {
+func newUserAddressStringModel(conn sqlx.SqlConn) *defaultUserAddressStringModel {
 	return &defaultUserAddressStringModel{
-		CachedConn: sqlc.NewConn(conn, c),
-		table:      "`user_address_string`",
+		conn:  conn,
+		table: "`user_address_string`",
 	}
 }
 
 func (m *defaultUserAddressStringModel) Delete(ctx context.Context, id int64) error {
-	data, err := m.FindOne(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	devUserAddressStringIdKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringIdPrefix, id)
-	devUserAddressStringPhoneKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-		return conn.ExecCtx(ctx, query, id)
-	}, devUserAddressStringIdKey, devUserAddressStringPhoneKey)
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
 func (m *defaultUserAddressStringModel) FindOne(ctx context.Context, id int64) (*UserAddressString, error) {
-	devUserAddressStringIdKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringIdPrefix, id)
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userAddressStringRows, m.table)
 	var resp UserAddressString
-	err := m.QueryRowCtx(ctx, &resp, devUserAddressStringIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
-		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userAddressStringRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, id)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -87,15 +71,9 @@ func (m *defaultUserAddressStringModel) FindOne(ctx context.Context, id int64) (
 }
 
 func (m *defaultUserAddressStringModel) FindOneByPhone(ctx context.Context, phone string) (*UserAddressString, error) {
-	devUserAddressStringPhoneKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringPhonePrefix, phone)
 	var resp UserAddressString
-	err := m.QueryRowIndexCtx(ctx, &resp, devUserAddressStringPhoneKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
-		query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userAddressStringRows, m.table)
-		if err := conn.QueryRowCtx(ctx, &resp, query, phone); err != nil {
-			return nil, err
-		}
-		return resp.Id, nil
-	}, m.queryPrimary)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userAddressStringRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, phone)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -107,52 +85,21 @@ func (m *defaultUserAddressStringModel) FindOneByPhone(ctx context.Context, phon
 }
 
 func (m *defaultUserAddressStringModel) Insert(ctx context.Context, data *UserAddressString) (sql.Result, error) {
-	devUserAddressStringIdKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringIdPrefix, data.Id)
-	devUserAddressStringPhoneKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringPhonePrefix, data.Phone)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?)", m.table, userAddressStringRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.Phone, data.AddressString)
-	}, devUserAddressStringIdKey, devUserAddressStringPhoneKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?)", m.table, userAddressStringRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.AddressString)
 	return ret, err
 }
 
-func (m *defaultUserAddressStringModel) UpdateByPhone(ctx context.Context, newData *UserAddressString) error {
-	data, err := m.FindOneByPhone(ctx, newData.Phone)
-	if err != nil {
-		return err
-	}
-
-	devUserAddressStringIdKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringIdPrefix, data.Id)
-	devUserAddressStringPhoneKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userAddressStringRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.Phone, newData.AddressString, data.Id)
-	}, devUserAddressStringIdKey, devUserAddressStringPhoneKey)
-	return err
-}
-
 func (m *defaultUserAddressStringModel) Update(ctx context.Context, newData *UserAddressString) error {
-	data, err := m.FindOne(ctx, newData.Id)
-	if err != nil {
-		return err
-	}
-
-	devUserAddressStringIdKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringIdPrefix, data.Id)
-	devUserAddressStringPhoneKey := fmt.Sprintf("%s%v", cacheDevUserAddressStringPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userAddressStringRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.Phone, newData.AddressString, newData.Id)
-	}, devUserAddressStringIdKey, devUserAddressStringPhoneKey)
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userAddressStringRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.AddressString, newData.Id)
 	return err
 }
 
-func (m *defaultUserAddressStringModel) formatPrimary(primary interface{}) string {
-	return fmt.Sprintf("%s%v", cacheDevUserAddressStringIdPrefix, primary)
-}
-
-func (m *defaultUserAddressStringModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userAddressStringRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
+func (m *defaultUserAddressStringModel) UpdateByPhone(ctx context.Context, newData *UserAddressString) error {
+	query := fmt.Sprintf("update %s set %s where `phone` = ?", m.table, userAddressStringRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.AddressString, newData.Phone)
+	return err
 }
 
 func (m *defaultUserAddressStringModel) tableName() string {

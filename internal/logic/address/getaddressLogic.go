@@ -3,8 +3,6 @@ package address
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 
@@ -28,7 +26,6 @@ func NewGetaddressLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getadd
 func (l *GetaddressLogic) Getaddress(req *types.GetAddressRes) (resp *types.GetAddressResp, err error) {
 	findAddressListByPhone, err := l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, req.Phone)
 	if err != nil {
-		fmt.Println("##############", err.Error())
 		return &types.GetAddressResp{Code: "10000", Msg: "success", Data: &types.GetAddressRp{Address: make([]*types.AddressInfo, 0)}}, nil
 
 	}

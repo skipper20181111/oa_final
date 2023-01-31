@@ -27,6 +27,9 @@ func NewGetscLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetscLogic 
 
 func (l *GetscLogic) Getsc(req *types.GetShoppingCartRes) (resp *types.GetShoppingCartResp, err error) {
 	scinfo, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, req.Phone)
+	if err != nil {
+		return &types.GetShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: make([]*types.ProductInfo, 0)}}, nil
+	}
 	tinyproductlist := make([]types.ProductTiny, 0)
 	json.Unmarshal([]byte(scinfo.ShoppingCart), &tinyproductlist)
 	PMcache, ok := l.svcCtx.LocalCache.Get(refresh.ProductsMap)

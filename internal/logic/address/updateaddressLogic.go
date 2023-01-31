@@ -3,7 +3,6 @@ package address
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
@@ -46,19 +45,18 @@ func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *t
 	}
 
 	marshaledList, err := json.Marshal(req.AddressInfoList)
-	if utf8.RuneCountInString(string(marshaledList)) > 6144 {
+	if utf8.RuneCountInString(string(marshaledList)) > 20000 {
 		return &types.UpdateAddressResp{Code: "4004", Msg: "超长"}, nil
 	}
-	err = l.svcCtx.UserAddressString.UpdateByPhone(l.ctx, &cachemodel.UserAddressString{Phone: req.Phone, AddressString: string(marshaledList)})
-	if err != nil {
-		insert, err := l.svcCtx.UserAddressString.Insert(l.ctx, &cachemodel.UserAddressString{Phone: req.Phone, AddressString: string(marshaledList)})
-		if err != nil {
-			fmt.Println(insert, err, "插入失败了，猜测是网络问题")
-			return &types.UpdateAddressResp{Code: "4004", Msg: "猜测是网络问题"}, nil
-
-		}
-	}
 	findAddressListByPhone, err := l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, req.Phone)
+	if findAddressListByPhone == nil && err.Error() == "notfind" {
+		l.svcCtx.UserAddressString.Insert(l.ctx, &cachemodel.UserAddressString{Phone: req.Phone, AddressString: string(marshaledList)})
+	} else if findAddressListByPhone == nil {
+		return &types.UpdateAddressResp{Code: "4004", Msg: "猜测是网络问题"}, nil
+	} else {
+		l.svcCtx.UserAddressString.UpdateByPhone(l.ctx, &cachemodel.UserAddressString{Phone: req.Phone, AddressString: string(marshaledList)})
+	}
+	findAddressListByPhone, err = l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, req.Phone)
 	addressList := make([]*types.AddressInfo, 0)
 	json.Unmarshal([]byte(findAddressListByPhone.AddressString), &addressList)
 	return &types.UpdateAddressResp{Code: "10000", Msg: "success", Data: &types.UpdateAddressRp{Address: addressList}}, nil

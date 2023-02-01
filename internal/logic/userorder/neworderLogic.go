@@ -35,6 +35,9 @@ func NewNeworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Neworder
 }
 
 func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderResp, err error) {
+	if len(req.ProductTinyList) == 0 {
+		return &types.NewOrderResp{Code: "4004", Msg: "无商品，订单金额为0"}, nil
+	}
 	PMcache, ok := l.svcCtx.LocalCache.Get(refresh.ProductsMap)
 	if !ok {
 		return &types.NewOrderResp{Code: "4004", Msg: "服务器查找商品列表失败"}, nil
@@ -63,7 +66,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 		return &types.NewOrderResp{Code: "4004", Msg: "数据库失效"}, nil
 	}
 	orderinfo := db2orderinfo(sn2order)
-
+	money := int64(orderinfo.PayAmount * 100)
 	// 此处开始生成订单
 	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
 	// 得到prepay_id，以及调起支付所需的参数和签名
@@ -73,10 +76,10 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 			Mchid:       core.String(l.svcCtx.Config.WxConf.MchID),
 			Description: core.String("沾还是不沾芥末，这是一个问题"),
 			OutTradeNo:  core.String(orderinfo.OutTradeNo),
-			Attach:      core.String("自定义数据说明" + randStr(5)),
+			Attach:      core.String(randStr(16)),
 			NotifyUrl:   core.String(l.svcCtx.Config.ServerInfo.Url + "/payrecall/tellmeso"),
 			Amount: &jsapi.Amount{
-				Total: core.Int64(1),
+				Total: core.Int64(money),
 			},
 			Payer: &jsapi.Payer{
 				Openid: core.String(req.OpenId),
@@ -174,7 +177,6 @@ func getsha512(message string) string {
 var letters = []rune("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func randStr(n int) string {
-	rand.Seed(time.Now().Unix())
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]

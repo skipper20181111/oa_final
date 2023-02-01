@@ -37,6 +37,7 @@ func (l *PreneworderLogic) Preneworder(req *types.PreNewOrderRes) (resp *types.P
 	return &types.PreNewOrderResp{Code: "10000", Msg: "结算完成，请下订单", Data: &types.PreNewOrderRp{OrderInfo: orderinfo}}, nil
 }
 func order2orderInfo(req *types.PreNewOrderRes, productsMap map[int64]*types.ProductInfo) (orderinfo *types.OrderInfo) {
+	orderinfo = &types.OrderInfo{}
 	orderinfo.Phone = req.Phone
 
 	for _, tiny := range req.ProductTinyList {

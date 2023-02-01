@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/zeromicro/go-zero/rest/httpc"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 var configFile = flag.String("f", "etc/oa-api.yaml", "the config file")
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
 
 	var c config.Config

@@ -28,6 +28,7 @@ type ServiceContext struct {
 	UserOrder         cachemodel.UserOrderModel
 	LocalCache        *collection.Cache
 	UserAddressString cachemodel.UserAddressStringModel
+	AccountOperateLog cachemodel.AccountOperateLogModel
 	Client            *core.Client
 	MchPrivateKey     *rsa.PrivateKey
 	Handler           *notify.Handler
@@ -77,5 +78,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		MchPrivateKey:     mchPrivateKey,
 		Handler:           handler,
 		UserOrder:         cachemodel.NewUserOrderModel(sqlx.NewMysql(c.DB.DataSource)),
+		AccountOperateLog: cachemodel.NewAccountOperateLogModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

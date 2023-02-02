@@ -29,9 +29,11 @@ type ServiceContext struct {
 	LocalCache        *collection.Cache
 	UserAddressString cachemodel.UserAddressStringModel
 	AccountOperateLog cachemodel.AccountOperateLogModel
+	CashAccount       cachemodel.CashAccountModel
 	Client            *core.Client
 	MchPrivateKey     *rsa.PrivateKey
 	Handler           *notify.Handler
+	Coupon            cachemodel.CouponModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -79,5 +81,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Handler:           handler,
 		UserOrder:         cachemodel.NewUserOrderModel(sqlx.NewMysql(c.DB.DataSource)),
 		AccountOperateLog: cachemodel.NewAccountOperateLogModel(sqlx.NewMysql(c.DB.DataSource)),
+		Coupon:            cachemodel.NewCouponModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
+		CashAccount:       cachemodel.NewCashAccountModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

@@ -36,14 +36,14 @@ func NewNeworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Neworder
 
 func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderResp, err error) {
 	if len(req.ProductTinyList) == 0 {
-		return &types.NewOrderResp{Code: "4004", Msg: "无商品，订单金额为0"}, nil
+		return &types.NewOrderResp{Code: "10000", Msg: "无商品，订单金额为0", Data: &types.NewOrderRp{}}, nil
 	}
 	PMcache, ok := l.svcCtx.LocalCache.Get(refresh.ProductsMap)
 	if !ok {
 		return &types.NewOrderResp{Code: "4004", Msg: "服务器查找商品列表失败"}, nil
 	}
 	productsMap := PMcache.(map[int64]*types.ProductInfo)
-	order := order2db(req, productsMap)
+	order := l.order2db(req, productsMap)
 	insert, err := l.svcCtx.UserOrder.Insert(l.ctx, order)
 	if err != nil { // 如果插入失败，就多试几次，如果试了三次都失败，那我没办法了
 		fmt.Println(insert, err.Error())
@@ -131,7 +131,7 @@ func db2orderinfo(order *cachemodel.UserOrder) *types.OrderInfo {
 	orderinfo.ModifyTime = order.ModifyTime.Format("2006-01-02 15:04:05")
 	return orderinfo
 }
-func order2db(req *types.NewOrderRes, productsMap map[int64]*types.ProductInfo) *cachemodel.UserOrder {
+func (l *NeworderLogic) order2db(req *types.NewOrderRes, productsMap map[int64]*types.ProductInfo) *cachemodel.UserOrder {
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
 	order := &cachemodel.UserOrder{}
 	order.Phone = req.Phone
@@ -143,13 +143,10 @@ func order2db(req *types.NewOrderRes, productsMap map[int64]*types.ProductInfo) 
 	}
 	order.Pidlist = string(marshal)
 	for _, tiny := range req.ProductTinyList {
-		order.OriginalAmount = order.OriginalAmount + productsMap[tiny.PId].Original_price*float64(tiny.Amount)
-		order.PayAmount = order.PayAmount + productsMap[tiny.PId].Promotion_price*float64(tiny.Amount)
+		order.OriginalAmount = order.OriginalAmount + int64(productsMap[tiny.PId].Promotion_price*100*float64(tiny.Amount))
 	}
+	l.calculatemoney(req.UsedCouponId, req.UseCashFirst, req.Phone, order)
 	order.FreightAmount = 40
-	order.PromotionAmount = 0
-	order.IntegrationAmount = 0
-	order.CouponAmount = 0
 	order.OrderStatus = 0
 	order.DeliveryCompany = "顺丰"
 	order.DeliverySn = randStr(20)
@@ -157,15 +154,17 @@ func order2db(req *types.NewOrderRes, productsMap map[int64]*types.ProductInfo) 
 	if err != nil {
 		fmt.Println(err.Error(), "结构体转化为字符串失败")
 	}
-	order.ReceiverInfo = string(addr)
-	order.Note = req.OrderNote
+	order.Address = string(addr)
+	order.OrderNote = req.OrderNote
 	order.DeleteStatus = 0
+	order.Growth = order.ActualAmount
+	order.ConfirmStatus = 0
 	order.ModifyTime = order.CreateOrderTime
 	order.PaymentTime = inittime
 	order.DeliveryTime = inittime
 	order.ReceiveTime = inittime
-	order.CommentTime = inittime
-	order.OrderSn = getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + order.ReceiverInfo)
+	order.CloseTime = inittime
+	order.OrderSn = getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + order.Address)
 	return order
 }
 func getsha512(message string) string {
@@ -182,4 +181,51 @@ func randStr(n int) string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func (l *NeworderLogic) calculatemoney(couponid int64, usecash bool, phone string, orderinfo *cachemodel.UserOrder) *cachemodel.UserOrder {
+	//计算打折后的钱
+	orderinfo.UsedCouponid = 0
+	couponinfo, _ := l.svcCtx.Coupon.FindOneByCouponId(l.ctx, couponid)
+	if couponinfo == nil {
+		orderinfo.ActualAmount = orderinfo.OriginalAmount
+	} else {
+		if couponinfo.Discount != 0 {
+			orderinfo.UsedCouponid = couponid
+			orderinfo.ActualAmount = orderinfo.OriginalAmount * (couponinfo.Discount) / 100
+
+		} else if couponinfo.MinPoint != 0 && couponinfo.Cut != 0 {
+			if orderinfo.ActualAmount < couponinfo.MinPoint*100 {
+				orderinfo.ActualAmount = orderinfo.OriginalAmount
+			} else {
+				orderinfo.UsedCouponid = couponid
+				orderinfo.ActualAmount = orderinfo.OriginalAmount - orderinfo.OriginalAmount/(couponinfo.MinPoint*100)
+			}
+		} else {
+			orderinfo.ActualAmount = orderinfo.OriginalAmount
+		}
+	}
+	orderinfo.CouponAmount = orderinfo.OriginalAmount - orderinfo.ActualAmount
+
+	// usecash
+	if usecash {
+		cash, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, phone)
+		if cash != nil {
+
+			if (orderinfo.ActualAmount - cash.Balance*100) >= 0 {
+				orderinfo.WexinPayAmount = orderinfo.ActualAmount - cash.Balance*100
+				orderinfo.CashAccountPayAmount = cash.Balance * 100
+			} else {
+				orderinfo.WexinPayAmount = 0
+				orderinfo.CashAccountPayAmount = orderinfo.ActualAmount
+			}
+
+		} else {
+			orderinfo.WexinPayAmount = orderinfo.ActualAmount
+		}
+	} else {
+		orderinfo.WexinPayAmount = orderinfo.ActualAmount
+	}
+
+	return orderinfo
 }

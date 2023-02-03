@@ -82,6 +82,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		UserOrder:         cachemodel.NewUserOrderModel(sqlx.NewMysql(c.DB.DataSource)),
 		AccountOperateLog: cachemodel.NewAccountOperateLogModel(sqlx.NewMysql(c.DB.DataSource)),
 		Coupon:            cachemodel.NewCouponModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
-		CashAccount:       cachemodel.NewCashAccountModel(sqlx.NewMysql(c.DB.DataSource)),
+		CashAccount:       cachemodel.NewCashAccountModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 	}
 }

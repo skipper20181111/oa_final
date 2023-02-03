@@ -1,6 +1,9 @@
 package cachemodel
 
-import "github.com/zeromicro/go-zero/core/stores/sqlx"
+import (
+	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
+)
 
 var _ CashAccountModel = (*customCashAccountModel)(nil)
 
@@ -17,8 +20,8 @@ type (
 )
 
 // NewCashAccountModel returns a model for the database table.
-func NewCashAccountModel(conn sqlx.SqlConn) CashAccountModel {
+func NewCashAccountModel(conn sqlx.SqlConn, c cache.CacheConf) CashAccountModel {
 	return &customCashAccountModel{
-		defaultCashAccountModel: newCashAccountModel(conn),
+		defaultCashAccountModel: newCashAccountModel(conn, c),
 	}
 }

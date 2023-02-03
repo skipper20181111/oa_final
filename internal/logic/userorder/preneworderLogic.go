@@ -28,23 +28,26 @@ func NewPreneworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Prene
 }
 
 func (l *PreneworderLogic) Preneworder(req *types.PreNewOrderRes) (resp *types.PreNewOrderResp, err error) {
+	if len(req.ProductTinyList) == 0 {
+		return &types.PreNewOrderResp{Code: "10000", Msg: "结算完成，请下订单", Data: &types.PreNewOrderRp{PreOrderInfo: nil}}, nil
+	}
 	PMcache, ok := l.svcCtx.LocalCache.Get(refresh.ProductsMap)
 	if !ok {
 		return &types.PreNewOrderResp{Code: "4004", Msg: "服务器查找商品列表失败"}, nil
 	}
 	productsMap := PMcache.(map[int64]*types.ProductInfo)
 	orderinfo := l.order2orderInfo(req, productsMap)
-	return &types.PreNewOrderResp{Code: "10000", Msg: "结算完成，请下订单", Data: &types.PreNewOrderRp{OrderInfo: orderinfo}}, nil
+	return &types.PreNewOrderResp{Code: "10000", Msg: "结算完成，请下订单", Data: &types.PreNewOrderRp{PreOrderInfo: orderinfo}}, nil
 }
-func (l *PreneworderLogic) order2orderInfo(req *types.PreNewOrderRes, productsMap map[int64]*types.ProductInfo) (orderinfo *types.OrderInfo) {
+func (l *PreneworderLogic) order2orderInfo(req *types.PreNewOrderRes, productsMap map[int64]*types.ProductInfo) (orderinfo *types.PreOrderInfo) {
 
-	orderinfo = &types.OrderInfo{}
+	orderinfo = &types.PreOrderInfo{}
 	orderinfo.Phone = req.Phone
 
 	for _, tiny := range req.ProductTinyList {
 		orderinfo.OriginalAmount = orderinfo.OriginalAmount + productsMap[tiny.PId].Promotion_price*float64(tiny.Amount)
 	}
-
+	l.calculatemoney(req.UsedCouponId, req.UseCashFirst, req.Phone, orderinfo)
 	orderinfo.FreightAmount = 40 // 后面要增加运费生成模块
 	orderinfo.PidList = req.ProductTinyList
 	orderinfo.CreateTime = time.Now().Format("2006-01-02 15:04:05")
@@ -57,7 +60,7 @@ func getsha256(msg string) string {
 	return hashCode2
 }
 
-func (l *PreneworderLogic) calculatemoney(originalmoney float64, couponid int64, usecash bool, phone string, orderinfo *types.OrderInfo) *types.OrderInfo {
+func (l *PreneworderLogic) calculatemoney(couponid int64, usecash bool, phone string, orderinfo *types.PreOrderInfo) *types.PreOrderInfo {
 	//计算打折后的钱
 	couponinfo, _ := l.svcCtx.Coupon.FindOneByCouponId(l.ctx, couponid)
 	if couponinfo == nil {
@@ -77,5 +80,25 @@ func (l *PreneworderLogic) calculatemoney(originalmoney float64, couponid int64,
 		}
 	}
 	orderinfo.CouponAmount = orderinfo.OriginalAmount - orderinfo.ActualAmount
-	l.svcCtx.CashAccount.FindOneByPhone(l.ctx, phone)
+
+	// usecash
+	if usecash {
+		cash, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, phone)
+		if cash != nil {
+			if (orderinfo.ActualAmount - float64(cash.Balance)) >= 0 {
+				orderinfo.WeXinPayAmount = orderinfo.ActualAmount - float64(cash.Balance)
+				orderinfo.CashAccountPayAmount = float64(cash.Balance)
+			} else {
+				orderinfo.WeXinPayAmount = 0
+				orderinfo.CashAccountPayAmount = orderinfo.ActualAmount
+			}
+
+		} else {
+			orderinfo.WeXinPayAmount = orderinfo.ActualAmount
+		}
+	} else {
+		orderinfo.WeXinPayAmount = orderinfo.ActualAmount
+	}
+
+	return orderinfo
 }

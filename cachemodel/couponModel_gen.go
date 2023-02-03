@@ -61,7 +61,7 @@ type (
 
 func newCouponModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultCouponModel {
 	return &defaultCouponModel{
-		CachedConn: sqlc.NewConn(conn, c),
+		CachedConn: sqlc.NewConn(conn, c, cache.WithExpiry(time.Second*30)),
 		table:      "`coupon`",
 	}
 }

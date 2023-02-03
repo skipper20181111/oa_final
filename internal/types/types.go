@@ -126,6 +126,19 @@ type RefreshResp struct {
 	Msg  string `json:"msg"`
 }
 
+type PreOrderInfo struct {
+	Phone                string         `json:"phone"`
+	CreateTime           string         `json:"createTime"`
+	PidList              []*ProductTiny `json:"pidList"`
+	OriginalAmount       float64        `json:"originalAmount"`
+	ActualAmount         float64        `json:"actualAmount"`
+	CouponAmount         float64        `json:"couponAmount"`
+	UsedCouponId         int64          `json:"usedCouponId"`
+	WeXinPayAmount       float64        `json:"weXinPayAmount"`
+	CashAccountPayAmount float64        `json:"cashAccountPayAmount"`
+	FreightAmount        float64        `json:"freightAmount"`
+}
+
 type OrderInfo struct {
 	Phone                string         `json:"phone"`
 	OrderSn              string         `json:"orderSn"`
@@ -143,7 +156,7 @@ type OrderInfo struct {
 	Growth               int64          `json:"growth"`
 	Address              *AddressInfo   `json:"addressInfo"`
 	BillType             int64          `json:"billType"`
-	BillInfo             string         `json:"billInfo"`
+	BillInfo             *Billinfo      `json:"billInfo"`
 	OrderNote            string         `json:"orderNote"`
 	OrderStatus          int64          `json:"orderStatus"`
 	DeliveryCompany      string         `json:"deliveryCompany"`
@@ -153,6 +166,15 @@ type OrderInfo struct {
 	DeleteStatus         int64          `json:"deleteStatus"`
 	PaymentTime          string         `json:"paymentTime"`
 	ModifyTime           string         `json:"modifyTime"`
+}
+
+type Billinfo struct {
+	CompanyName    string `json:"companyName"`
+	ComponyAddress string `json:"componyAddress"`
+	ComponyPhone   string `json:"componyPhone"`
+	TaxId          string `json:"taxId"`
+	OpeningBank    string `json:"openingBank"`
+	BankAccount    string `json:"bankAccount"`
 }
 
 type NewOrderRes struct {
@@ -211,7 +233,7 @@ type PreNewOrderRes struct {
 }
 
 type PreNewOrderRp struct {
-	OrderInfo *OrderInfo `json:"orderInfo"`
+	PreOrderInfo *PreOrderInfo `json:"preOrderInfo"`
 }
 
 type PreNewOrderResp struct {

@@ -144,6 +144,18 @@ type (
     }
 )
 type (
+PreOrderInfo{
+    Phone string `json:"phone"`
+    CreateTime string `json:"createTime"`
+    PidList []*ProductTiny `json:"pidList"`
+    OriginalAmount float64 `json:"originalAmount"`
+    ActualAmount float64 `json:"actualAmount"`
+    CouponAmount float64 `json:"couponAmount"`
+    UsedCouponId int64 `json:"usedCouponId"`
+    WeXinPayAmount float64 `json:"weXinPayAmount"`
+    CashAccountPayAmount float64 `json:"cashAccountPayAmount"`
+    FreightAmount float64 `json:"freightAmount"`
+}
     OrderInfo {
         Phone string `json:"phone"`
         OrderSn string `json:"orderSn"`
@@ -161,7 +173,7 @@ type (
         Growth int64 `json:"growth"`
         Address *AddressInfo `json:"addressInfo"`
         BillType int64 `json:"billType"`
-        BillInfo string `json:"billInfo"`
+        BillInfo *Billinfo `json:"billInfo"`
         OrderNote string `json:"orderNote"`
         OrderStatus int64 `json:"orderStatus"`
         DeliveryCompany string `json:"deliveryCompany"`
@@ -171,6 +183,14 @@ type (
         DeleteStatus int64 `json:"deleteStatus"`
         PaymentTime string `json:"paymentTime"`
         ModifyTime string `json:"modifyTime"`
+    }
+    Billinfo {
+        CompanyName string `json:"companyName"`
+        ComponyAddress string `json:"componyAddress"`
+        ComponyPhone string `json:"componyPhone"`
+        TaxId string `json:"taxId"`
+        OpeningBank string `json:"openingBank"`
+        BankAccount string `json:"bankAccount"`
     }
     NewOrderRes {
         OpenId string `json:"openId"`
@@ -230,7 +250,7 @@ type (
     }
 
     PreNewOrderRp {
-        OrderInfo *OrderInfo `json:"orderInfo"`
+        PreOrderInfo *PreOrderInfo `json:"preOrderInfo"`
     }
     PreNewOrderResp {
         Code string `json:"code"`

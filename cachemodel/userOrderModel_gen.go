@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
+	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
@@ -20,6 +21,10 @@ var (
 	userOrderRows                = strings.Join(userOrderFieldNames, ",")
 	userOrderRowsExpectAutoSet   = strings.Join(stringx.Remove(userOrderFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	userOrderRowsWithPlaceHolder = strings.Join(stringx.Remove(userOrderFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
+
+	cacheDevUserOrderIdPrefix         = "cache:dev:userOrder:id:"
+	cacheDevUserOrderOrderSnPrefix    = "cache:dev:userOrder:orderSn:"
+	cacheDevUserOrderOutTradeNoPrefix = "cache:dev:userOrder:outTradeNo:"
 )
 
 type (
@@ -30,11 +35,10 @@ type (
 		FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*UserOrder, error)
 		Update(ctx context.Context, data *UserOrder) error
 		Delete(ctx context.Context, id int64) error
-		FindAllByPhone(ctx context.Context, phone string) ([]*UserOrder, error)
 	}
 
 	defaultUserOrderModel struct {
-		conn  sqlx.SqlConn
+		sqlc.CachedConn
 		table string
 	}
 
@@ -50,7 +54,7 @@ type (
 		ActualAmount         int64     `db:"actual_amount"`           // 实际支付金额
 		CouponAmount         int64     `db:"coupon_amount"`           // 优惠券抵扣金额
 		UsedCouponid         int64     `db:"used_couponid"`           // 使用的优惠券id 0意味着没有使用优惠券
-		WeixinPayAmount      int64     `db:"weixin_pay_amount"`       // 微信支付金额
+		WexinPayAmount       int64     `db:"wexin_pay_amount"`        // 微信支付金额
 		CashAccountPayAmount int64     `db:"cash_account_pay_amount"` // 现金账户支付金额
 		FreightAmount        int64     `db:"freight_amount"`          // 运费金额
 		Address              string    `db:"address"`                 // 收货人信息
@@ -59,7 +63,7 @@ type (
 		DeliveryCompany      string    `db:"delivery_company"`        // 物流公司(配送方式)
 		DeliverySn           string    `db:"delivery_sn"`             // 物流单号
 		AutoConfirmDay       int64     `db:"auto_confirm_day"`        // 自动确认时间（天）
-		Growth               int64     `db:"growth"`                  // 可以获得的成长值，等于消费额
+		Growth               int64     `db:"growth"`                  // 可以活动的成长值，等于消费额
 		BillType             int64     `db:"bill_type"`               // 发票类型：0->不开发票；1->电子发票；2->纸质发票
 		BillInfo             string    `db:"bill_info"`               // 发票信息 {单位名称，单位地址，电话，税号，开户银行，银行账户}
 		ConfirmStatus        int64     `db:"confirm_status"`          // 确认收货状态：0->未确认；1->已确认
@@ -72,23 +76,36 @@ type (
 	}
 )
 
-func newUserOrderModel(conn sqlx.SqlConn) *defaultUserOrderModel {
+func newUserOrderModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultUserOrderModel {
 	return &defaultUserOrderModel{
-		conn:  conn,
-		table: "`user_order`",
+		CachedConn: sqlc.NewConn(conn, c),
+		table:      "`user_order`",
 	}
 }
 
 func (m *defaultUserOrderModel) Delete(ctx context.Context, id int64) error {
-	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, id)
+	data, err := m.FindOne(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	devUserOrderIdKey := fmt.Sprintf("%s%v", cacheDevUserOrderIdPrefix, id)
+	devUserOrderOrderSnKey := fmt.Sprintf("%s%v", cacheDevUserOrderOrderSnPrefix, data.OrderSn)
+	devUserOrderOutTradeNoKey := fmt.Sprintf("%s%v", cacheDevUserOrderOutTradeNoPrefix, data.OutTradeNo)
+	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, devUserOrderIdKey, devUserOrderOrderSnKey, devUserOrderOutTradeNoKey)
 	return err
 }
 
 func (m *defaultUserOrderModel) FindOne(ctx context.Context, id int64) (*UserOrder, error) {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userOrderRows, m.table)
+	devUserOrderIdKey := fmt.Sprintf("%s%v", cacheDevUserOrderIdPrefix, id)
 	var resp UserOrder
-	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
+	err := m.QueryRowCtx(ctx, &resp, devUserOrderIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
+		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userOrderRows, m.table)
+		return conn.QueryRowCtx(ctx, v, query, id)
+	})
 	switch err {
 	case nil:
 		return &resp, nil
@@ -100,9 +117,15 @@ func (m *defaultUserOrderModel) FindOne(ctx context.Context, id int64) (*UserOrd
 }
 
 func (m *defaultUserOrderModel) FindOneByOrderSn(ctx context.Context, orderSn string) (*UserOrder, error) {
+	devUserOrderOrderSnKey := fmt.Sprintf("%s%v", cacheDevUserOrderOrderSnPrefix, orderSn)
 	var resp UserOrder
-	query := fmt.Sprintf("select %s from %s where `order_sn` = ? limit 1", userOrderRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, orderSn)
+	err := m.QueryRowIndexCtx(ctx, &resp, devUserOrderOrderSnKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
+		query := fmt.Sprintf("select %s from %s where `order_sn` = ? limit 1", userOrderRows, m.table)
+		if err := conn.QueryRowCtx(ctx, &resp, query, orderSn); err != nil {
+			return nil, err
+		}
+		return resp.Id, nil
+	}, m.queryPrimary)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -113,24 +136,16 @@ func (m *defaultUserOrderModel) FindOneByOrderSn(ctx context.Context, orderSn st
 	}
 }
 
-func (m *defaultUserOrderModel) FindAllByPhone(ctx context.Context, phone string) ([]*UserOrder, error) {
-	query := fmt.Sprintf("select %s from %s where `phone` = ? order by `create_order_time` DESC limit 10", userOrderRows, m.table)
-	var resp = make([]*UserOrder, 0)
-	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone)
-	switch err {
-	case nil:
-		return resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
-
 func (m *defaultUserOrderModel) FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*UserOrder, error) {
+	devUserOrderOutTradeNoKey := fmt.Sprintf("%s%v", cacheDevUserOrderOutTradeNoPrefix, outTradeNo)
 	var resp UserOrder
-	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? limit 1", userOrderRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, outTradeNo)
+	err := m.QueryRowIndexCtx(ctx, &resp, devUserOrderOutTradeNoKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
+		query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? limit 1", userOrderRows, m.table)
+		if err := conn.QueryRowCtx(ctx, &resp, query, outTradeNo); err != nil {
+			return nil, err
+		}
+		return resp.Id, nil
+	}, m.queryPrimary)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -142,15 +157,39 @@ func (m *defaultUserOrderModel) FindOneByOutTradeNo(ctx context.Context, outTrad
 }
 
 func (m *defaultUserOrderModel) Insert(ctx context.Context, data *UserOrder) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userOrderRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.OriginalAmount, data.ActualAmount, data.CouponAmount, data.UsedCouponid, data.WeixinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.BillType, data.BillInfo, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime)
+	devUserOrderIdKey := fmt.Sprintf("%s%v", cacheDevUserOrderIdPrefix, data.Id)
+	devUserOrderOrderSnKey := fmt.Sprintf("%s%v", cacheDevUserOrderOrderSnPrefix, data.OrderSn)
+	devUserOrderOutTradeNoKey := fmt.Sprintf("%s%v", cacheDevUserOrderOutTradeNoPrefix, data.OutTradeNo)
+	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userOrderRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.OriginalAmount, data.ActualAmount, data.CouponAmount, data.UsedCouponid, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.BillType, data.BillInfo, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime)
+	}, devUserOrderIdKey, devUserOrderOrderSnKey, devUserOrderOutTradeNoKey)
 	return ret, err
 }
 
 func (m *defaultUserOrderModel) Update(ctx context.Context, newData *UserOrder) error {
-	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userOrderRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.OriginalAmount, newData.ActualAmount, newData.CouponAmount, newData.UsedCouponid, newData.WeixinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.Id)
+	data, err := m.FindOne(ctx, newData.Id)
+	if err != nil {
+		return err
+	}
+
+	devUserOrderIdKey := fmt.Sprintf("%s%v", cacheDevUserOrderIdPrefix, data.Id)
+	devUserOrderOrderSnKey := fmt.Sprintf("%s%v", cacheDevUserOrderOrderSnPrefix, data.OrderSn)
+	devUserOrderOutTradeNoKey := fmt.Sprintf("%s%v", cacheDevUserOrderOutTradeNoPrefix, data.OutTradeNo)
+	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userOrderRowsWithPlaceHolder)
+		return conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.OriginalAmount, newData.ActualAmount, newData.CouponAmount, newData.UsedCouponid, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.Id)
+	}, devUserOrderIdKey, devUserOrderOrderSnKey, devUserOrderOutTradeNoKey)
 	return err
+}
+
+func (m *defaultUserOrderModel) formatPrimary(primary interface{}) string {
+	return fmt.Sprintf("%s%v", cacheDevUserOrderIdPrefix, primary)
+}
+
+func (m *defaultUserOrderModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userOrderRows, m.table)
+	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultUserOrderModel) tableName() string {

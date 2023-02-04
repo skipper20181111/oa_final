@@ -38,12 +38,16 @@ func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payment
 			if no.OrderStatus == 0 {
 				no.OrderStatus = 1
 				no.TransactionId = *transaction.TransactionId
+				no.PaymentTime = time.Now()
+				no.ModifyTime = time.Now()
 				l.svcCtx.UserOrder.Update(l.ctx, no)
 				l.oplog("user_order", *transaction.OutTradeNo, "结束更新", lid)
 				return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil
 			} else {
 				no.OrderStatus = 99
 				no.TransactionId = *transaction.TransactionId
+				no.PaymentTime = time.Now()
+				no.ModifyTime = time.Now()
 				l.svcCtx.UserOrder.Update(l.ctx, no)
 				return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil
 			}

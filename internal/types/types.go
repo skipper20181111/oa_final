@@ -306,3 +306,16 @@ type CancelOrderResp struct {
 	Msg  string         `json:"msg"`
 	Data *CancelOrderRp `json:"data"`
 }
+
+type LockMsg struct {
+	Phone string `json:"phone"`
+	Field string `json:"field"`
+}
+
+type GetLockRes struct {
+	LockMsgList []*LockMsg `json:"lockMsgList"`
+}
+
+type GetLockResp struct {
+	Code map[string]bool `json:"code"`
+}

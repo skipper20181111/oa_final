@@ -5,8 +5,10 @@ package cachemodel
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
 	"github.com/zeromicro/go-zero/core/stores/cache"
@@ -40,15 +42,15 @@ type (
 	}
 
 	CashAccount struct {
-		Id      int64  `db:"id"`      // id
-		Phone   string `db:"phone"`   // 账号
-		Balance int64  `db:"balance"` // 余额
+		Id      int64   `db:"id"`      // id
+		Phone   string  `db:"phone"`   // 账号
+		Balance float64 `db:"balance"` // 余额
 	}
 )
 
 func newCashAccountModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultCashAccountModel {
 	return &defaultCashAccountModel{
-		CachedConn: sqlc.NewConn(conn, c),
+		CachedConn: sqlc.NewConn(conn, c, cache.WithExpiry(time.Second*5)),
 		table:      "`cash_account`",
 	}
 }
@@ -99,7 +101,7 @@ func (m *defaultCashAccountModel) FindOneByPhone(ctx context.Context, phone stri
 	case nil:
 		return &resp, nil
 	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
+		return nil, errors.New("notfind")
 	default:
 		return nil, err
 	}

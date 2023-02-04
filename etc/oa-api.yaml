@@ -10,7 +10,8 @@ DB:
 Cache:
   - Host: ${RedisHost}
     Pass:
-
+Lock:
+  Host: ${PccHost}
 Auth:
   AccessSecret: qXTj90Mb3cWlKas9GZ96EjJRin8M5rG66cbo83a0V2jZCR3csXOHXk6HXb022CXboYZZr3Zbs3b17TsgBdRreYaPuI7QDKiwUgzxetcLFvtp9WrNipUCqpRISaeUsSwt
   AccessExpire: 172800

@@ -19,4 +19,7 @@ type Config struct {
 	ServerInfo struct {
 		Url string
 	}
+	Lock struct {
+		Host string
+	}
 }

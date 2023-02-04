@@ -319,6 +319,18 @@ type (
         Data *CancelOrderRp `json:"data"`
     }
 )
+type (
+    LockMsg {
+        Phone string `json:"phone"`
+        Field string `json:"field"`
+    }
+    GetLockRes {
+        LockMsgList []*LockMsg `json:"lockMsgList"`
+    }
+    GetLockResp {
+        Code map[string]bool `json:"code"`
+    }
+)
 
 
 

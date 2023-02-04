@@ -24,8 +24,9 @@ func NewGetallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getal
 
 func (l *GetallorderLogic) Getallorder(req *types.GetAllOrderRes) (resp *types.GetAllOrderResp, err error) {
 	allorder, err := l.svcCtx.UserOrder.FindAllByPhone(l.ctx, req.Phone)
-	if err != nil {
-		return &types.GetAllOrderResp{Code: "4004", Msg: err.Error()}, nil
+	if allorder == nil || len(allorder) == 0 {
+		infos := make([]*types.OrderInfo, 0)
+		return &types.GetAllOrderResp{Code: "10000", Msg: "success", Data: &types.GetAllOrderRp{OrderInfos: infos}}, nil
 	}
 	infos := make([]*types.OrderInfo, 0)
 	for _, order := range allorder {

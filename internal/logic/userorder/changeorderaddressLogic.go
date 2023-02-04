@@ -35,7 +35,7 @@ func (l *ChangeorderaddressLogic) Changeorderaddress(req *types.ChangeOrdeRaddre
 	if err != nil {
 		fmt.Println(err.Error(), "结构体转化为字符串失败")
 	}
-	sn2order.ReceiverInfo = string(addr)
+	sn2order.Address = string(addr)
 	sn2order.ModifyTime = time.Now()
 	err = l.svcCtx.UserOrder.Update(l.ctx, sn2order)
 	if err != nil {

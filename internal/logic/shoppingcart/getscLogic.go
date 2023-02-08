@@ -26,8 +26,14 @@ func NewGetscLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetscLogic 
 }
 
 func (l *GetscLogic) Getsc(req *types.GetShoppingCartRes) (resp *types.GetShoppingCartResp, err error) {
+	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
+		return &types.GetShoppingCartResp{
+			Code: "4004",
+			Msg:  "请勿使用其他用户的token",
+		}, nil
+	}
 	scinfo, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, req.Phone)
-	if err != nil {
+	if scinfo == nil {
 		return &types.GetShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: make([]*types.ProductInfo, 0)}}, nil
 	}
 	tinyproductlist := make([]types.ProductTiny, 0)
@@ -39,7 +45,10 @@ func (l *GetscLogic) Getsc(req *types.GetShoppingCartRes) (resp *types.GetShoppi
 	productsMap := PMcache.(map[int64]*types.ProductInfo)
 	goodsList := make([]*types.ProductInfo, 0)
 	for _, tiny := range tinyproductlist {
-		info := productsMap[tiny.PId]
+		info, ok := productsMap[tiny.PId]
+		if !ok {
+			continue
+		}
 		info.Amount = tiny.Amount
 		goodsList = append(goodsList, productsMap[tiny.PId])
 	}

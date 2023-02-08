@@ -26,6 +26,12 @@ func NewUpdateaddressLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Upd
 }
 
 func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *types.UpdateAddressResp, err error) {
+	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
+		return &types.UpdateAddressResp{
+			Code: "4004",
+			Msg:  "请勿使用其他用户的token",
+		}, nil
+	}
 	if len(req.AddressInfoList) != 0 {
 		count := 0
 		havedefalt := 0
@@ -43,7 +49,7 @@ func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *t
 			req.AddressInfoList[0].IsDefault = 1
 		}
 	}
-
+	//以上这一段是为了修正只能有一个默认地址
 	marshaledList, err := json.Marshal(req.AddressInfoList)
 	if utf8.RuneCountInString(string(marshaledList)) > 20000 {
 		return &types.UpdateAddressResp{Code: "4004", Msg: "超长"}, nil

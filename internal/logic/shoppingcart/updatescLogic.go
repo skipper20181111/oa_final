@@ -27,12 +27,28 @@ func NewUpdatescLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Updatesc
 }
 
 func (l *UpdatescLogic) Updatesc(req *types.UpdateShoppingCartRes) (resp *types.UpdateShoppingCartResp, err error) {
-	shoppingCart, err := json.Marshal(req.ShopCartIdList)
-	err = l.svcCtx.UserShopping.UpdateByPhone(l.ctx, req.Phone, string(shoppingCart))
-	if err != nil {
-		l.svcCtx.UserShopping.Insert(l.ctx, &cachemodel.UserShoppingCart{Phone: req.Phone, ShoppingCart: string(shoppingCart)})
+	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
+		return &types.UpdateShoppingCartResp{
+			Code: "4004",
+			Msg:  "请勿使用其他用户的token",
+		}, nil
 	}
+	shoppingCart, err := json.Marshal(req.ShopCartIdList)
+	scphone, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, req.Phone)
+	if scphone == nil && err.Error() == "notfind" {
+		l.svcCtx.UserShopping.Insert(l.ctx, &cachemodel.UserShoppingCart{Phone: req.Phone, ShoppingCart: string(shoppingCart)})
+	} else if scphone != nil {
+		l.svcCtx.UserShopping.UpdateByPhone(l.ctx, req.Phone, string(shoppingCart))
+	} else {
+		goodsList := make([]*types.ProductInfo, 0)
+		return &types.UpdateShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: goodsList}}, nil
+	}
+
 	scinfo, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, req.Phone)
+	if scinfo == nil {
+		goodsList := make([]*types.ProductInfo, 0)
+		return &types.UpdateShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: goodsList}}, nil
+	}
 	tinyproductlist := make([]types.ProductTiny, 0)
 	json.Unmarshal([]byte(scinfo.ShoppingCart), &tinyproductlist)
 	//for i, productTiny := range tinyproductlist {
@@ -45,7 +61,10 @@ func (l *UpdatescLogic) Updatesc(req *types.UpdateShoppingCartRes) (resp *types.
 	productsMap := PMcache.(map[int64]*types.ProductInfo)
 	goodsList := make([]*types.ProductInfo, 0)
 	for _, tiny := range tinyproductlist {
-		info := productsMap[tiny.PId]
+		info, ok := productsMap[tiny.PId]
+		if !ok {
+			continue
+		}
 		info.Amount = tiny.Amount
 		goodsList = append(goodsList, productsMap[tiny.PId])
 	}

@@ -5,6 +5,7 @@ package cachemodel
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -100,7 +101,7 @@ func (m *defaultUserShoppingCartModel) FindOneByPhone(ctx context.Context, phone
 	case nil:
 		return &resp, nil
 	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
+		return nil, errors.New("notfind")
 	default:
 		return nil, err
 	}

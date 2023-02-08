@@ -42,11 +42,16 @@ func NewNeworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Neworder
 }
 
 func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderResp, err error) {
-
+	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
+		return &types.NewOrderResp{
+			Code: "4004",
+			Msg:  "请勿使用其他用户的token",
+		}, nil
+	}
 	lid := time.Now().UnixNano() + int64(rand.Intn(1024))
 	l.oplog("付款啊", req.Phone, "开始更新", lid)
 	if len(req.ProductTinyList) == 0 {
-		return &types.NewOrderResp{Code: "10000", Msg: "无商品，订单金额为0", Data: &types.NewOrderRp{}}, nil
+		return &types.NewOrderResp{Code: "4004", Msg: "无商品，订单金额为0", Data: &types.NewOrderRp{}}, nil
 	}
 	PMcache, ok := l.svcCtx.LocalCache.Get(refresh.ProductsMap)
 	if !ok {
@@ -61,13 +66,20 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "user_coupon"})
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "cash_account"})
 		if l.getlock(lockmsglist) {
-			if !l.updatecashaccount(lid) {
-				order.WexinPayAmount = order.CashAccountPayAmount + order.WexinPayAmount
-				order.CashAccountPayAmount = 0
+			if l.usecash {
+				if !l.updatecashaccount(lid) {
+					order.WexinPayAmount = order.ActualAmount
+					order.CashAccountPayAmount = 0
+					l.oplog("支付模块更新现金账户失败", req.Phone, "开始更新", lid)
+				}
 			}
-			if !l.updatecoupon(lid) {
-				l.oplog("更新优惠券失败", req.Phone, "开始更新", lid)
+
+			if l.usecoupon {
+				if !l.updatecoupon(lid) {
+					l.oplog("支付模块更新优惠券失败", req.Phone, "开始更新", lid)
+				}
 			}
+
 		}
 	}
 
@@ -258,7 +270,7 @@ func (l *NeworderLogic) order2db(req *types.NewOrderRes, productsMap map[int64]*
 	for _, tiny := range req.ProductTinyList {
 		order.OriginalAmount = order.OriginalAmount + int64(productsMap[tiny.PId].Promotion_price*100*float64(tiny.Amount))
 	}
-	l.calculatemoney(req.UsedCouponId, req.UseCashFirst, req.Phone, order)
+	l.calculatemoney(req.UsedCouponId, req.UseCouponFirst, req.UseCashFirst, req.Phone, order)
 	order.FreightAmount = 4000
 	order.OrderStatus = 0
 	order.DeliveryCompany = "顺丰"
@@ -299,43 +311,49 @@ func randStr(n int) string {
 	return string(b)
 }
 
-func (l *NeworderLogic) calculatemoney(couponid int64, usecash bool, phone string, orderinfo *cachemodel.UserOrder) *cachemodel.UserOrder {
-	//计算打折后的钱
+func (l *NeworderLogic) calculatemoney(couponid int64, UseCoupon, usecash bool, phone string, orderinfo *cachemodel.UserOrder) *cachemodel.UserOrder {
 	l.usecoupon = false
 	l.usecash = false
-	orderinfo.UsedCouponid = -1
-	couponinfo, _ := l.svcCtx.Coupon.FindOneByCouponId(l.ctx, couponid)
-	byPhone, _ := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, phone)
-	if couponinfo == nil || byPhone == nil {
+	if UseCoupon {
+		//计算打折后的钱
+		orderinfo.UsedCouponid = -1
+		couponinfo, _ := l.svcCtx.Coupon.FindOneByCouponId(l.ctx, couponid)
+		byPhone, _ := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, phone)
+		if couponinfo == nil || byPhone == nil {
 
-		orderinfo.ActualAmount = orderinfo.OriginalAmount
-	} else {
-		usercouponmap := make(map[int64]int)
-		json.Unmarshal([]byte(byPhone.CouponIdList), &usercouponmap)
-		couponcount := usercouponmap[couponid]
-		if couponcount > 0 {
-			if couponinfo.Discount != 0 {
-				l.usecoupon = true
-				orderinfo.UsedCouponid = couponid
-				orderinfo.ActualAmount = orderinfo.OriginalAmount * (couponinfo.Discount) / 100
-
-			} else if couponinfo.MinPoint != 0 && couponinfo.Cut != 0 {
-				if orderinfo.ActualAmount < couponinfo.MinPoint*100 {
-					orderinfo.ActualAmount = orderinfo.OriginalAmount
-				} else {
+			orderinfo.ActualAmount = orderinfo.OriginalAmount
+		} else {
+			usercouponmap := make(map[int64]int)
+			json.Unmarshal([]byte(byPhone.CouponIdList), &usercouponmap)
+			couponcount := usercouponmap[couponid]
+			if couponcount > 0 {
+				if couponinfo.Discount != 0 {
 					l.usecoupon = true
 					orderinfo.UsedCouponid = couponid
-					orderinfo.ActualAmount = orderinfo.OriginalAmount - orderinfo.OriginalAmount/(couponinfo.MinPoint*100)
+					orderinfo.ActualAmount = orderinfo.OriginalAmount * (couponinfo.Discount) / 100
+
+				} else if couponinfo.MinPoint != 0 && couponinfo.Cut != 0 {
+					if orderinfo.ActualAmount < couponinfo.MinPoint*100 {
+						orderinfo.ActualAmount = orderinfo.OriginalAmount
+					} else {
+						l.usecoupon = true
+						orderinfo.UsedCouponid = couponid
+						orderinfo.ActualAmount = orderinfo.OriginalAmount - orderinfo.OriginalAmount/(couponinfo.MinPoint*100)
+					}
+				} else {
+					orderinfo.ActualAmount = orderinfo.OriginalAmount
 				}
 			} else {
 				orderinfo.ActualAmount = orderinfo.OriginalAmount
 			}
-		} else {
-			orderinfo.ActualAmount = orderinfo.OriginalAmount
-		}
 
+		}
+		orderinfo.CouponAmount = orderinfo.OriginalAmount - orderinfo.ActualAmount
+
+	} else {
+		orderinfo.CouponAmount = 0
+		orderinfo.ActualAmount = orderinfo.OriginalAmount
 	}
-	orderinfo.CouponAmount = orderinfo.OriginalAmount - orderinfo.ActualAmount
 
 	// usecash
 	if usecash {

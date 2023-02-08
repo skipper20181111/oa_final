@@ -184,6 +184,7 @@ type NewOrderRes struct {
 	Address         *AddressInfo   `json:"address"`
 	OrderNote       string         `json:"orderNote"` // 订单备注
 	UsedCouponId    int64          `json:"usedCouponId"`
+	UseCouponFirst  bool           `json:"useCouponFirst"`
 	UseCashFirst    bool           `json:"useCashFirst"`
 }
 
@@ -229,6 +230,7 @@ type PreNewOrderRes struct {
 	Address         *AddressInfo   `json:"address"`
 	OrderNote       string         `json:"orderNote"` // 订单备注
 	UsedCouponId    int64          `json:"usedCouponId"`
+	UseCouponFirst  bool           `json:"useCouponFirst"`
 	UseCashFirst    bool           `json:"useCashFirst"`
 }
 

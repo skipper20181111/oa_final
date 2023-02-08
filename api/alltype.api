@@ -144,18 +144,18 @@ type (
     }
 )
 type (
-PreOrderInfo{
-    Phone string `json:"phone"`
-    CreateTime string `json:"createTime"`
-    PidList []*ProductTiny `json:"pidList"`
-    OriginalAmount float64 `json:"originalAmount"`
-    ActualAmount float64 `json:"actualAmount"`
-    CouponAmount float64 `json:"couponAmount"`
-    UsedCouponId int64 `json:"usedCouponId"`
-    WeXinPayAmount float64 `json:"weXinPayAmount"`
-    CashAccountPayAmount float64 `json:"cashAccountPayAmount"`
-    FreightAmount float64 `json:"freightAmount"`
-}
+    PreOrderInfo {
+        Phone string `json:"phone"`
+        CreateTime string `json:"createTime"`
+        PidList []*ProductTiny `json:"pidList"`
+        OriginalAmount float64 `json:"originalAmount"`
+        ActualAmount float64 `json:"actualAmount"`
+        CouponAmount float64 `json:"couponAmount"`
+        UsedCouponId int64 `json:"usedCouponId"`
+        WeXinPayAmount float64 `json:"weXinPayAmount"`
+        CashAccountPayAmount float64 `json:"cashAccountPayAmount"`
+        FreightAmount float64 `json:"freightAmount"`
+    }
     OrderInfo {
         Phone string `json:"phone"`
         OrderSn string `json:"orderSn"`
@@ -199,6 +199,7 @@ PreOrderInfo{
         Address *AddressInfo `json:"address"`
         OrderNote string `json:"orderNote"` // 订单备注
         UsedCouponId int64 `json:"usedCouponId"`
+        UseCouponFirst bool `json:"useCouponFirst"`
         UseCashFirst bool `json:"useCashFirst"`
     }
 
@@ -246,6 +247,7 @@ type (
         Address *AddressInfo `json:"address"`
         OrderNote string `json:"orderNote"` // 订单备注
         UsedCouponId int64 `json:"usedCouponId"`
+        UseCouponFirst bool `json:"useCouponFirst"`
         UseCashFirst bool `json:"useCashFirst"`
     }
 

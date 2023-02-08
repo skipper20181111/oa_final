@@ -27,6 +27,12 @@ func NewChangeorderaddressLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *ChangeorderaddressLogic) Changeorderaddress(req *types.ChangeOrdeRaddressRes) (resp *types.ChangeOrdeRaddressResp, err error) {
+	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
+		return &types.ChangeOrdeRaddressResp{
+			Code: "4004",
+			Msg:  "请勿使用其他用户的token",
+		}, nil
+	}
 	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -42,6 +48,11 @@ func (l *ChangeorderaddressLogic) Changeorderaddress(req *types.ChangeOrdeRaddre
 		fmt.Println(err.Error())
 	}
 	sn, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
-
+	if sn == nil || sn.Address != string(addr) {
+		return &types.ChangeOrdeRaddressResp{
+			Code: "4004",
+			Msg:  "数据库失效",
+		}, nil
+	}
 	return &types.ChangeOrdeRaddressResp{Code: "10000", Msg: "修改成功", Data: &types.ChangeOrdeRaddressRp{OrderInfo: db2orderinfo(sn)}}, nil
 }

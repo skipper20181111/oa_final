@@ -35,10 +35,16 @@ func NewCancelorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Cance
 }
 
 func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.CancelOrderResp, err error) {
+	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
+		return &types.CancelOrderResp{
+			Code: "4004",
+			Msg:  "请勿使用其他用户的token",
+		}, nil
+	}
 	lid := time.Now().UnixNano() + int64(rand.Intn(1024))
 	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
 	if sn2order == nil {
-		return &types.CancelOrderResp{Code: "10000", Msg: "为查询到订单"}, nil
+		return &types.CancelOrderResp{Code: "10000", Msg: "未查询到订单"}, nil
 	}
 	if sn2order.OrderStatus != 1 {
 		return &types.CancelOrderResp{Code: "10000", Msg: "已发货无法退款"}, nil
@@ -49,8 +55,8 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 		OutTradeNo:  core.String(sn2order.OutTradeNo),
 		OutRefundNo: core.String(sn2order.OutTradeNo),
 		Amount: &refunddomestic.AmountReq{Currency: core.String("CNY"),
-			Refund: core.Int64(1),
-			Total:  core.Int64(1)},
+			Refund: core.Int64(sn2order.WexinPayAmount),
+			Total:  core.Int64(sn2order.WexinPayAmount)},
 	})
 	defer result.Response.Body.Close()
 	if err != nil {
@@ -67,10 +73,10 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "user_coupon"})
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "cash_account"})
 		if l.getlock(lockmsglist) {
-			if !l.updatecashaccount(lid, sn2order) {
+			if sn2order.CashAccountPayAmount > 0 && !l.updatecashaccount(lid, sn2order) {
 				l.oplog("更新现金账户失败", req.Phone+sn2order.OutTradeNo, "开始更新", lid)
 			}
-			if !l.updatecoupon(lid, sn2order) {
+			if sn2order.UsedCouponid != 0 && !l.updatecoupon(lid, sn2order) {
 				l.oplog("更新优惠券失败", req.Phone+sn2order.OutTradeNo, "开始更新", lid)
 			}
 		}

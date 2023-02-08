@@ -30,8 +30,14 @@ func NewGetorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getorder
 }
 
 func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderResp, err error) {
+	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
+		return &types.GetOrderResp{
+			Code: "4004",
+			Msg:  "请勿使用其他用户的token",
+		}, nil
+	}
 	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
-	if err != nil {
+	if sn2order == nil {
 		return &types.GetOrderResp{Code: "4004", Msg: err.Error()}, nil
 	}
 	if sn2order.OrderStatus == 0 { // 说明还没有付款，去查一查究竟有没有付款
@@ -49,13 +55,11 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 			sn2order.OrderStatus = 1
 			sn2order.ModifyTime = time.Now()
 			sn2order.PaymentTime = sn2order.ModifyTime
-			err := l.svcCtx.UserOrder.Update(l.ctx, sn2order)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
+			l.svcCtx.UserOrder.Update(l.ctx, sn2order)
 			sn, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, sn2order.OrderSn)
-			if err != nil {
+			if sn == nil {
 				fmt.Println(err.Error())
+				return &types.GetOrderResp{Code: "10000", Msg: "查询失败", Data: &types.GetOrderRp{OrderInfo: &types.OrderInfo{}}}, nil
 			}
 			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: db2orderinfo(sn)}}, nil
 		}
@@ -64,7 +68,7 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 		service := refunddomestic.RefundsApiService{Client: l.svcCtx.Client}
 		no, result, err := service.QueryByOutRefundNo(l.ctx,
 			refunddomestic.QueryByOutRefundNoRequest{
-				OutRefundNo: core.String("u95VAbNrdOFf4KQr7s7ry9WE9M6OqpUx"),
+				OutRefundNo: core.String(sn2order.OutTradeNo),
 			})
 		defer result.Response.Body.Close()
 		if err != nil {

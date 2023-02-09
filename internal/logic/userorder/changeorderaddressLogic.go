@@ -27,15 +27,16 @@ func NewChangeorderaddressLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *ChangeorderaddressLogic) Changeorderaddress(req *types.ChangeOrdeRaddressRes) (resp *types.ChangeOrdeRaddressResp, err error) {
-	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
+	userphone := l.ctx.Value("phone").(string)
+	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
+	if sn2order == nil {
+		fmt.Println(err.Error())
+	}
+	if sn2order.Phone != userphone {
 		return &types.ChangeOrdeRaddressResp{
 			Code: "4004",
-			Msg:  "请勿使用其他用户的token",
+			Msg:  "请不要使用别人的token",
 		}, nil
-	}
-	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
-	if err != nil {
-		fmt.Println(err.Error())
 	}
 	addr, err := json.Marshal(req.Address)
 	if err != nil {

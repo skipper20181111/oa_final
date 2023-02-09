@@ -29,6 +29,7 @@ func NewPaybillLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PaybillLo
 }
 
 func (l *PaybillLogic) Paybill(req *types.BillPayRes) (resp *types.BillPayResp, err error) {
+	useropenid := l.ctx.Value("openid").(string)
 	rand.Seed(time.Now().Unix())
 	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
 	// 得到prepay_id，以及调起支付所需的参数和签名
@@ -44,7 +45,7 @@ func (l *PaybillLogic) Paybill(req *types.BillPayRes) (resp *types.BillPayResp, 
 				Total: core.Int64(req.Money),
 			},
 			Payer: &jsapi.Payer{
-				Openid: core.String(req.OpenId),
+				Openid: core.String(useropenid),
 			},
 		},
 	)

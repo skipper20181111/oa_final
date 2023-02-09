@@ -42,8 +42,6 @@ type AddressInfo struct {
 }
 
 type UpdateAddressRes struct {
-	OpenId          string         `json:"openId"`
-	Phone           string         `json:"phone"`
 	AddressInfoList []*AddressInfo `json:"addressInfoList"`
 }
 
@@ -58,8 +56,6 @@ type UpdateAddressResp struct {
 }
 
 type GetAddressRes struct {
-	OpenId string `json:"openId"`
-	Phone  string `json:"phone"`
 }
 
 type GetAddressRp struct {
@@ -99,8 +95,6 @@ type ProductTiny struct {
 }
 
 type UpdateShoppingCartRes struct {
-	OpenId         string        `json:"openId"`
-	Phone          string        `json:"phone"`
 	ShopCartIdList []ProductTiny `json:"shopCartIdList"`
 }
 
@@ -111,8 +105,6 @@ type UpdateShoppingCartResp struct {
 }
 
 type GetShoppingCartRes struct {
-	OpenId string `json:"openId"`
-	Phone  string `json:"phone"`
 }
 
 type GetShoppingCartResp struct {
@@ -178,8 +170,6 @@ type Billinfo struct {
 }
 
 type NewOrderRes struct {
-	OpenId          string         `json:"openId"`
-	Phone           string         `json:"phone"`
 	ProductTinyList []*ProductTiny `json:"productTinyList"`
 	Address         *AddressInfo   `json:"address"`
 	OrderNote       string         `json:"orderNote"` // 订单备注
@@ -204,9 +194,7 @@ type NewOrderResp struct {
 }
 
 type BillPayRes struct {
-	OpenId string `json:"openId"`
-	Phone  string `json:"phone"`
-	Money  int64  `json:"money"`
+	Money int64 `json:"money"`
 }
 
 type BillPayRp struct {
@@ -224,8 +212,6 @@ type BillPayResp struct {
 }
 
 type PreNewOrderRes struct {
-	OpenId          string         `json:"openId"`
-	Phone           string         `json:"phone"`
 	ProductTinyList []*ProductTiny `json:"productTinyList"`
 	Address         *AddressInfo   `json:"address"`
 	OrderNote       string         `json:"orderNote"` // 订单备注
@@ -245,8 +231,6 @@ type PreNewOrderResp struct {
 }
 
 type GetAllOrderRes struct {
-	OpenId string `json:"openId"`
-	Phone  string `json:"phone"`
 }
 
 type GetAllOrderRp struct {
@@ -260,8 +244,6 @@ type GetAllOrderResp struct {
 }
 
 type GetOrderRes struct {
-	OpenId  string `json:"openId"`
-	Phone   string `json:"phone"`
 	OrderSn string `json:"orderSn"`
 }
 
@@ -276,8 +258,6 @@ type GetOrderResp struct {
 }
 
 type ChangeOrdeRaddressRes struct {
-	OpenId  string       `json:"openId"`
-	Phone   string       `json:"phone"`
 	OrderSn string       `json:"orderSn"`
 	Address *AddressInfo `json:"address"`
 }
@@ -293,8 +273,6 @@ type ChangeOrdeRaddressResp struct {
 }
 
 type CancelOrderRes struct {
-	OpenId  string `json:"openId"`
-	Phone   string `json:"phone"`
 	OrderSn string `json:"orderSn"`
 }
 

@@ -35,12 +35,7 @@ func NewCancelorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Cance
 }
 
 func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.CancelOrderResp, err error) {
-	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
-		return &types.CancelOrderResp{
-			Code: "4004",
-			Msg:  "请勿使用其他用户的token",
-		}, nil
-	}
+	userphone := l.ctx.Value("phone").(string)
 	lid := time.Now().UnixNano() + int64(rand.Intn(1024))
 	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
 	if sn2order == nil {
@@ -49,7 +44,7 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 	if sn2order.OrderStatus != 1 {
 		return &types.CancelOrderResp{Code: "10000", Msg: "已发货无法退款"}, nil
 	}
-	l.oplog("微信退款", req.Phone, "开始更新", lid)
+	l.oplog("微信退款", userphone, "开始更新", lid)
 	service := refunddomestic.RefundsApiService{Client: l.svcCtx.Client}
 	create, result, err := service.Create(l.ctx, refunddomestic.CreateRequest{
 		OutTradeNo:  core.String(sn2order.OutTradeNo),
@@ -65,7 +60,7 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 	} else {
 		log.Printf("status=%d resp=%s", result.Response.StatusCode, resp, create.String())
 	}
-	l.oplog("微信退款", req.Phone, "结束更新", lid)
+	l.oplog("微信退款", userphone, "结束更新", lid)
 	//从这里开始更新现金账户于优惠券账户
 	// 此时还有特别重要的事情，1，要更改现金账户余额，2，要更改优惠券账户，毕竟优惠券账户已经用完了。
 	if sn2order.CashAccountPayAmount > 0 || sn2order.UsedCouponid != 0 {
@@ -74,10 +69,10 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "cash_account"})
 		if l.getlock(lockmsglist) {
 			if sn2order.CashAccountPayAmount > 0 && !l.updatecashaccount(lid, sn2order) {
-				l.oplog("更新现金账户失败", req.Phone+sn2order.OutTradeNo, "开始更新", lid)
+				l.oplog("更新现金账户失败", userphone+sn2order.OutTradeNo, "开始更新", lid)
 			}
 			if sn2order.UsedCouponid != 0 && !l.updatecoupon(lid, sn2order) {
-				l.oplog("更新优惠券失败", req.Phone+sn2order.OutTradeNo, "开始更新", lid)
+				l.oplog("更新优惠券失败", userphone+sn2order.OutTradeNo, "开始更新", lid)
 			}
 		}
 	}

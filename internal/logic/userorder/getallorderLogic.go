@@ -23,13 +23,8 @@ func NewGetallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getal
 }
 
 func (l *GetallorderLogic) Getallorder(req *types.GetAllOrderRes) (resp *types.GetAllOrderResp, err error) {
-	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
-		return &types.GetAllOrderResp{
-			Code: "4004",
-			Msg:  "请勿使用其他用户的token",
-		}, nil
-	}
-	allorder, err := l.svcCtx.UserOrder.FindAllByPhone(l.ctx, req.Phone)
+	userphone := l.ctx.Value("phone").(string)
+	allorder, err := l.svcCtx.UserOrder.FindAllByPhone(l.ctx, userphone)
 	if allorder == nil || len(allorder) == 0 {
 		infos := make([]*types.OrderInfo, 0)
 		return &types.GetAllOrderResp{Code: "10000", Msg: "success", Data: &types.GetAllOrderRp{OrderInfos: infos}}, nil

@@ -24,13 +24,8 @@ func NewGetaddressLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getadd
 }
 
 func (l *GetaddressLogic) Getaddress(req *types.GetAddressRes) (resp *types.GetAddressResp, err error) {
-	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
-		return &types.GetAddressResp{
-			Code: "4004",
-			Msg:  "请勿使用其他用户的token",
-		}, nil
-	}
-	findAddressListByPhone, err := l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, req.Phone)
+	userphone := l.ctx.Value("phone").(string)
+	findAddressListByPhone, err := l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, userphone)
 	if err != nil {
 		return &types.GetAddressResp{Code: "10000", Msg: "success", Data: &types.GetAddressRp{Address: make([]*types.AddressInfo, 0)}}, nil
 

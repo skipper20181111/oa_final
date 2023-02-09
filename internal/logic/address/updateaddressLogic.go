@@ -26,12 +26,7 @@ func NewUpdateaddressLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Upd
 }
 
 func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *types.UpdateAddressResp, err error) {
-	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
-		return &types.UpdateAddressResp{
-			Code: "4004",
-			Msg:  "请勿使用其他用户的token",
-		}, nil
-	}
+	userphone := l.ctx.Value("phone").(string)
 	if len(req.AddressInfoList) != 0 {
 		count := 0
 		havedefalt := 0
@@ -54,15 +49,15 @@ func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *t
 	if utf8.RuneCountInString(string(marshaledList)) > 20000 {
 		return &types.UpdateAddressResp{Code: "4004", Msg: "超长"}, nil
 	}
-	findAddressListByPhone, err := l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, req.Phone)
+	findAddressListByPhone, err := l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, userphone)
 	if findAddressListByPhone == nil && err.Error() == "notfind" {
-		l.svcCtx.UserAddressString.Insert(l.ctx, &cachemodel.UserAddressString{Phone: req.Phone, AddressString: string(marshaledList)})
+		l.svcCtx.UserAddressString.Insert(l.ctx, &cachemodel.UserAddressString{Phone: userphone, AddressString: string(marshaledList)})
 	} else if findAddressListByPhone == nil {
 		return &types.UpdateAddressResp{Code: "4004", Msg: "猜测是网络问题"}, nil
 	} else {
-		l.svcCtx.UserAddressString.UpdateByPhone(l.ctx, &cachemodel.UserAddressString{Phone: req.Phone, AddressString: string(marshaledList)})
+		l.svcCtx.UserAddressString.UpdateByPhone(l.ctx, &cachemodel.UserAddressString{Phone: userphone, AddressString: string(marshaledList)})
 	}
-	findAddressListByPhone, err = l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, req.Phone)
+	findAddressListByPhone, err = l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, userphone)
 	addressList := make([]*types.AddressInfo, 0)
 	json.Unmarshal([]byte(findAddressListByPhone.AddressString), &addressList)
 	return &types.UpdateAddressResp{Code: "10000", Msg: "success", Data: &types.UpdateAddressRp{Address: addressList}}, nil

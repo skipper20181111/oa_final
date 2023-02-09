@@ -16,8 +16,9 @@ import (
 
 type PreneworderLogic struct {
 	logx.Logger
-	ctx    context.Context
-	svcCtx *svc.ServiceContext
+	ctx       context.Context
+	svcCtx    *svc.ServiceContext
+	userphone string
 }
 
 func NewPreneworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PreneworderLogic {
@@ -29,12 +30,7 @@ func NewPreneworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Prene
 }
 
 func (l *PreneworderLogic) Preneworder(req *types.PreNewOrderRes) (resp *types.PreNewOrderResp, err error) {
-	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
-		return &types.PreNewOrderResp{
-			Code: "4004",
-			Msg:  "请勿使用其他用户的token",
-		}, nil
-	}
+	l.userphone = l.ctx.Value("phone").(string)
 	if len(req.ProductTinyList) == 0 {
 		return &types.PreNewOrderResp{Code: "10000", Msg: "商品列表为空", Data: &types.PreNewOrderRp{PreOrderInfo: nil}}, nil
 	}
@@ -49,7 +45,7 @@ func (l *PreneworderLogic) Preneworder(req *types.PreNewOrderRes) (resp *types.P
 func (l *PreneworderLogic) order2orderInfo(req *types.PreNewOrderRes, productsMap map[int64]*types.ProductInfo) (orderinfo *types.PreOrderInfo) {
 
 	orderinfo = &types.PreOrderInfo{}
-	orderinfo.Phone = req.Phone
+	orderinfo.Phone = l.userphone
 
 	for _, tiny := range req.ProductTinyList {
 		infopt, ok := productsMap[tiny.PId]
@@ -59,7 +55,7 @@ func (l *PreneworderLogic) order2orderInfo(req *types.PreNewOrderRes, productsMa
 		}
 		orderinfo.OriginalAmount = orderinfo.OriginalAmount + productsMap[tiny.PId].Promotion_price*float64(tiny.Amount)
 	}
-	l.calculatemoney(req.UsedCouponId, req.UseCouponFirst, req.UseCashFirst, req.Phone, orderinfo)
+	l.calculatemoney(req.UsedCouponId, req.UseCouponFirst, req.UseCashFirst, l.userphone, orderinfo)
 	orderinfo.FreightAmount = 40 // 后面要增加运费生成模块
 	orderinfo.PidList = req.ProductTinyList
 	orderinfo.CreateTime = time.Now().Format("2006-01-02 15:04:05")

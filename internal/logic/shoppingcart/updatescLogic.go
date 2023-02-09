@@ -27,24 +27,19 @@ func NewUpdatescLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Updatesc
 }
 
 func (l *UpdatescLogic) Updatesc(req *types.UpdateShoppingCartRes) (resp *types.UpdateShoppingCartResp, err error) {
-	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
-		return &types.UpdateShoppingCartResp{
-			Code: "4004",
-			Msg:  "请勿使用其他用户的token",
-		}, nil
-	}
+	userphone := l.ctx.Value("phone").(string)
 	shoppingCart, err := json.Marshal(req.ShopCartIdList)
-	scphone, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, req.Phone)
+	scphone, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, userphone)
 	if scphone == nil && err.Error() == "notfind" {
-		l.svcCtx.UserShopping.Insert(l.ctx, &cachemodel.UserShoppingCart{Phone: req.Phone, ShoppingCart: string(shoppingCart)})
+		l.svcCtx.UserShopping.Insert(l.ctx, &cachemodel.UserShoppingCart{Phone: userphone, ShoppingCart: string(shoppingCart)})
 	} else if scphone != nil {
-		l.svcCtx.UserShopping.UpdateByPhone(l.ctx, req.Phone, string(shoppingCart))
+		l.svcCtx.UserShopping.UpdateByPhone(l.ctx, userphone, string(shoppingCart))
 	} else {
 		goodsList := make([]*types.ProductInfo, 0)
 		return &types.UpdateShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: goodsList}}, nil
 	}
 
-	scinfo, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, req.Phone)
+	scinfo, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, userphone)
 	if scinfo == nil {
 		goodsList := make([]*types.ProductInfo, 0)
 		return &types.UpdateShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: goodsList}}, nil

@@ -49,8 +49,6 @@ type AddressInfo {
 
 type (
     UpdateAddressRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
         AddressInfoList []*AddressInfo `json:"addressInfoList"`
     }
     UpdateAddressRp {
@@ -65,8 +63,6 @@ type (
 
 type (
     GetAddressRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
     }
     GetAddressRp {
         Address []*AddressInfo `json:"address"`
@@ -117,8 +113,6 @@ type (
         Amount int `json:"amount"`
     }
     UpdateShoppingCartRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
         ShopCartIdList []ProductTiny `json:"shopCartIdList"`
     }
     UpdateShoppingCartResp {
@@ -128,8 +122,6 @@ type (
     }
 
     GetShoppingCartRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
     }
     GetShoppingCartResp {
         Code string `json:"code"`
@@ -193,8 +185,6 @@ type (
         BankAccount string `json:"bankAccount"`
     }
     NewOrderRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
         ProductTinyList []*ProductTiny `json:"productTinyList"`
         Address *AddressInfo `json:"address"`
         OrderNote string `json:"orderNote"` // 订单备注
@@ -219,8 +209,6 @@ type (
 )
 type (
     BillPayRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
         Money int64 `json:"money"`
     }
     BillPayRp {
@@ -241,8 +229,6 @@ type (
 
 type (
     PreNewOrderRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
         ProductTinyList []*ProductTiny `json:"productTinyList"`
         Address *AddressInfo `json:"address"`
         OrderNote string `json:"orderNote"` // 订单备注
@@ -262,8 +248,6 @@ type (
 )
 type (
     GetAllOrderRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
     }
     GetAllOrderRp {
         OrderInfos []*OrderInfo `json:"orderInfos"`
@@ -276,8 +260,6 @@ type (
 )
 type (
     GetOrderRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
         OrderSn string `json:"orderSn"`
     }
     GetOrderRp {
@@ -291,8 +273,6 @@ type (
 )
 type (
     ChangeOrdeRaddressRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
         OrderSn string `json:"orderSn"`
         Address *AddressInfo `json:"address"`
     }
@@ -307,8 +287,6 @@ type (
 )
 type (
     CancelOrderRes {
-        OpenId string `json:"openId"`
-        Phone string `json:"phone"`
         OrderSn string `json:"orderSn"`
     }
     CancelOrderRp {

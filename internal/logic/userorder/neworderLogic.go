@@ -31,6 +31,7 @@ type NeworderLogic struct {
 	userorder   *cachemodel.UserOrder
 	usecash     bool
 	usecoupon   bool
+	userphone   string
 }
 
 func NewNeworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *NeworderLogic {
@@ -42,14 +43,10 @@ func NewNeworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Neworder
 }
 
 func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderResp, err error) {
-	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
-		return &types.NewOrderResp{
-			Code: "4004",
-			Msg:  "请勿使用其他用户的token",
-		}, nil
-	}
+	l.userphone = l.ctx.Value("phone").(string)
+	useropenid := l.ctx.Value("openid").(string)
 	lid := time.Now().UnixNano() + int64(rand.Intn(1024))
-	l.oplog("付款啊", req.Phone, "开始更新", lid)
+	l.oplog("付款啊", l.userphone, "开始更新", lid)
 	if len(req.ProductTinyList) == 0 {
 		return &types.NewOrderResp{Code: "4004", Msg: "无商品，订单金额为0", Data: &types.NewOrderRp{}}, nil
 	}
@@ -70,13 +67,13 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 				if !l.updatecashaccount(lid) {
 					order.WexinPayAmount = order.ActualAmount
 					order.CashAccountPayAmount = 0
-					l.oplog("支付模块更新现金账户失败", req.Phone, "开始更新", lid)
+					l.oplog("支付模块更新现金账户失败", l.userphone, "开始更新", lid)
 				}
 			}
 
 			if l.usecoupon {
 				if !l.updatecoupon(lid) {
-					l.oplog("支付模块更新优惠券失败", req.Phone, "开始更新", lid)
+					l.oplog("支付模块更新优惠券失败", l.userphone, "开始更新", lid)
 				}
 			}
 
@@ -95,7 +92,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	money := sn2order.WexinPayAmount
 
 	// 此处开始生成订单
-	l.oplog("微信支付啊", req.Phone, "开始更新", lid)
+	l.oplog("微信支付啊", l.userphone, "开始更新", lid)
 	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
 	// 得到prepay_id，以及调起支付所需的参数和签名
 	payment, result, err := jssvc.PrepayWithRequestPayment(l.ctx,
@@ -110,7 +107,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 				Total: core.Int64(money),
 			},
 			Payer: &jsapi.Payer{
-				Openid: core.String(req.OpenId),
+				Openid: core.String(useropenid),
 			},
 		},
 	)
@@ -128,8 +125,8 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	paySign := *payment.PaySign
 	signType := *payment.SignType
 	neworderrp := types.NewOrderRp{OrderInfo: orderinfo, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
-	l.oplog("微信支付啊", req.Phone, "结束更新", lid)
-	l.oplog("付款啊", req.Phone, "结束更新", lid)
+	l.oplog("微信支付啊", l.userphone, "结束更新", lid)
+	l.oplog("付款啊", l.userphone, "结束更新", lid)
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 
 }
@@ -259,7 +256,7 @@ func db2orderinfo(order *cachemodel.UserOrder) *types.OrderInfo {
 func (l *NeworderLogic) order2db(req *types.NewOrderRes, productsMap map[int64]*types.ProductInfo) *cachemodel.UserOrder {
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
 	order := &cachemodel.UserOrder{}
-	order.Phone = req.Phone
+	order.Phone = l.userphone
 	order.CreateOrderTime = time.Now()
 	order.OutTradeNo = randStr(32)
 	marshal, err := json.Marshal(req.ProductTinyList)
@@ -270,7 +267,7 @@ func (l *NeworderLogic) order2db(req *types.NewOrderRes, productsMap map[int64]*
 	for _, tiny := range req.ProductTinyList {
 		order.OriginalAmount = order.OriginalAmount + int64(productsMap[tiny.PId].Promotion_price*100*float64(tiny.Amount))
 	}
-	l.calculatemoney(req.UsedCouponId, req.UseCouponFirst, req.UseCashFirst, req.Phone, order)
+	l.calculatemoney(req.UsedCouponId, req.UseCouponFirst, req.UseCashFirst, l.userphone, order)
 	order.FreightAmount = 4000
 	order.OrderStatus = 0
 	order.DeliveryCompany = "顺丰"

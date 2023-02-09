@@ -17,8 +17,9 @@ import (
 
 type GetorderLogic struct {
 	logx.Logger
-	ctx    context.Context
-	svcCtx *svc.ServiceContext
+	ctx       context.Context
+	svcCtx    *svc.ServiceContext
+	userphone string
 }
 
 func NewGetorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetorderLogic {
@@ -30,15 +31,13 @@ func NewGetorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getorder
 }
 
 func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderResp, err error) {
-	if l.ctx.Value("openid") != req.OpenId || l.ctx.Value("phone") != req.Phone {
-		return &types.GetOrderResp{
-			Code: "4004",
-			Msg:  "请勿使用其他用户的token",
-		}, nil
-	}
+	l.userphone = l.ctx.Value("phone").(string)
 	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
 	if sn2order == nil {
 		return &types.GetOrderResp{Code: "4004", Msg: err.Error()}, nil
+	}
+	if sn2order.Phone != l.userphone {
+		return &types.GetOrderResp{Code: "4004", Msg: "不要使用别人的token"}, nil
 	}
 	if sn2order.OrderStatus == 0 { // 说明还没有付款，去查一查究竟有没有付款
 		jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}

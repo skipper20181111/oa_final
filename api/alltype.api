@@ -195,6 +195,7 @@ type (
 
     NewOrderRp {
         OrderInfo *OrderInfo `json:"orderInfo"`
+        UseWechatPay bool `json:"useWechatPay"`
         TimeStamp string `json:"timeStamp"`
         NonceStr string `json:"nonceStr"`
         Package string `json:"package"`

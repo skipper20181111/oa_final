@@ -179,12 +179,13 @@ type NewOrderRes struct {
 }
 
 type NewOrderRp struct {
-	OrderInfo *OrderInfo `json:"orderInfo"`
-	TimeStamp string     `json:"timeStamp"`
-	NonceStr  string     `json:"nonceStr"`
-	Package   string     `json:"package"`
-	SignType  string     `json:"signType"`
-	PaySign   string     `json:"paySign"`
+	OrderInfo    *OrderInfo `json:"orderInfo"`
+	UseWechatPay bool       `json:"useWechatPay"`
+	TimeStamp    string     `json:"timeStamp"`
+	NonceStr     string     `json:"nonceStr"`
+	Package      string     `json:"package"`
+	SignType     string     `json:"signType"`
+	PaySign      string     `json:"paySign"`
 }
 
 type NewOrderResp struct {

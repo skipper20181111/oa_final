@@ -90,7 +90,9 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	l.userorder = sn2order
 	orderinfo := db2orderinfo(sn2order)
 	money := sn2order.WexinPayAmount
-
+	if money == 0 {
+		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: false}}, nil
+	}
 	// 此处开始生成订单
 	l.oplog("微信支付啊", l.userphone, "开始更新", lid)
 	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
@@ -124,7 +126,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	packagestr := *payment.Package
 	paySign := *payment.PaySign
 	signType := *payment.SignType
-	neworderrp := types.NewOrderRp{OrderInfo: orderinfo, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
+	neworderrp := types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: true, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
 	l.oplog("微信支付啊", l.userphone, "结束更新", lid)
 	l.oplog("付款啊", l.userphone, "结束更新", lid)
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil

@@ -78,6 +78,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 			}
 
 		}
+		l.closelock(lockmsglist)
 	}
 
 	//结束更新现金账户与优惠券账户

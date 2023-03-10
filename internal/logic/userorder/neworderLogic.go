@@ -56,6 +56,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	}
 	productsMap := PMcache.(map[int64]*types.ProductInfo)
 	order := l.order2db(req, productsMap)
+	l.userorder = order
 	//从这里开始更新现金账户于优惠券账户
 	// 此时还有特别重要的事情，1，要更改现金账户余额，2，要更改优惠券账户，毕竟优惠券账户已经用完了。
 	if l.usecash || l.usecoupon {
@@ -73,10 +74,17 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 
 			if l.usecoupon {
 				if !l.updatecoupon(lid) {
+					order.WexinPayAmount = order.WexinPayAmount + order.CouponAmount
+					order.CouponAmount = 0
 					l.oplog("支付模块更新优惠券失败", l.userphone, "开始更新", lid)
 				}
 			}
 
+		} else { // 如果没有获取到锁，那么全部金额都用微信支付
+			order.WexinPayAmount = order.OriginalAmount
+			order.ActualAmount = order.OriginalAmount
+			order.CashAccountPayAmount = 0
+			order.CouponAmount = 0
 		}
 		l.closelock(lockmsglist)
 	}
@@ -141,11 +149,12 @@ func (l *NeworderLogic) updatecashaccount(lid int64) bool {
 	}()
 
 	accphone := l.ctx.Value("phone").(string)
-	phone, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, accphone)
+	phone, _ := l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, accphone)
 	l.oplog("cash_account", accphone, "开始更新", lid)
-	phone.Balance = phone.Balance - l.cashaccount.Balance
+	phone.Balance = phone.Balance - float64(l.userorder.CashAccountPayAmount)/100
 	l.svcCtx.CashAccount.Update(l.ctx, phone)
 	l.oplog("cash_account", accphone, "结束更新", lid)
+	l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "消费", Phone: accphone, Balance: phone.Balance, ChangeAmount: l.cashaccount.Balance})
 	return true
 }
 func (l *NeworderLogic) updatecoupon(lid int64) bool {
@@ -357,7 +366,8 @@ func (l *NeworderLogic) calculatemoney(couponid int64, UseCoupon, usecash bool, 
 
 	// usecash
 	if usecash {
-		cash, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, phone)
+		cash, _ := l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, phone)
+		l.cashaccount = cash
 		if cash != nil {
 			if cash.Balance*100 > 0 {
 				l.usecash = true

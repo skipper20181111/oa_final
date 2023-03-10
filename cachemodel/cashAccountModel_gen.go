@@ -34,6 +34,7 @@ type (
 		FindOneByPhone(ctx context.Context, phone string) (*CashAccount, error)
 		Update(ctx context.Context, data *CashAccount) error
 		Delete(ctx context.Context, id int64) error
+		FindOneByPhoneNoCach(ctx context.Context, phone string) (*CashAccount, error)
 	}
 
 	defaultCashAccountModel struct {
@@ -97,6 +98,21 @@ func (m *defaultCashAccountModel) FindOneByPhone(ctx context.Context, phone stri
 		}
 		return resp.Id, nil
 	}, m.queryPrimary)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, errors.New("notfind")
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultCashAccountModel) FindOneByPhoneNoCach(ctx context.Context, phone string) (*CashAccount, error) {
+
+	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", cashAccountRows, m.table)
+	var resp CashAccount
+	err := m.QueryRowNoCacheCtx(ctx, &resp, query, phone)
 	switch err {
 	case nil:
 		return &resp, nil

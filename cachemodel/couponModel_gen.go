@@ -34,6 +34,7 @@ type (
 		FindOneByCouponId(ctx context.Context, couponId int64) (*Coupon, error)
 		Update(ctx context.Context, data *Coupon) error
 		Delete(ctx context.Context, id int64) error
+		FindOneByCouponIdNoCache(ctx context.Context, couponId int64) (*Coupon, error)
 	}
 
 	defaultCouponModel struct {
@@ -80,7 +81,19 @@ func (m *defaultCouponModel) Delete(ctx context.Context, id int64) error {
 	}, devCouponCouponIdKey, devCouponIdKey)
 	return err
 }
-
+func (m *defaultCouponModel) FindOneByCouponIdNoCache(ctx context.Context, couponId int64) (*Coupon, error) {
+	var resp Coupon
+	query := fmt.Sprintf("select %s from %s where `coupon_id` = ? limit 1", couponRows, m.table)
+	err := m.QueryRowNoCacheCtx(ctx, &resp, query, couponId)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, errors.New("notfind")
+	default:
+		return nil, err
+	}
+}
 func (m *defaultCouponModel) FindOne(ctx context.Context, id int64) (*Coupon, error) {
 	devCouponIdKey := fmt.Sprintf("%s%v", cacheDevCouponIdPrefix, id)
 	var resp Coupon

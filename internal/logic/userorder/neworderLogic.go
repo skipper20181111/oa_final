@@ -46,7 +46,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	l.userphone = l.ctx.Value("phone").(string)
 	useropenid := l.ctx.Value("openid").(string)
 	lid := time.Now().UnixNano() + int64(rand.Intn(1024))
-
+	UseCashOrCouponPay := false
 	if len(req.ProductTinyList) == 0 {
 		return &types.NewOrderResp{Code: "4004", Msg: "无商品，订单金额为0", Data: &types.NewOrderRp{}}, nil
 	}
@@ -66,9 +66,12 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	}
 	l.userorder = sn2order
 	orderinfo := db2orderinfo(sn2order)
+	if l.usecoupon || l.usecash {
+		UseCashOrCouponPay = true
+	}
 	money := sn2order.WexinPayAmount
 	if money == 0 {
-		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: false}}, nil
+		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: false, UseCashOrCouponPay: UseCashOrCouponPay}}, nil
 	}
 	// 此处开始生成订单
 	l.oplog("微信支付啊", l.userorder.OrderSn, "开始更新", lid)
@@ -103,7 +106,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	packagestr := *payment.Package
 	paySign := *payment.PaySign
 	signType := *payment.SignType
-	neworderrp := types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: true, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
+	neworderrp := types.NewOrderRp{OrderInfo: orderinfo, UseCashOrCouponPay: UseCashOrCouponPay, UseWechatPay: true, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 
 }

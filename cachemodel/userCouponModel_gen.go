@@ -34,6 +34,7 @@ type (
 		FindOneByPhone(ctx context.Context, phone string) (*UserCoupon, error)
 		Update(ctx context.Context, data *UserCoupon) error
 		Delete(ctx context.Context, id int64) error
+		FindOneByPhoneNoCache(ctx context.Context, phone string) (*UserCoupon, error)
 	}
 
 	defaultUserCouponModel struct {
@@ -143,4 +144,18 @@ func (m *defaultUserCouponModel) queryPrimary(ctx context.Context, conn sqlx.Sql
 
 func (m *defaultUserCouponModel) tableName() string {
 	return m.table
+}
+
+func (m *defaultUserCouponModel) FindOneByPhoneNoCache(ctx context.Context, phone string) (*UserCoupon, error) {
+	var resp UserCoupon
+	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userCouponRows, m.table)
+	err := m.QueryRowNoCacheCtx(ctx, &resp, query, phone)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
 }

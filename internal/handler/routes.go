@@ -29,6 +29,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
+				Path:    "/finishorder",
+				Handler: userorder.FinishorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/paybill",
 				Handler: userorder.PaybillHandler(serverCtx),
 			},

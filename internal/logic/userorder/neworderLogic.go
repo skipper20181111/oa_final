@@ -46,7 +46,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	l.userphone = l.ctx.Value("phone").(string)
 	useropenid := l.ctx.Value("openid").(string)
 	lid := time.Now().UnixNano() + int64(rand.Intn(1024))
-	l.oplog("付款啊", l.userphone, "开始更新", lid)
+
 	if len(req.ProductTinyList) == 0 {
 		return &types.NewOrderResp{Code: "4004", Msg: "无商品，订单金额为0", Data: &types.NewOrderRp{}}, nil
 	}
@@ -56,40 +56,8 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	}
 	productsMap := PMcache.(map[int64]*types.ProductInfo)
 	order := l.order2db(req, productsMap)
-	l.userorder = order
-	//从这里开始更新现金账户于优惠券账户
-	// 此时还有特别重要的事情，1，要更改现金账户余额，2，要更改优惠券账户，毕竟优惠券账户已经用完了。
-	if l.usecash || l.usecoupon {
-		lockmsglist := make([]*types.LockMsg, 0)
-		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "user_coupon"})
-		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "cash_account"})
-		if l.getlock(lockmsglist) {
-			if l.usecash {
-				if !l.updatecashaccount(lid) {
-					order.WexinPayAmount = order.ActualAmount
-					order.CashAccountPayAmount = 0
-					l.oplog("支付模块更新现金账户失败", l.userphone, "开始更新", lid)
-				}
-			}
-
-			if l.usecoupon {
-				if !l.updatecoupon(lid) {
-					order.WexinPayAmount = order.WexinPayAmount + order.CouponAmount
-					order.CouponAmount = 0
-					l.oplog("支付模块更新优惠券失败", l.userphone, "开始更新", lid)
-				}
-			}
-
-		} else { // 如果没有获取到锁，那么全部金额都用微信支付
-			order.WexinPayAmount = order.OriginalAmount
-			order.ActualAmount = order.OriginalAmount
-			order.CashAccountPayAmount = 0
-			order.CouponAmount = 0
-		}
-		l.closelock(lockmsglist)
-	}
-
-	//结束更新现金账户与优惠券账户
+	order.LogId = lid
+	l.oplog("付款啊", order.OrderSn, "开始更新", lid)
 	l.svcCtx.UserOrder.Insert(l.ctx, order)
 	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, order.OrderSn)
 	if sn2order == nil {
@@ -103,7 +71,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: false}}, nil
 	}
 	// 此处开始生成订单
-	l.oplog("微信支付啊", l.userphone, "开始更新", lid)
+	l.oplog("微信支付啊", l.userorder.OrderSn, "开始更新", lid)
 	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
 	// 得到prepay_id，以及调起支付所需的参数和签名
 	payment, result, err := jssvc.PrepayWithRequestPayment(l.ctx,
@@ -136,8 +104,6 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	paySign := *payment.PaySign
 	signType := *payment.SignType
 	neworderrp := types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: true, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
-	l.oplog("微信支付啊", l.userphone, "结束更新", lid)
-	l.oplog("付款啊", l.userphone, "结束更新", lid)
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 
 }
@@ -326,8 +292,8 @@ func (l *NeworderLogic) calculatemoney(couponid int64, UseCoupon, usecash bool, 
 	if UseCoupon {
 		//计算打折后的钱
 		orderinfo.UsedCouponid = -1
-		couponinfo, _ := l.svcCtx.Coupon.FindOneByCouponId(l.ctx, couponid)
-		byPhone, _ := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, phone)
+		couponinfo, _ := l.svcCtx.Coupon.FindOneByCouponIdNoCache(l.ctx, couponid)
+		byPhone, _ := l.svcCtx.UserCoupon.FindOneByPhoneNoCache(l.ctx, phone)
 		if couponinfo == nil || byPhone == nil {
 
 			orderinfo.ActualAmount = orderinfo.OriginalAmount

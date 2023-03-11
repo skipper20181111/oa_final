@@ -207,6 +207,14 @@ type (
         Msg string `json:"msg"`
         Data *NewOrderRp `json:"data"`
     }
+    FinishOrderRes{
+        OrderSn string `json:"orderSn"`
+    }
+    FinishOrderResp{
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *OrderInfo `json:"data"`
+    }
 )
 type (
     BillPayRes {

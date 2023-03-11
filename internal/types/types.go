@@ -194,6 +194,16 @@ type NewOrderResp struct {
 	Data *NewOrderRp `json:"data"`
 }
 
+type FinishOrderRes struct {
+	OrderSn string `json:"orderSn"`
+}
+
+type FinishOrderResp struct {
+	Code string     `json:"code"`
+	Msg  string     `json:"msg"`
+	Data *OrderInfo `json:"data"`
+}
+
 type BillPayRes struct {
 	Money int64 `json:"money"`
 }

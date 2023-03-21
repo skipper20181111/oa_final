@@ -47,6 +47,7 @@ type (
 		CreateOrderTime      time.Time `db:"create_order_time"`       // 订单产生时间
 		Pidlist              string    `db:"pidlist"`                 // 订单商品列表
 		OriginalAmount       int64     `db:"original_amount"`         // 原始金额
+		PointAmount          int64     `db:"point_amount"`            // 积分点数(金额)
 		ActualAmount         int64     `db:"actual_amount"`           // 实际支付金额
 		CouponAmount         int64     `db:"coupon_amount"`           // 优惠券抵扣金额
 		UsedCouponid         int64     `db:"used_couponid"`           // 使用的优惠券id 0意味着没有使用优惠券
@@ -141,14 +142,14 @@ func (m *defaultUserOrderModel) FindOneByOutTradeNo(ctx context.Context, outTrad
 }
 
 func (m *defaultUserOrderModel) Insert(ctx context.Context, data *UserOrder) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userOrderRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.OriginalAmount, data.ActualAmount, data.CouponAmount, data.UsedCouponid, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.BillType, data.BillInfo, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.LogId)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userOrderRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.OriginalAmount, data.PointAmount, data.ActualAmount, data.CouponAmount, data.UsedCouponid, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.BillType, data.BillInfo, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.LogId)
 	return ret, err
 }
 
 func (m *defaultUserOrderModel) Update(ctx context.Context, newData *UserOrder) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userOrderRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.OriginalAmount, newData.ActualAmount, newData.CouponAmount, newData.UsedCouponid, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.OriginalAmount, newData.PointAmount, newData.ActualAmount, newData.CouponAmount, newData.UsedCouponid, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.Id)
 	return err
 }
 

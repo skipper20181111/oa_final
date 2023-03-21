@@ -141,6 +141,7 @@ type (
         CreateTime string `json:"createTime"`
         PidList []*ProductTiny `json:"pidList"`
         OriginalAmount float64 `json:"originalAmount"`
+        PointAmount int64 `json:"pointAmount"`
         ActualAmount float64 `json:"actualAmount"`
         CouponAmount float64 `json:"couponAmount"`
         UsedCouponId int64 `json:"usedCouponId"`
@@ -156,6 +157,7 @@ type (
         CreateTime string `json:"createTime"`
         PidList []*ProductTiny `json:"pidList"`
         OriginalAmount float64 `json:"originalAmount"`
+        PointAmount int64 `json:"pointAmount"`
         ActualAmount float64 `json:"actualAmount"`
         CouponAmount float64 `json:"couponAmount"`
         UsedCouponId int64 `json:"usedCouponId"`
@@ -191,12 +193,13 @@ type (
         UsedCouponId int64 `json:"usedCouponId"`
         UseCouponFirst bool `json:"useCouponFirst"`
         UseCashFirst bool `json:"useCashFirst"`
+    UsePointFirst bool `json:"usePointFirst"`
     }
 
     NewOrderRp {
         OrderInfo *OrderInfo `json:"orderInfo"`
         UseWechatPay bool `json:"useWechatPay"`
-        UseCashOrCouponPay bool `json:"useCashOrCouponPay"`
+        UseAccount bool `json:"useAccount"`
         TimeStamp string `json:"timeStamp"`
         NonceStr string `json:"nonceStr"`
         Package string `json:"package"`
@@ -208,10 +211,10 @@ type (
         Msg string `json:"msg"`
         Data *NewOrderRp `json:"data"`
     }
-    FinishOrderRes{
+    FinishOrderRes {
         OrderSn string `json:"orderSn"`
     }
-    FinishOrderResp{
+    FinishOrderResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
         Data *OrderInfo `json:"data"`
@@ -245,6 +248,7 @@ type (
         UsedCouponId int64 `json:"usedCouponId"`
         UseCouponFirst bool `json:"useCouponFirst"`
         UseCashFirst bool `json:"useCashFirst"`
+        UsePointFirst bool `json:"usePointFirst"`
     }
 
     PreNewOrderRp {
@@ -321,6 +325,21 @@ type (
         Code map[string]bool `json:"code"`
     }
 )
+type (
+    GetPointRes {
+
+    }
+    GetPointRp {
+        HistoryPoints int64 `json:"historyPoints"`
+        AvailablePoints int64 `json:"availablePoints"`
+    }
+    GetPointResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetPointRp `json:"data"`
+    }
+)
+
 
 
 

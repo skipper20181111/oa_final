@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/zeromicro/go-zero/core/mathx"
 	"oa_final/internal/logic/refresh"
 	"time"
 
@@ -55,6 +56,14 @@ func (l *PreneworderLogic) order2orderInfo(req *types.PreNewOrderRes, productsMa
 		}
 		orderinfo.OriginalAmount = orderinfo.OriginalAmount + productsMap[tiny.PId].Promotion_price*float64(tiny.Amount)
 	}
+	if req.UsePointFirst {
+		phone, err := l.svcCtx.UserPoints.FindOneByPhone(l.ctx, l.userphone)
+		if phone != nil && err == nil {
+			orderinfo.PointAmount = int64(mathx.MinInt(int(phone.AvailablePoints), int(orderinfo.OriginalAmount*100)))
+			orderinfo.OriginalAmount = orderinfo.OriginalAmount - float64(orderinfo.PointAmount/100)
+		}
+	}
+
 	l.calculatemoney(req.UsedCouponId, req.UseCouponFirst, req.UseCashFirst, l.userphone, orderinfo)
 	orderinfo.FreightAmount = 40 // 后面要增加运费生成模块
 	orderinfo.PidList = req.ProductTinyList

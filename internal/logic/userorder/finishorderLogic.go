@@ -22,6 +22,7 @@ type FinishorderLogic struct {
 	svcCtx      *svc.ServiceContext
 	usecash     bool
 	usecoupon   bool
+	usepoint    bool
 	cashaccount *cachemodel.CashAccount
 	userorder   *cachemodel.UserOrder
 }
@@ -37,6 +38,8 @@ func NewFinishorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Finis
 func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.FinishOrderResp, err error) {
 	l.usecoupon = false
 	l.usecash = false
+	l.usepoint = false
+	userphone := l.ctx.Value("phone").(string)
 
 	//从这里开始更新现金账户于优惠券账户
 	// 此时还有特别重要的事情，1，要更改现金账户余额，2，要更改优惠券账户，毕竟优惠券账户已经用完了。
@@ -48,11 +51,18 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 	if order.UsedCouponid != -1 {
 		l.usecoupon = true
 	}
+	if order.PointAmount > 0 {
+		cache, _ := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, userphone)
+		if cache != nil {
+			cache.AvailablePoints = cache.AvailablePoints - order.PointAmount
+			l.svcCtx.UserPoints.Update(l.ctx, cache)
+		}
+	}
 	lid := order.LogId
 	if l.usecash || l.usecoupon {
 		lockmsglist := make([]*types.LockMsg, 0)
-		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "user_coupon"})
-		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "cash_account"})
+		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: userphone, Field: "user_coupon"})
+		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: userphone, Field: "cash_account"})
 		if l.getlock(lockmsglist) {
 			if l.usecash {
 				if !l.updatecashaccount(lid) {
@@ -70,7 +80,7 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 		l.closelock(lockmsglist)
 	}
 
-	return
+	return &types.FinishOrderResp{Code: "10000", Msg: "finished", Data: db2orderinfo(order)}, nil
 }
 func (l *FinishorderLogic) oplog(tablename, event, describe string, lid int64) error {
 	aol := &cachemodel.AccountOperateLog{Phone: l.ctx.Value("phone").(string), TableName: tablename, Event: event, Describe: describe, Timestamp: time.Now(), Lid: lid}

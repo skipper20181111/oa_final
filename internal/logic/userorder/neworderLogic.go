@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
+	"github.com/zeromicro/go-zero/core/mathx"
 	"github.com/zeromicro/go-zero/rest/httpc"
 	"io/ioutil"
 	"log"
@@ -31,6 +32,7 @@ type NeworderLogic struct {
 	userorder   *cachemodel.UserOrder
 	usecash     bool
 	usecoupon   bool
+	usepoint    bool
 	userphone   string
 }
 
@@ -46,7 +48,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	l.userphone = l.ctx.Value("phone").(string)
 	useropenid := l.ctx.Value("openid").(string)
 	lid := time.Now().UnixNano() + int64(rand.Intn(1024))
-	UseCashOrCouponPay := false
+	UseAccount := false
 	if len(req.ProductTinyList) == 0 {
 		return &types.NewOrderResp{Code: "4004", Msg: "无商品，订单金额为0", Data: &types.NewOrderRp{}}, nil
 	}
@@ -66,12 +68,12 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	}
 	l.userorder = sn2order
 	orderinfo := db2orderinfo(sn2order)
-	if l.usecoupon || l.usecash {
-		UseCashOrCouponPay = true
+	if l.usecoupon || l.usecash || l.usepoint {
+		UseAccount = true
 	}
 	money := sn2order.WexinPayAmount
 	if money == 0 {
-		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: false, UseCashOrCouponPay: UseCashOrCouponPay}}, nil
+		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: false, UseAccount: UseAccount}}, nil
 	}
 	// 此处开始生成订单
 	l.oplog("微信支付啊", l.userorder.OrderSn, "开始更新", lid)
@@ -106,7 +108,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	packagestr := *payment.Package
 	paySign := *payment.PaySign
 	signType := *payment.SignType
-	neworderrp := types.NewOrderRp{OrderInfo: orderinfo, UseCashOrCouponPay: UseCashOrCouponPay, UseWechatPay: true, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
+	neworderrp := types.NewOrderRp{OrderInfo: orderinfo, UseAccount: UseAccount, UseWechatPay: true, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 
 }
@@ -204,6 +206,7 @@ func (l *NeworderLogic) closelock(lockmsglist []*types.LockMsg) bool {
 func db2orderinfo(order *cachemodel.UserOrder) *types.OrderInfo {
 	orderinfo := &types.OrderInfo{}
 	orderinfo.Phone = order.Phone
+	orderinfo.PointAmount = order.PointAmount
 	orderinfo.OrderSn = order.OrderSn
 	orderinfo.OutTradeNo = order.OutTradeNo
 	orderinfo.TransactionId = order.TransactionId
@@ -247,6 +250,14 @@ func (l *NeworderLogic) order2db(req *types.NewOrderRes, productsMap map[int64]*
 	order.Pidlist = string(marshal)
 	for _, tiny := range req.ProductTinyList {
 		order.OriginalAmount = order.OriginalAmount + int64(productsMap[tiny.PId].Promotion_price*100*float64(tiny.Amount))
+	}
+	if req.UsePointFirst {
+		cache, _ := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, l.userphone)
+		if cache != nil && cache.AvailablePoints > 0 {
+			l.usepoint = true
+			order.PointAmount = int64(mathx.MinInt(int(order.OriginalAmount), int(cache.AvailablePoints)))
+			order.OriginalAmount = order.OriginalAmount - order.PointAmount
+		}
 	}
 	l.calculatemoney(req.UsedCouponId, req.UseCouponFirst, req.UseCashFirst, l.userphone, order)
 	order.FreightAmount = 4000

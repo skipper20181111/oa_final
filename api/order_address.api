@@ -101,3 +101,16 @@ service oa-api {
 	@handler tellmeso
 	post /tellmeso (TellMeSoRes) returns (TellMeSoResp)
 }
+
+@server(
+	group: associator
+	prefix : associator
+	jwt : Auth
+	//    middleware : Limit_count
+	
+)
+service oa-api {
+	@doc "获取点数"
+	@handler getpoint
+	post /getpoint (GetPointRes) returns (GetPointResp)
+}

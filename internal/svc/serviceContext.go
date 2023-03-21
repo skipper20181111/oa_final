@@ -36,6 +36,7 @@ type ServiceContext struct {
 	Handler           *notify.Handler
 	Coupon            cachemodel.CouponModel
 	UserCoupon        cachemodel.UserCouponModel
+	UserPoints        cachemodel.UserPointsModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -87,5 +88,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		CashAccount:       cachemodel.NewCashAccountModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		UserCoupon:        cachemodel.NewUserCouponModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		CashLog:           cachemodel.NewCashLogModel(sqlx.NewMysql(c.DB.DataSource)),
+		UserPoints:        cachemodel.NewUserPointsModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 	}
 }

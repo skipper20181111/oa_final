@@ -123,6 +123,7 @@ type PreOrderInfo struct {
 	CreateTime           string         `json:"createTime"`
 	PidList              []*ProductTiny `json:"pidList"`
 	OriginalAmount       float64        `json:"originalAmount"`
+	PointAmount          int64          `json:"pointAmount"`
 	ActualAmount         float64        `json:"actualAmount"`
 	CouponAmount         float64        `json:"couponAmount"`
 	UsedCouponId         int64          `json:"usedCouponId"`
@@ -139,6 +140,7 @@ type OrderInfo struct {
 	CreateTime           string         `json:"createTime"`
 	PidList              []*ProductTiny `json:"pidList"`
 	OriginalAmount       float64        `json:"originalAmount"`
+	PointAmount          int64          `json:"pointAmount"`
 	ActualAmount         float64        `json:"actualAmount"`
 	CouponAmount         float64        `json:"couponAmount"`
 	UsedCouponId         int64          `json:"usedCouponId"`
@@ -176,17 +178,18 @@ type NewOrderRes struct {
 	UsedCouponId    int64          `json:"usedCouponId"`
 	UseCouponFirst  bool           `json:"useCouponFirst"`
 	UseCashFirst    bool           `json:"useCashFirst"`
+	UsePointFirst   bool           `json:"usePointFirst"`
 }
 
 type NewOrderRp struct {
-	OrderInfo          *OrderInfo `json:"orderInfo"`
-	UseWechatPay       bool       `json:"useWechatPay"`
-	UseCashOrCouponPay bool       `json:"useCashOrCouponPay"`
-	TimeStamp          string     `json:"timeStamp"`
-	NonceStr           string     `json:"nonceStr"`
-	Package            string     `json:"package"`
-	SignType           string     `json:"signType"`
-	PaySign            string     `json:"paySign"`
+	OrderInfo    *OrderInfo `json:"orderInfo"`
+	UseWechatPay bool       `json:"useWechatPay"`
+	UseAccount   bool       `json:"useAccount"`
+	TimeStamp    string     `json:"timeStamp"`
+	NonceStr     string     `json:"nonceStr"`
+	Package      string     `json:"package"`
+	SignType     string     `json:"signType"`
+	PaySign      string     `json:"paySign"`
 }
 
 type NewOrderResp struct {
@@ -230,6 +233,7 @@ type PreNewOrderRes struct {
 	UsedCouponId    int64          `json:"usedCouponId"`
 	UseCouponFirst  bool           `json:"useCouponFirst"`
 	UseCashFirst    bool           `json:"useCashFirst"`
+	UsePointFirst   bool           `json:"usePointFirst"`
 }
 
 type PreNewOrderRp struct {
@@ -310,4 +314,18 @@ type GetLockRes struct {
 
 type GetLockResp struct {
 	Code map[string]bool `json:"code"`
+}
+
+type GetPointRes struct {
+}
+
+type GetPointRp struct {
+	HistoryPoints   int64 `json:"historyPoints"`
+	AvailablePoints int64 `json:"availablePoints"`
+}
+
+type GetPointResp struct {
+	Code string      `json:"code"`
+	Msg  string      `json:"msg"`
+	Data *GetPointRp `json:"data"`
 }

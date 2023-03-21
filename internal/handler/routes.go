@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	address "oa_final/internal/handler/address"
+	associator "oa_final/internal/handler/associator"
 	payrecall "oa_final/internal/handler/payrecall"
 	refresh "oa_final/internal/handler/refresh"
 	shoppingcart "oa_final/internal/handler/shoppingcart"
@@ -116,5 +117,17 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/payrecall"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/getpoint",
+				Handler: associator.GetpointHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/associator"),
 	)
 }

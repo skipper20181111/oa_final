@@ -33,10 +33,15 @@ func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payment
 	lid := time.Now().UnixNano() - int64(rand.Intn(1024))
 	l.oplog("user_order", *transaction.OutTradeNo, "开始更新", lid)
 	if *transaction.TradeState == "SUCCESS" {
-
 		no, _ := l.svcCtx.UserOrder.FindOneByOutTradeNo(l.ctx, *transaction.OutTradeNo)
 		l.oplog("付款啊", no.OrderSn, "结束更新", no.LogId)
 		if no != nil {
+			cache, _ := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, no.Phone)
+			if cache != nil {
+				cache.HistoryPoints = cache.HistoryPoints + no.WexinPayAmount
+				cache.AvailablePoints = cache.AvailablePoints + no.WexinPayAmount
+				l.svcCtx.UserPoints.Update(l.ctx, cache)
+			}
 			if no.OrderStatus == 0 {
 				no.OrderStatus = 1
 				no.TransactionId = *transaction.TransactionId

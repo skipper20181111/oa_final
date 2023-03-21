@@ -40,7 +40,7 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 	l.usecash = false
 	l.usepoint = false
 	userphone := l.ctx.Value("phone").(string)
-
+	userpoint := &cachemodel.UserPoints{}
 	//从这里开始更新现金账户于优惠券账户
 	// 此时还有特别重要的事情，1，要更改现金账户余额，2，要更改优惠券账户，毕竟优惠券账户已经用完了。
 	order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
@@ -52,19 +52,22 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 		l.usecoupon = true
 	}
 	if order.PointAmount > 0 {
-		cache, _ := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, userphone)
-		if cache != nil {
-			cache.AvailablePoints = cache.AvailablePoints - order.PointAmount
-			l.svcCtx.UserPoints.Update(l.ctx, cache)
+		l.usepoint = true
+		userpoint, _ = l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, userphone)
+		if userpoint != nil {
+			userpoint.AvailablePoints = userpoint.AvailablePoints - order.PointAmount
 		}
 	}
 	lid := order.LogId
-	if l.usecash || l.usecoupon {
+	if l.usecash || l.usecoupon || l.usepoint {
 		lockmsglist := make([]*types.LockMsg, 0)
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: userphone, Field: "user_coupon"})
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: userphone, Field: "cash_account"})
 		if l.getlock(lockmsglist) {
 			if l.usecash {
+				userpoint.HistoryPoints = userpoint.HistoryPoints + l.userorder.CashAccountPayAmount/100
+				userpoint.AvailablePoints = userpoint.AvailablePoints + l.userorder.CashAccountPayAmount/100
+				l.svcCtx.UserPoints.Update(l.ctx, userpoint)
 				if !l.updatecashaccount(lid) {
 					l.oplog("支付模块更新现金账户失败", order.OrderSn, "开始更新", lid)
 				}

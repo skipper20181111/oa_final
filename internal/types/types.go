@@ -334,12 +334,26 @@ type CashRechargeRes struct {
 	Rpid int64 `json:"rpid"`
 }
 
+type RechargeOrderInfo struct {
+	Phone           string `json:"phone"`
+	OrderSn         string `json:"orderSn"`
+	OutTradeSn      string `json:"outTradeSn"`
+	TransactionId   string `json:"transactionId"`
+	CreateOrderTime string `json:"createOrderTime"`
+	Rpid            int64  `json:"rpid"`
+	Amount          int64  `json:"amount"`
+	GiftAmount      int64  `json:"giftAmount"`
+	WexinPayAmount  int64  `json:"wexinPayAmount"`
+	PaymentTime     string `json:"paymentTime"`
+}
+
 type CashRechargeRp struct {
-	TimeStamp string `json:"timeStamp"`
-	NonceStr  string `json:"nonceStr"`
-	Package   string `json:"package"`
-	SignType  string `json:"signType"`
-	PaySign   string `json:"paySign"`
+	RechargeOrderInfo *RechargeOrderInfo `json:"rechargeOrderInfo"`
+	TimeStamp         string             `json:"timeStamp"`
+	NonceStr          string             `json:"nonceStr"`
+	Package           string             `json:"package"`
+	SignType          string             `json:"signType"`
+	PaySign           string             `json:"paySign"`
 }
 
 type CashRechargeResp struct {

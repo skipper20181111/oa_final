@@ -42,6 +42,7 @@ type ServiceContext struct {
 	UserCoupon        cachemodel.UserCouponModel
 	UserPoints        cachemodel.UserPointsModel
 	RechargeProduct   cachemodel.RechargeProductModel
+	RechargeOrder     cachemodel.RechargeOrderModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -95,5 +96,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		CashLog:           cachemodel.NewCashLogModel(sqlx.NewMysql(c.DB.DataSource)),
 		UserPoints:        cachemodel.NewUserPointsModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		RechargeProduct:   cachemodel.NewRechargeProductModel(sqlx.NewMysql(c.DB.DataSource)),
+		RechargeOrder:     cachemodel.NewRechargeOrderModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

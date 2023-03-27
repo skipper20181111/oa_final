@@ -17,8 +17,6 @@ type RefreshPLLogic struct {
 	svcCtx *svc.ServiceContext
 }
 
-const ProductsMap = "ProductsMap"
-
 func NewRefreshPLLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshPLLogic {
 	return &RefreshPLLogic{
 		Logger: logx.WithContext(ctx),
@@ -37,7 +35,15 @@ func (l *RefreshPLLogic) RefreshPL() (resp *types.RefreshResp, err error) {
 		info := product2info(product)
 		productsMap[product.Pid] = &info
 	}
-	l.svcCtx.LocalCache.Set(ProductsMap, productsMap)
+	l.svcCtx.LocalCache.Set(svc.ProductsMap, productsMap)
+	all, _ := l.svcCtx.RechargeProduct.FindAll(l.ctx)
+	rcpmap := make(map[int64]*cachemodel.RechargeProduct)
+	if all != nil && len(all) >= 1 {
+		for _, product := range all {
+			rcpmap[product.Rpid] = product
+		}
+	}
+	l.svcCtx.LocalCache.Set(svc.RechargeProductKey, rcpmap)
 	return &types.RefreshResp{Code: "10000", Msg: "刷新成功"}, err
 }
 func product2info(product *cachemodel.Product) (info types.ProductInfo) {

@@ -329,3 +329,11 @@ type GetPointResp struct {
 	Msg  string      `json:"msg"`
 	Data *GetPointRp `json:"data"`
 }
+
+type CashRechargeRes struct {
+}
+
+type CashRechargeResp struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
+}

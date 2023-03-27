@@ -193,7 +193,7 @@ type (
         UsedCouponId int64 `json:"usedCouponId"`
         UseCouponFirst bool `json:"useCouponFirst"`
         UseCashFirst bool `json:"useCashFirst"`
-    UsePointFirst bool `json:"usePointFirst"`
+        UsePointFirst bool `json:"usePointFirst"`
     }
 
     NewOrderRp {
@@ -339,6 +339,16 @@ type (
         Data *GetPointRp `json:"data"`
     }
 )
+type (
+    CashRechargeRes {
+
+    }
+    CashRechargeResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+    }
+)
+
 
 
 

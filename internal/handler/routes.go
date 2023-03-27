@@ -30,6 +30,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
+				Path:    "/cashrecharge",
+				Handler: userorder.CashrechargeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/finishorder",
 				Handler: userorder.FinishorderHandler(serverCtx),
 			},
@@ -114,6 +119,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodPost,
 				Path:    "/tellmeso",
 				Handler: payrecall.TellmesoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/coupontellmeso",
+				Handler: payrecall.CoupontellmesoHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/payrecall"),

@@ -15,7 +15,6 @@ import (
 	"math/rand"
 	"net/http"
 	"oa_final/cachemodel"
-	"oa_final/internal/logic/refresh"
 	"time"
 
 	"oa_final/internal/svc"
@@ -52,7 +51,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	if len(req.ProductTinyList) == 0 {
 		return &types.NewOrderResp{Code: "4004", Msg: "无商品，订单金额为0", Data: &types.NewOrderRp{}}, nil
 	}
-	PMcache, ok := l.svcCtx.LocalCache.Get(refresh.ProductsMap)
+	PMcache, ok := l.svcCtx.LocalCache.Get(svc.ProductsMap)
 	if !ok {
 		return &types.NewOrderResp{Code: "4004", Msg: "服务器查找商品列表失败"}, nil
 	}

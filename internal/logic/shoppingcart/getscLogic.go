@@ -3,8 +3,6 @@ package shoppingcart
 import (
 	"context"
 	"encoding/json"
-	"oa_final/internal/logic/refresh"
-
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 
@@ -33,7 +31,7 @@ func (l *GetscLogic) Getsc(req *types.GetShoppingCartRes) (resp *types.GetShoppi
 	}
 	tinyproductlist := make([]types.ProductTiny, 0)
 	json.Unmarshal([]byte(scinfo.ShoppingCart), &tinyproductlist)
-	PMcache, ok := l.svcCtx.LocalCache.Get(refresh.ProductsMap)
+	PMcache, ok := l.svcCtx.LocalCache.Get(svc.ProductsMap)
 	if !ok {
 		return &types.GetShoppingCartResp{Code: "4004", Msg: "此地无缓存"}, nil
 	}

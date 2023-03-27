@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/zeromicro/go-zero/core/mathx"
-	"oa_final/internal/logic/refresh"
 	"time"
 
 	"oa_final/internal/svc"
@@ -35,7 +34,7 @@ func (l *PreneworderLogic) Preneworder(req *types.PreNewOrderRes) (resp *types.P
 	if len(req.ProductTinyList) == 0 {
 		return &types.PreNewOrderResp{Code: "10000", Msg: "商品列表为空", Data: &types.PreNewOrderRp{PreOrderInfo: nil}}, nil
 	}
-	PMcache, ok := l.svcCtx.LocalCache.Get(refresh.ProductsMap)
+	PMcache, ok := l.svcCtx.LocalCache.Get(svc.ProductsMap)
 	if !ok {
 		return &types.PreNewOrderResp{Code: "4004", Msg: "服务器查找商品列表失败"}, nil
 	}

@@ -20,6 +20,10 @@ import (
 )
 
 const localCacheExpire = time.Duration(time.Second * 800)
+const (
+	RechargeProductKey = "RechargeProductKey"
+	ProductsMap        = "ProductsMap"
+)
 
 type ServiceContext struct {
 	Config            config.Config
@@ -37,6 +41,7 @@ type ServiceContext struct {
 	Coupon            cachemodel.CouponModel
 	UserCoupon        cachemodel.UserCouponModel
 	UserPoints        cachemodel.UserPointsModel
+	RechargeProduct   cachemodel.RechargeProductModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -89,5 +94,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		UserCoupon:        cachemodel.NewUserCouponModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		CashLog:           cachemodel.NewCashLogModel(sqlx.NewMysql(c.DB.DataSource)),
 		UserPoints:        cachemodel.NewUserPointsModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
+		RechargeProduct:   cachemodel.NewRechargeProductModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

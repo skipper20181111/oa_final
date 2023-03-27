@@ -24,7 +24,6 @@ func NewCashrechargeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Cash
 }
 
 func (l *CashrechargeLogic) Cashrecharge(req *types.CashRechargeRes) (resp *types.CashRechargeResp, err error) {
-	// todo: add your logic here and delete this line
 
 	return
 }

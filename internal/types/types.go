@@ -331,9 +331,19 @@ type GetPointResp struct {
 }
 
 type CashRechargeRes struct {
+	Rpid int64 `json:"rpid"`
+}
+
+type CashRechargeRp struct {
+	TimeStamp string `json:"timeStamp"`
+	NonceStr  string `json:"nonceStr"`
+	Package   string `json:"package"`
+	SignType  string `json:"signType"`
+	PaySign   string `json:"paySign"`
 }
 
 type CashRechargeResp struct {
-	Code string `json:"code"`
-	Msg  string `json:"msg"`
+	Code string          `json:"code"`
+	Msg  string          `json:"msg"`
+	Data *CashRechargeRp `json:"data"`
 }

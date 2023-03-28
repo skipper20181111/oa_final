@@ -122,3 +122,24 @@ service oa-api {
 	@handler getpoint
 	post /getpoint (GetPointRes) returns (GetPointResp)
 }
+
+@server(
+	group: invoice
+	prefix : invoice
+	jwt : Auth
+	//    middleware : Limit_count
+	
+)
+service oa-api {
+	@doc "申请开发票"
+	@handler applyinvoice
+	post /applyinvoice (ApplyInvoiceRes) returns (ApplyInvoiceResp)
+	
+	@doc "获取发票信息"
+	@handler getinvoice
+	post /getinvoice (GetInvoiceRes) returns (GetInvoiceResp)
+	
+	@doc "获取发票信息"
+	@handler getallinvoice
+	post /getallinvoice (GetAllInvoiceRes) returns (GetAllInvoiceResp)
+}

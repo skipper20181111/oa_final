@@ -343,17 +343,17 @@ type (
     CashRechargeRes {
         Rpid int64 `json:"rpid"`
     }
-    RechargeOrderInfo{
-    Phone string `json:"phone"`
-    OrderSn string `json:"orderSn"`
-    OutTradeSn string `json:"outTradeSn"`
-    TransactionId string `json:"transactionId"`
-    CreateOrderTime string `json:"createOrderTime"`
-    Rpid int64 `json:"rpid"`
-    Amount int64 `json:"amount"`
-    GiftAmount int64 `json:"giftAmount"`
-    WexinPayAmount int64 `json:"wexinPayAmount"`
-    PaymentTime string `json:"paymentTime"`
+    RechargeOrderInfo {
+        Phone string `json:"phone"`
+        OrderSn string `json:"orderSn"`
+        OutTradeSn string `json:"outTradeSn"`
+        TransactionId string `json:"transactionId"`
+        CreateOrderTime string `json:"createOrderTime"`
+        Rpid int64 `json:"rpid"`
+        Amount int64 `json:"amount"`
+        GiftAmount int64 `json:"giftAmount"`
+        WexinPayAmount int64 `json:"wexinPayAmount"`
+        PaymentTime string `json:"paymentTime"`
     }
     CashRechargeRp {
         RechargeOrderInfo *RechargeOrderInfo `json:"rechargeOrderInfo"`
@@ -369,6 +369,63 @@ type (
         Data *CashRechargeRp `json:"data"`
     }
 )
+type (
+    ApplyInvoiceRes {
+        OrderType int64 `json:"orderType"`
+        // 订单类型 0代表order 1代表充值
+        OrderSn string `json:"orderSn"`
+        InvoiceType int64 `json:"invoiceType"`
+        // 0代表普票，1代表专票
+        InvoiceTitle string `json:"invoiceTitle"`
+        // 发票抬头
+        ComponyAddress string `json:"componyAddress"`
+        ComponyPhone string `json:"componyPhone"`
+        TaxId string `json:"taxId"`
+        OpeningBank string `json:"openingBank"`
+        BankAccount string `json:"bankAccount"`
+    }
+    InvoiceInfo {
+        Phone string `json:"phone"`
+        OrderType int64 `json:"orderType"`
+        // 订单类型 0代表order 1代表充值
+        OrderSn string `json:"orderSn"`
+        InvoiceType int64 `json:"invoiceType"`
+        // 0代表普票，1代表专票
+        InvoiceTitle string `json:"invoiceTitle"`
+        // 发票抬头
+        ComponyAddress string `json:"componyAddress"`
+        ComponyPhone string `json:"componyPhone"`
+        TaxId string `json:"taxId"`
+        OpeningBank string `json:"openingBank"`
+        BankAccount string `json:"bankAccount"`
+        ApplyTime string `json:"applyTime"`
+        Status int64 `json:"status"`
+        FinishTime string `json:"finishTime"`
+    }
+    ApplyInvoiceResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *InvoiceInfo `json:"data"`
+    }
+    GetInvoiceRes{
+        OrderSn string `json:"orderSn"`
+    }
+    GetInvoiceResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *InvoiceInfo `json:"data"`
+    }
+    GetAllInvoiceRes{
+
+    }
+    GetAllInvoiceResp{
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data []*InvoiceInfo `json:"data"`
+    }
+
+)
+
 
 
 

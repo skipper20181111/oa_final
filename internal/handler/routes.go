@@ -6,6 +6,7 @@ import (
 
 	address "oa_final/internal/handler/address"
 	associator "oa_final/internal/handler/associator"
+	invoice "oa_final/internal/handler/invoice"
 	payrecall "oa_final/internal/handler/payrecall"
 	refresh "oa_final/internal/handler/refresh"
 	shoppingcart "oa_final/internal/handler/shoppingcart"
@@ -139,5 +140,27 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/associator"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/applyinvoice",
+				Handler: invoice.ApplyinvoiceHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getinvoice",
+				Handler: invoice.GetinvoiceHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getallinvoice",
+				Handler: invoice.GetallinvoiceHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/invoice"),
 	)
 }

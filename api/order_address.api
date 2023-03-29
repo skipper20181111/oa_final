@@ -93,6 +93,9 @@ service oa-api {
 	@doc "刷新购物车商品列表(带商品数量)"
 	@handler refreshPL
 	get /refreshPL returns (RefreshResp)
+	@doc "探针"
+	@handler probe
+	get /probe () returns ()
 }
 
 @server(

@@ -110,6 +110,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/refreshPL",
 				Handler: refresh.RefreshPLHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/probe",
+				Handler: refresh.ProbeHandler(serverCtx),
+			},
 		},
 		rest.WithPrefix("/refresh"),
 	)

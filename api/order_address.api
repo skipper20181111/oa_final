@@ -18,7 +18,7 @@ import "alltype.api"
 service oa-api {
 	@doc "结算接口"
 	@handler preneworder
-	post /preneworder (PreNewOrderRes) returns (PreNewOrderResp)
+	post /preneworder (NewOrderRes) returns (PreNewOrderResp)
 	
 	@doc "新订单"
 	@handler neworder
@@ -31,6 +31,10 @@ service oa-api {
 	@doc "完成订单"
 	@handler finishorder
 	post /finishorder (FinishOrderRes) returns (FinishOrderResp)
+	
+	@doc "预支付"
+	@handler prepay
+	post /prepay (FinishOrderRes) returns (PrePayResp)
 	
 	@doc "自定义支付"
 	@handler paybill

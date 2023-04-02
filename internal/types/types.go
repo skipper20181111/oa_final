@@ -176,6 +176,7 @@ type NewOrderRes struct {
 	Address         *AddressInfo   `json:"address"`
 	OrderNote       string         `json:"orderNote"` // 订单备注
 	UsedCouponId    int64          `json:"usedCouponId"`
+	UsedCouponUUID  string         `json:"usedCoupUUID"`
 	UseCouponFirst  bool           `json:"useCouponFirst"`
 	UseCashFirst    bool           `json:"useCashFirst"`
 	UsePointFirst   bool           `json:"usePointFirst"`
@@ -206,6 +207,12 @@ type FinishOrderResp struct {
 	Code string     `json:"code"`
 	Msg  string     `json:"msg"`
 	Data *OrderInfo `json:"data"`
+}
+
+type PrePayResp struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
+	Data bool   `json:"data"`
 }
 
 type BillPayRes struct {
@@ -413,4 +420,9 @@ type GetAllInvoiceResp struct {
 	Code string         `json:"code"`
 	Msg  string         `json:"msg"`
 	Data []*InvoiceInfo `json:"data"`
+}
+
+type CouponStoreInfo struct {
+	CouponId     int64  `json:"couponId"`
+	DisabledTime string `json:"disabledTime"`
 }

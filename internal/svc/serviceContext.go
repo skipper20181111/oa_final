@@ -16,6 +16,7 @@ import (
 	"log"
 	"oa_final/cachemodel"
 	"oa_final/internal/config"
+	"oa_final/withcachemodel"
 	"time"
 )
 
@@ -35,6 +36,7 @@ type ServiceContext struct {
 	AccountOperateLog cachemodel.AccountOperateLogModel
 	CashAccount       cachemodel.CashAccountModel
 	CashLog           cachemodel.CashLogModel
+	UserOrdercache    withcachemodel.UserOrderModel
 	Client            *core.Client
 	MchPrivateKey     *rsa.PrivateKey
 	Handler           *notify.Handler
@@ -94,6 +96,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Coupon:            cachemodel.NewCouponModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		CashAccount:       cachemodel.NewCashAccountModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		UserCoupon:        cachemodel.NewUserCouponModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
+		UserOrdercache:    withcachemodel.NewUserOrderModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		CashLog:           cachemodel.NewCashLogModel(sqlx.NewMysql(c.DB.DataSource)),
 		UserPoints:        cachemodel.NewUserPointsModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
 		RechargeProduct:   cachemodel.NewRechargeProductModel(sqlx.NewMysql(c.DB.DataSource)),

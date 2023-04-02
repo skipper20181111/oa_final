@@ -9,16 +9,16 @@ import (
 	"oa_final/internal/types"
 )
 
-func PreneworderHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func PrepayHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.NewOrderRes
+		var req types.FinishOrderRes
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.Error(w, err)
 			return
 		}
 
-		l := userorder.NewPreneworderLogic(r.Context(), svcCtx)
-		resp, err := l.Preneworder(&req)
+		l := userorder.NewPrepayLogic(r.Context(), svcCtx)
+		resp, err := l.Prepay(&req)
 		if err != nil {
 			httpx.Error(w, err)
 		} else {

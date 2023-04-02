@@ -49,7 +49,7 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 			return &types.GetOrderResp{Code: "4004", Msg: err.Error()}, nil
 		}
 		if *no2payment.TradeState != "SUCCESS" {
-			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: db2orderinfo(sn2order)}}, nil
+			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order)}}, nil
 		} else {
 			sn2order.OrderStatus = 1
 			sn2order.ModifyTime = time.Now()
@@ -60,7 +60,7 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 				fmt.Println(err.Error())
 				return &types.GetOrderResp{Code: "10000", Msg: "查询失败", Data: &types.GetOrderRp{OrderInfo: &types.OrderInfo{}}}, nil
 			}
-			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: db2orderinfo(sn)}}, nil
+			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn)}}, nil
 		}
 	}
 	if sn2order.OrderStatus == 6 { // 说明已经发起了退款，具体有没有成功呢？
@@ -88,10 +88,10 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 			if err != nil {
 				fmt.Println(err.Error())
 			}
-			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: db2orderinfo(sn)}}, nil
+			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn)}}, nil
 
 		}
 	}
-	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: db2orderinfo(sn2order)}}, nil
+	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order)}}, nil
 
 }

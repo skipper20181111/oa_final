@@ -55,5 +55,5 @@ func (l *ChangeorderaddressLogic) Changeorderaddress(req *types.ChangeOrdeRaddre
 			Msg:  "数据库失效",
 		}, nil
 	}
-	return &types.ChangeOrdeRaddressResp{Code: "10000", Msg: "修改成功", Data: &types.ChangeOrdeRaddressRp{OrderInfo: db2orderinfo(sn)}}, nil
+	return &types.ChangeOrdeRaddressResp{Code: "10000", Msg: "修改成功", Data: &types.ChangeOrdeRaddressRp{OrderInfo: OrderDb2info(sn)}}, nil
 }

@@ -31,7 +31,7 @@ func (l *GetallorderLogic) Getallorder(req *types.GetAllOrderRes) (resp *types.G
 	}
 	infos := make([]*types.OrderInfo, 0)
 	for _, order := range allorder {
-		orderinfo := db2orderinfo(order)
+		orderinfo := OrderDb2info(order)
 		infos = append(infos, orderinfo)
 	}
 

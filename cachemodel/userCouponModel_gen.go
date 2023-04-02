@@ -5,7 +5,6 @@ package cachemodel
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -43,9 +42,9 @@ type (
 	}
 
 	UserCoupon struct {
-		Id           int64  `db:"id"`
-		CouponIdList string `db:"coupon_id_list"` // 优惠券列表[id:拥有数量],后领取的靠前排列
-		Phone        string `db:"phone"`          // 领取人账号
+		Id          int64  `db:"id"`
+		CouponIdMap string `db:"coupon_id_map"` // 优惠券字典{cuuid:{cid:1,disabledtime:}},后领取的靠前排列
+		Phone       string `db:"phone"`         // 领取人账号
 	}
 )
 
@@ -55,7 +54,19 @@ func newUserCouponModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultUserCoupon
 		table:      "`user_coupon`",
 	}
 }
-
+func (m *defaultUserCouponModel) FindOneByPhoneNoCache(ctx context.Context, phone string) (*UserCoupon, error) {
+	var resp UserCoupon
+	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userCouponRows, m.table)
+	err := m.QueryRowNoCacheCtx(ctx, &resp, query, phone)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultUserCouponModel) Delete(ctx context.Context, id int64) error {
 	data, err := m.FindOne(ctx, id)
 	if err != nil {
@@ -82,7 +93,7 @@ func (m *defaultUserCouponModel) FindOne(ctx context.Context, id int64) (*UserCo
 	case nil:
 		return &resp, nil
 	case sqlc.ErrNotFound:
-		return nil, errors.New("notfind")
+		return nil, ErrNotFound
 	default:
 		return nil, err
 	}
@@ -113,7 +124,7 @@ func (m *defaultUserCouponModel) Insert(ctx context.Context, data *UserCoupon) (
 	devUserCouponPhoneKey := fmt.Sprintf("%s%v", cacheDevUserCouponPhonePrefix, data.Phone)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("insert into %s (%s) values (?, ?)", m.table, userCouponRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.CouponIdList, data.Phone)
+		return conn.ExecCtx(ctx, query, data.CouponIdMap, data.Phone)
 	}, devUserCouponIdKey, devUserCouponPhoneKey)
 	return ret, err
 }
@@ -128,7 +139,7 @@ func (m *defaultUserCouponModel) Update(ctx context.Context, newData *UserCoupon
 	devUserCouponPhoneKey := fmt.Sprintf("%s%v", cacheDevUserCouponPhonePrefix, data.Phone)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userCouponRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.CouponIdList, newData.Phone, newData.Id)
+		return conn.ExecCtx(ctx, query, newData.CouponIdMap, newData.Phone, newData.Id)
 	}, devUserCouponIdKey, devUserCouponPhoneKey)
 	return err
 }
@@ -144,18 +155,4 @@ func (m *defaultUserCouponModel) queryPrimary(ctx context.Context, conn sqlx.Sql
 
 func (m *defaultUserCouponModel) tableName() string {
 	return m.table
-}
-
-func (m *defaultUserCouponModel) FindOneByPhoneNoCache(ctx context.Context, phone string) (*UserCoupon, error) {
-	var resp UserCoupon
-	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userCouponRows, m.table)
-	err := m.QueryRowNoCacheCtx(ctx, &resp, query, phone)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
 }

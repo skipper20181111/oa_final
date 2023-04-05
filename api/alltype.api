@@ -436,6 +436,18 @@ type CouponStoreInfo {
     DisabledTime string `json:"disabledTime"`
 }
 
+type (
+    StarMallOrderRes {
+        Pid int64 `json:"pid"`
+        Address *AddressInfo `json:"address"`
+        OrderNote string `json:"orderNote"` // 订单备注
+    }
+    StarMallOrderResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *OrderInfo `json:"data"`
+    }
+)
 
 
 

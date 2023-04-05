@@ -25,6 +25,7 @@ const (
 	RechargeProductKey = "RechargeProductKey"
 	ProductsMap        = "ProductsMap"
 	ProductsInfoMap    = "ProductsInfoMap"
+	StarMallMap        = "StarMallMap"
 )
 
 type ServiceContext struct {
@@ -47,6 +48,7 @@ type ServiceContext struct {
 	RechargeProduct   cachemodel.RechargeProductModel
 	RechargeOrder     cachemodel.RechargeOrderModel
 	Invoice           cachemodel.InvoiceModel
+	StarMallLongList  cachemodel.StarmallLonglistModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -103,5 +105,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		RechargeProduct:   cachemodel.NewRechargeProductModel(sqlx.NewMysql(c.DB.DataSource)),
 		RechargeOrder:     cachemodel.NewRechargeOrderModel(sqlx.NewMysql(c.DB.DataSource)),
 		Invoice:           cachemodel.NewInvoiceModel(sqlx.NewMysql(c.DB.DataSource)),
+		StarMallLongList:  cachemodel.NewStarmallLonglistModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

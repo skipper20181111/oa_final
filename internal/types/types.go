@@ -426,3 +426,15 @@ type CouponStoreInfo struct {
 	CouponId     int64  `json:"couponId"`
 	DisabledTime string `json:"disabledTime"`
 }
+
+type StarMallOrderRes struct {
+	Pid       int64        `json:"pid"`
+	Address   *AddressInfo `json:"address"`
+	OrderNote string       `json:"orderNote"` // 订单备注
+}
+
+type StarMallOrderResp struct {
+	Code string     `json:"code"`
+	Msg  string     `json:"msg"`
+	Data *OrderInfo `json:"data"`
+}

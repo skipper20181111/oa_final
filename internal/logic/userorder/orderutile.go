@@ -116,6 +116,7 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 	order := &cachemodel.UserOrder{}
 	order.Phone = l.userphone
 	order.FinishWeixinpay = 0
+	order.PointSorder = 0
 	order.FinishAccountpay = 0
 	order.CreateOrderTime = time.Now()
 	order.OutTradeNo = randStr(32)

@@ -48,6 +48,17 @@ func (l *RefreshPLLogic) RefreshPL() (resp *types.RefreshResp, err error) {
 		}
 	}
 	l.svcCtx.LocalCache.Set(svc.RechargeProductKey, rcpmap)
+
+	// 开始starmall的缓存
+	findAll, _ := l.svcCtx.StarMallLongList.FindAll(l.ctx)
+	StarMallMap := make(map[int64]*cachemodel.StarmallLonglist, 0)
+	if findAll != nil && len(findAll) >= 1 {
+		for _, longlist := range findAll {
+			StarMallMap[longlist.ProductId] = longlist
+		}
+	}
+	l.svcCtx.LocalCache.Set(svc.StarMallMap, StarMallMap)
+
 	return &types.RefreshResp{Code: "10000", Msg: "刷新成功"}, err
 }
 func product2info(product *cachemodel.Product) (info types.ProductInfo) {

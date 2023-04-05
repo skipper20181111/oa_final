@@ -31,6 +31,8 @@ type (
 		Update(ctx context.Context, data *UserOrder) error
 		Delete(ctx context.Context, id int64) error
 		FindAllByPhone(ctx context.Context, phone string) ([]*UserOrder, error)
+		FinishAccountPay(ctx context.Context, OrderSn string) error
+		FinishWeiXinPay(ctx context.Context, OrderSn string) error
 	}
 
 	defaultUserOrderModel struct {
@@ -56,6 +58,9 @@ type (
 		FreightAmount        int64     `db:"freight_amount"`          // 运费金额
 		Address              string    `db:"address"`                 // 收货人信息
 		OrderNote            string    `db:"order_note"`              // 订单备注
+		FinishWeixinpay      int64     `db:"finish_weixinpay"`        // 是否完成微信支付
+		FinishAccountpay     int64     `db:"finish_accountpay"`       // 是否完成账户支付
+		PointSorder          int64     `db:"point_sorder"`            // 是否为积分兑换账单
 		OrderStatus          int64     `db:"order_status"`            // 订单状态：0->待付款；1->待发货；2->已发货；3->已完成；4->已关闭；5->无效订单；6->已退货未退钱；7->已退货已退钱; 99->待复核
 		DeliveryCompany      string    `db:"delivery_company"`        // 物流公司(配送方式)
 		DeliverySn           string    `db:"delivery_sn"`             // 物流单号
@@ -80,6 +85,12 @@ func newUserOrderModel(conn sqlx.SqlConn) *defaultUserOrderModel {
 		table: "`user_order`",
 	}
 }
+
+func (m *defaultUserOrderModel) Delete(ctx context.Context, id int64) error {
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
+	return err
+}
 func (m *defaultUserOrderModel) FindAllByPhone(ctx context.Context, phone string) ([]*UserOrder, error) {
 	query := fmt.Sprintf("select %s from %s where `phone` = ? ", userOrderRows, m.table)
 	var resp []*UserOrder
@@ -93,12 +104,16 @@ func (m *defaultUserOrderModel) FindAllByPhone(ctx context.Context, phone string
 		return nil, err
 	}
 }
-func (m *defaultUserOrderModel) Delete(ctx context.Context, id int64) error {
-	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, id)
+func (m *defaultUserOrderModel) FinishWeiXinPay(ctx context.Context, OrderSn string) error {
+	query := fmt.Sprintf("update %s set `finish_weixinpay`=1 where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, OrderSn)
 	return err
 }
-
+func (m *defaultUserOrderModel) FinishAccountPay(ctx context.Context, OrderSn string) error {
+	query := fmt.Sprintf("update %s set `finish_accountpay`=1 where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, OrderSn)
+	return err
+}
 func (m *defaultUserOrderModel) FindOne(ctx context.Context, id int64) (*UserOrder, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userOrderRows, m.table)
 	var resp UserOrder
@@ -142,14 +157,14 @@ func (m *defaultUserOrderModel) FindOneByOutTradeNo(ctx context.Context, outTrad
 }
 
 func (m *defaultUserOrderModel) Insert(ctx context.Context, data *UserOrder) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userOrderRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.OriginalAmount, data.PointAmount, data.ActualAmount, data.CouponAmount, data.UsedCouponinfo, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.BillType, data.BillInfo, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.LogId)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userOrderRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.OriginalAmount, data.PointAmount, data.ActualAmount, data.CouponAmount, data.UsedCouponinfo, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.FinishWeixinpay, data.FinishAccountpay, data.PointSorder, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.BillType, data.BillInfo, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.LogId)
 	return ret, err
 }
 
 func (m *defaultUserOrderModel) Update(ctx context.Context, newData *UserOrder) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userOrderRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.OriginalAmount, newData.PointAmount, newData.ActualAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.OriginalAmount, newData.PointAmount, newData.ActualAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointSorder, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.Id)
 	return err
 }
 

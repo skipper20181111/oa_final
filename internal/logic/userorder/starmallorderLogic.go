@@ -28,7 +28,7 @@ func NewStarmallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Sta
 }
 
 func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *types.StarMallOrderResp, err error) {
-
+	phone := l.ctx.Value("phone").(string)
 	get, ok := l.svcCtx.LocalCache.Get(svc.StarMallMap)
 	if !ok {
 		return &types.StarMallOrderResp{Code: "4004", Msg: "缓存失效"}, nil
@@ -39,8 +39,18 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 	if !ok {
 		return &types.StarMallOrderResp{Code: "10000", Msg: "无此商品", Data: orderinfo}, nil
 	}
-	db := starreq2db(req, l.ctx.Value("phone").(string))
-	return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(db)}, nil
+	if StarMallMap[req.Pid].ExchangePoints == 0 {
+		return &types.StarMallOrderResp{Code: "10000", Msg: "此商品不可兑换", Data: orderinfo}, nil
+	}
+	cache, err := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, phone)
+	if cache != nil && cache.AvailablePoints > StarMallMap[req.Pid].ExchangePoints {
+		db := starreq2db(req, phone)
+		cache.AvailablePoints = cache.AvailablePoints - StarMallMap[req.Pid].ExchangePoints
+		l.svcCtx.UserPoints.Update(l.ctx, cache)
+		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(db)}, nil
+	} else {
+		return &types.StarMallOrderResp{Code: "10000", Msg: "积分不足", Data: orderinfo}, nil
+	}
 }
 func starreq2db(req *types.StarMallOrderRes, phone string) *cachemodel.UserOrder {
 

@@ -53,7 +53,7 @@ func newStarmallLonglistModel(conn sqlx.SqlConn) *defaultStarmallLonglistModel {
 func (m *defaultStarmallLonglistModel) FindAll(ctx context.Context) ([]*StarmallLonglist, error) {
 	query := fmt.Sprintf("select %s from %s", starmallLonglistRows, m.table)
 	var resp []*StarmallLonglist
-	err := m.conn.QueryRowCtx(ctx, &resp, query)
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
 	switch err {
 	case nil:
 		return resp, nil

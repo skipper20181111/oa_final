@@ -39,6 +39,7 @@ func (l *RefreshPLLogic) RefreshPL() (resp *types.RefreshResp, err error) {
 	}
 	l.svcCtx.LocalCache.Set(svc.ProductsInfoMap, productsInfoMap)
 	l.svcCtx.LocalCache.Set(svc.ProductsMap, productsMap)
+
 	all, _ := l.svcCtx.RechargeProduct.FindAll(l.ctx)
 	rcpmap := make(map[int64]*cachemodel.RechargeProduct)
 	if all != nil && len(all) >= 1 {

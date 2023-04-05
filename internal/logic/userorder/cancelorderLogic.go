@@ -39,7 +39,7 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 	if sn2order.OrderStatus != 1 {
 		return &types.CancelOrderResp{Code: "10000", Msg: "已发货无法退款"}, nil
 	}
-	lu.oplog("微信退款", userphone, "开始更新", lid)
+	lu.Oplog("微信退款", userphone, "开始更新", lid)
 	service := refunddomestic.RefundsApiService{Client: l.svcCtx.Client}
 	create, result, err := service.Create(l.ctx, refunddomestic.CreateRequest{
 		OutTradeNo:  core.String(sn2order.OutTradeNo),
@@ -55,7 +55,7 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 	} else {
 		log.Printf("status=%d resp=%s", result.Response.StatusCode, resp, create.String())
 	}
-	lu.oplog("微信退款", userphone, "结束更新", lid)
+	lu.Oplog("微信退款", userphone, "结束更新", lid)
 	//从这里开始更新现金账户于优惠券账户
 	// 此时还有特别重要的事情，1，要更改现金账户余额，2，要更改优惠券账户，毕竟优惠券账户已经用完了。
 	if sn2order.CashAccountPayAmount > 0 || sn2order.UsedCouponinfo != "" {
@@ -65,11 +65,11 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 		if lu.getlock(lockmsglist) {
 			ok, _ := lu.Updatecashaccount(sn2order, false)
 			if sn2order.CashAccountPayAmount > 0 && !ok {
-				lu.oplog("更新现金账户失败", userphone+sn2order.OutTradeNo, "开始更新", lid)
+				lu.Oplog("更新现金账户失败", userphone+sn2order.OutTradeNo, "开始更新", lid)
 			}
 			ok, _ = lu.UpdateCoupon(sn2order, false)
 			if sn2order.UsedCouponinfo != "" && !ok {
-				lu.oplog("更新优惠券失败", userphone+sn2order.OutTradeNo, "开始更新", lid)
+				lu.Oplog("更新优惠券失败", userphone+sn2order.OutTradeNo, "开始更新", lid)
 			}
 		}
 	}

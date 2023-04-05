@@ -62,17 +62,17 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 			if l.usecash { // 现金账户部分
 				cashok, okstr := lu.Updatecashaccount(l.userorder, true)
 				if !cashok || okstr != "yes" {
-					lu.oplog("支付模块更新现金账户失败", order.OrderSn, "开始更新", l.userorder.LogId)
+					lu.Oplog("支付模块更新现金账户失败", order.OrderSn, "开始更新", l.userorder.LogId)
 				} else {
-					userpoint.HistoryPoints = userpoint.HistoryPoints + l.userorder.CashAccountPayAmount/100
-					userpoint.AvailablePoints = userpoint.AvailablePoints + l.userorder.CashAccountPayAmount/100
+					userpoint.HistoryPoints = userpoint.HistoryPoints + l.userorder.CashAccountPayAmount
+					userpoint.AvailablePoints = userpoint.AvailablePoints + l.userorder.CashAccountPayAmount
 					l.svcCtx.UserPoints.Update(l.ctx, userpoint)
 				}
 			}
 			if l.usecoupon {
 				couponok, okstr := lu.UpdateCoupon(l.userorder, true)
 				if !couponok || okstr != "yes" {
-					lu.oplog("支付模块更新优惠券失败", order.OrderSn, "开始更新", l.userorder.LogId)
+					lu.Oplog("支付模块更新优惠券失败", order.OrderSn, "开始更新", l.userorder.LogId)
 				}
 			}
 			lu.closelock(lockmsglist)
@@ -83,11 +83,4 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 	}
 
 	return &types.FinishOrderResp{Code: "10000", Msg: "不需要操作钱包或优惠券或积分，直接返回"}, nil
-}
-func (l *FinishorderLogic) UpdateAll(LockKey []*types.LockMsg) bool {
-	lu := NewLogic(l.ctx, l.svcCtx)
-	if lu.getlock(LockKey) {
-	}
-
-	return false
 }

@@ -43,19 +43,32 @@ type (
 	}
 
 	CashAccount struct {
-		Id      int64   `db:"id"`      // id
-		Phone   string  `db:"phone"`   // 账号
-		Balance float64 `db:"balance"` // 余额
+		Id      int64  `db:"id"`      // id
+		Phone   string `db:"phone"`   // 账号
+		Balance int64  `db:"balance"` // 余额
 	}
 )
 
 func newCashAccountModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultCashAccountModel {
 	return &defaultCashAccountModel{
-		CachedConn: sqlc.NewConn(conn, c, cache.WithExpiry(time.Second*5)),
+		CachedConn: sqlc.NewConn(conn, c, cache.WithExpiry(time.Minute)),
 		table:      "`cash_account`",
 	}
 }
+func (m *defaultCashAccountModel) FindOneByPhoneNoCach(ctx context.Context, phone string) (*CashAccount, error) {
 
+	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", cashAccountRows, m.table)
+	var resp CashAccount
+	err := m.QueryRowNoCacheCtx(ctx, &resp, query, phone)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, errors.New("notfind")
+	default:
+		return nil, err
+	}
+}
 func (m *defaultCashAccountModel) Delete(ctx context.Context, id int64) error {
 	data, err := m.FindOne(ctx, id)
 	if err != nil {
@@ -102,22 +115,7 @@ func (m *defaultCashAccountModel) FindOneByPhone(ctx context.Context, phone stri
 	case nil:
 		return &resp, nil
 	case sqlc.ErrNotFound:
-		return nil, errors.New("notfind")
-	default:
-		return nil, err
-	}
-}
-
-func (m *defaultCashAccountModel) FindOneByPhoneNoCach(ctx context.Context, phone string) (*CashAccount, error) {
-
-	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", cashAccountRows, m.table)
-	var resp CashAccount
-	err := m.QueryRowNoCacheCtx(ctx, &resp, query, phone)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, errors.New("notfind")
+		return nil, ErrNotFound
 	default:
 		return nil, err
 	}

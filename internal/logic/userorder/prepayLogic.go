@@ -30,7 +30,7 @@ func (l *PrepayLogic) Prepay(req *types.FinishOrderRes) (resp *types.PrePayResp,
 	}
 
 	cashaccount, _ := l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, order.Phone)
-	if cashaccount == nil || cashaccount.Balance < float64(order.CashAccountPayAmount/100) {
+	if cashaccount == nil || cashaccount.Balance < order.CashAccountPayAmount {
 		return &types.PrePayResp{Code: "10000", Msg: "账户余额不足，请重建订单", Data: false}, nil
 	}
 	usercoupon, _ := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, order.Phone)

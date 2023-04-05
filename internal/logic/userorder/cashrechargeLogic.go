@@ -45,10 +45,11 @@ func (l *CashrechargeLogic) Cashrecharge(req *types.CashRechargeRes) (resp *type
 	if !ok {
 		return &types.CashRechargeResp{Code: "4004", Msg: "无此rpid"}, nil
 	}
+	lu := NewLogic(l.ctx, l.svcCtx)
 	orderdb := l.order2db(rproduct)
 	l.svcCtx.RechargeOrder.Insert(l.ctx, orderdb)
 	order, _ := l.svcCtx.RechargeOrder.FindOneByOrderSn(l.ctx, orderdb.OrderSn)
-	l.oplog("现金账户充值", order.OrderSn, "开始更新", orderdb.LogId)
+	lu.Oplog("现金账户充值", order.OrderSn, "开始更新", orderdb.LogId)
 	if order == nil {
 		return &types.CashRechargeResp{Code: "4004", Msg: "数据库失效"}, nil
 	}
@@ -100,11 +101,7 @@ func db2info(order *cachemodel.RechargeOrder) *types.RechargeOrderInfo {
 	info.CreateOrderTime = order.CreateOrderTime.Format("2006-01-02 15:04:05")
 	return info
 }
-func (l *CashrechargeLogic) oplog(tablename, event, describe string, lid int64) error {
-	aol := &cachemodel.AccountOperateLog{Phone: l.ctx.Value("phone").(string), TableName: tablename, Event: event, Describe: describe, Timestamp: time.Now(), Lid: lid}
-	_, err := l.svcCtx.AccountOperateLog.Insert(l.ctx, aol)
-	return err
-}
+
 func (l *CashrechargeLogic) order2db(rproduct *cachemodel.RechargeProduct) *cachemodel.RechargeOrder {
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
 	db := &cachemodel.RechargeOrder{}
@@ -115,9 +112,9 @@ func (l *CashrechargeLogic) order2db(rproduct *cachemodel.RechargeProduct) *cach
 	db.CreateOrderTime = time.Now()
 	db.PaymentTime = inittime
 	db.OrderStatus = 0
-	db.WexinPayAmount = rproduct.Price * 100
-	db.GiftAmount = rproduct.GiftAmount * 100
-	db.Amount = rproduct.Price * 100
+	db.WexinPayAmount = rproduct.Price
+	db.GiftAmount = rproduct.GiftAmount
+	db.Amount = rproduct.Price
 	db.OrderSn = getsha512(db.Phone + db.CreateOrderTime.String() + strconv.FormatInt(db.Rpid, 10))
 	return db
 }

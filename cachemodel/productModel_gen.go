@@ -38,31 +38,31 @@ type (
 	}
 
 	Product struct {
-		Id                  int64     `db:"id"`
-		Pid                 int64     `db:"pid"`                 // 商品id
-		Grade               int64     `db:"grade"`               // 0->普通商品，1->礼品级
-		ProductCategoryId   int64     `db:"product_category_id"` // 商品类别id
-		ProductTitle        string    `db:"product_title"`       // 标题
-		Picture             string    `db:"picture"`             // 商品主图
-		Status              int64     `db:"status"`              // 上架状态：0->正常，1->下架，2->预约商品
-		ReserveTime         time.Time `db:"reserve_time"`        // 预售开始时间
-		Sale                int64     `db:"sale"`                // 销量
-		Price               float64   `db:"price"`
-		PromotionPrice      float64   `db:"promotion_price"` // 促销价格
-		OriginalPrice       float64   `db:"original_price"`  // 市场价
-		CutPrice            float64   `db:"cut_price"`       // 相比上月平均价格下降了多少
-		Description         string    `db:"description"`     // 商品描述
-		Unit                string    `db:"unit"`            // 单位
-		Weight              float64   `db:"weight"`          // 商品重量，默认为克
-		StorageEnv          string    `db:"storage_env"`     // 存储环境
-		AlbumPicsList       string    `db:"album_pics_list"` // 画册图片，连产品图片限制为5张，列表
-		DetailTitle         string    `db:"detail_title"`
-		DetailDesc          string    `db:"detail_desc"`
-		ProductionArea      string    `db:"production_area"`       // 产地
-		DetailLongImage     string    `db:"detail_long_image"`     // 详情长照片
-		BrandName           string    `db:"brand_name"`            // 品牌名称
-		ProductCategoryName string    `db:"product_category_name"` // 商品分类名称
-		Attribute           string    `db:"attribute"`             // 商品属性名称
+		Id                  int64         `db:"id"`
+		Pid                 int64         `db:"pid"`                 // 商品id
+		ProductCategoryId   int64         `db:"product_category_id"` // 商品类别id
+		ProductTitle        string        `db:"product_title"`       // 标题
+		Picture             string        `db:"picture"`             // 商品主图
+		Status              int64         `db:"status"`              // 上架状态：0->正常，1->下架，2->预约商品
+		ReserveTime         time.Time     `db:"reserve_time"`        // 预售开始时间
+		Sale                int64         `db:"sale"`                // 销量
+		Price               int64         `db:"price"`
+		PromotionPrice      int64         `db:"promotion_price"` // 促销价格
+		OriginalPrice       int64         `db:"original_price"`  // 市场价
+		CutPrice            int64         `db:"cut_price"`       // 相比上月平均价格下降了多少
+		Description         string        `db:"description"`     // 商品描述
+		Unit                string        `db:"unit"`            // 单位
+		Weight              float64       `db:"weight"`          // 商品重量，默认为克
+		StorageEnv          string        `db:"storage_env"`     // 存储环境
+		AlbumPicsList       string        `db:"album_pics_list"` // 画册图片，连产品图片限制为5张，列表
+		DetailTitle         string        `db:"detail_title"`
+		DetailDesc          string        `db:"detail_desc"`
+		ProductionArea      string        `db:"production_area"`       // 产地
+		DetailLongImage     string        `db:"detail_long_image"`     // 详情长照片
+		BrandName           string        `db:"brand_name"`            // 品牌名称
+		ProductCategoryName string        `db:"product_category_name"` // 商品分类名称
+		Attribute           string        `db:"attribute"`             // 商品属性名称
+		Grade               sql.NullInt64 `db:"grade"`
 	}
 )
 
@@ -72,18 +72,26 @@ func newProductModel(conn sqlx.SqlConn) *defaultProductModel {
 		table: "`product`",
 	}
 }
-func (m *defaultProductModel) FindAll(ctx context.Context) ([]*Product, error) {
-	var productlist []*Product
-	query := fmt.Sprintf("select %s from %s", productRows, m.table)
-	err := m.conn.QueryRowsCtx(ctx, &productlist, query)
-	return productlist, err
-}
+
 func (m *defaultProductModel) Delete(ctx context.Context, id int64) error {
 	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
+func (m *defaultProductModel) FindAll(ctx context.Context) ([]*Product, error) {
+	query := fmt.Sprintf("select %s from %s", productRows, m.table)
+	var resp []*Product
+	err := m.conn.QueryRowCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultProductModel) FindOne(ctx context.Context, id int64) (*Product, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", productRows, m.table)
 	var resp Product
@@ -114,13 +122,13 @@ func (m *defaultProductModel) FindOneByPid(ctx context.Context, pid int64) (*Pro
 
 func (m *defaultProductModel) Insert(ctx context.Context, data *Product) (sql.Result, error) {
 	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, productRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Pid, data.Grade, data.ProductCategoryId, data.ProductTitle, data.Picture, data.Status, data.ReserveTime, data.Sale, data.Price, data.PromotionPrice, data.OriginalPrice, data.CutPrice, data.Description, data.Unit, data.Weight, data.StorageEnv, data.AlbumPicsList, data.DetailTitle, data.DetailDesc, data.ProductionArea, data.DetailLongImage, data.BrandName, data.ProductCategoryName, data.Attribute)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Pid, data.ProductCategoryId, data.ProductTitle, data.Picture, data.Status, data.ReserveTime, data.Sale, data.Price, data.PromotionPrice, data.OriginalPrice, data.CutPrice, data.Description, data.Unit, data.Weight, data.StorageEnv, data.AlbumPicsList, data.DetailTitle, data.DetailDesc, data.ProductionArea, data.DetailLongImage, data.BrandName, data.ProductCategoryName, data.Attribute, data.Grade)
 	return ret, err
 }
 
 func (m *defaultProductModel) Update(ctx context.Context, newData *Product) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, productRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Pid, newData.Grade, newData.ProductCategoryId, newData.ProductTitle, newData.Picture, newData.Status, newData.ReserveTime, newData.Sale, newData.Price, newData.PromotionPrice, newData.OriginalPrice, newData.CutPrice, newData.Description, newData.Unit, newData.Weight, newData.StorageEnv, newData.AlbumPicsList, newData.DetailTitle, newData.DetailDesc, newData.ProductionArea, newData.DetailLongImage, newData.BrandName, newData.ProductCategoryName, newData.Attribute, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Pid, newData.ProductCategoryId, newData.ProductTitle, newData.Picture, newData.Status, newData.ReserveTime, newData.Sale, newData.Price, newData.PromotionPrice, newData.OriginalPrice, newData.CutPrice, newData.Description, newData.Unit, newData.Weight, newData.StorageEnv, newData.AlbumPicsList, newData.DetailTitle, newData.DetailDesc, newData.ProductionArea, newData.DetailLongImage, newData.BrandName, newData.ProductCategoryName, newData.Attribute, newData.Grade, newData.Id)
 	return err
 }
 

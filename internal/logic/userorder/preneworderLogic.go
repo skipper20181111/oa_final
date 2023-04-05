@@ -2,6 +2,7 @@ package userorder
 
 import (
 	"context"
+	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 
@@ -32,7 +33,7 @@ func (l *PreneworderLogic) Preneworder(req *types.NewOrderRes) (resp *types.PreN
 	if !ok {
 		return &types.PreNewOrderResp{Code: "4004", Msg: "服务器查找商品列表失败"}, nil
 	}
-	productsMap := PMcache.(map[int64]*types.ProductInfo)
+	productsMap := PMcache.(map[int64]*cachemodel.Product)
 	lu := NewLogic(l.ctx, l.svcCtx)
 
 	orderinfo := OrderDb2Preinfo(lu.Order2db(req, productsMap, UseCache(true)))

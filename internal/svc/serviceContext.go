@@ -24,6 +24,7 @@ const localCacheExpire = time.Duration(time.Second * 800)
 const (
 	RechargeProductKey = "RechargeProductKey"
 	ProductsMap        = "ProductsMap"
+	ProductsInfoMap    = "ProductsInfoMap"
 )
 
 type ServiceContext struct {

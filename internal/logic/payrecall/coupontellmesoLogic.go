@@ -43,13 +43,13 @@ func (l *CoupontellmesoLogic) Coupontellmeso(notifyReq *notify.Request, transact
 				l.oplog("cashaccount", order.OrderSn, "开始更新", order.LogId)
 				phone, err := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, order.Phone)
 				if phone == nil && err.Error() == "notfind" {
-					_, err := l.svcCtx.CashAccount.Insert(l.ctx, &cachemodel.CashAccount{Phone: order.Phone, Balance: float64(order.WexinPayAmount / 100)})
+					_, err := l.svcCtx.CashAccount.Insert(l.ctx, &cachemodel.CashAccount{Phone: order.Phone, Balance: order.WexinPayAmount})
 					if err != nil {
 						l.closelock(lockmsglist)
 						return &types.TellMeSoResp{Code: "FAIL", Message: "失败"}, nil
 					}
 				} else if phone != nil {
-					phone.Balance = phone.Balance + float64(order.WexinPayAmount/100)
+					phone.Balance = phone.Balance + order.WexinPayAmount
 					l.svcCtx.CashAccount.Update(l.ctx, phone)
 				} else {
 					l.closelock(lockmsglist)

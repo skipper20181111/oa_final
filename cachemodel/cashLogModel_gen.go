@@ -38,8 +38,8 @@ type (
 	CashLog struct {
 		Id           int64     `db:"id"`
 		Phone        string    `db:"phone"`         // 手机号账号
-		ChangeAmount float64   `db:"change_amount"` // 变动金额
-		Balance      float64   `db:"balance"`       // 余额
+		ChangeAmount int64     `db:"change_amount"` // 变动金额
+		Balance      int64     `db:"balance"`       // 余额
 		Behavior     string    `db:"behavior"`      // 行为
 		Date         time.Time `db:"date"`          // 日志时间
 	}

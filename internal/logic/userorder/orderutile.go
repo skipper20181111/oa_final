@@ -105,7 +105,7 @@ func OrderDb2info(order *cachemodel.UserOrder) *types.OrderInfo {
 	orderinfo.ModifyTime = order.ModifyTime.Format("2006-01-02 15:04:05")
 	return orderinfo
 }
-func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*types.ProductInfo, opts ...func(logic *Logic)) *cachemodel.UserOrder {
+func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemodel.Product, opts ...func(logic *Logic)) *cachemodel.UserOrder {
 	l.couponid = req.UsedCouponId
 	l.couponinfomap = Uuidstr2map(req.UsedCouponUUID)
 	l.couponuuid = req.UsedCouponUUID
@@ -123,7 +123,7 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*types.Pr
 	}
 	order.Pidlist = string(marshal)
 	for _, tiny := range req.ProductTinyList {
-		order.OriginalAmount = order.OriginalAmount + int64(productsMap[tiny.PId].Promotion_price*100*float64(tiny.Amount))
+		order.OriginalAmount = order.OriginalAmount + productsMap[tiny.PId].PromotionPrice*int64(tiny.Amount)
 	}
 	if req.UsePointFirst {
 
@@ -174,7 +174,7 @@ func randStr(n int) string {
 	}
 	return string(b)
 }
-func (l *Logic) oplog(tablename, event, describe string, lid int64) error {
+func (l *Logic) Oplog(tablename, event, describe string, lid int64) error {
 	aol := &cachemodel.AccountOperateLog{Phone: l.ctx.Value("phone").(string), TableName: tablename, Event: event, Describe: describe, Timestamp: time.Now(), Lid: lid}
 	_, err := l.svcCtx.AccountOperateLog.Insert(l.ctx, aol)
 	return err
@@ -210,7 +210,7 @@ func (l *Logic) calculatemoney(UseCoupon, usecash bool, options ...func(logic *L
 							l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount * (l.coupon.Discount) / 100
 
 						} else if l.coupon.MinPoint != 0 && l.coupon.Cut != 0 {
-							if l.Orderdb.ActualAmount < l.coupon.MinPoint*100 {
+							if l.Orderdb.ActualAmount < l.coupon.MinPoint {
 								l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount
 							} else {
 								l.usecoupon = true
@@ -238,9 +238,9 @@ func (l *Logic) calculatemoney(UseCoupon, usecash bool, options ...func(logic *L
 		if cash != nil {
 			if cash.Balance*100 > 0 {
 				l.usecash = true
-				if (l.Orderdb.ActualAmount - int64(cash.Balance*100)) >= 0 {
-					l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount - int64(cash.Balance*100)
-					l.Orderdb.CashAccountPayAmount = int64(cash.Balance * 100)
+				if (l.Orderdb.ActualAmount - cash.Balance) >= 0 {
+					l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount - cash.Balance*100
+					l.Orderdb.CashAccountPayAmount = cash.Balance
 				} else {
 					l.Orderdb.WexinPayAmount = 0
 					l.Orderdb.CashAccountPayAmount = l.Orderdb.ActualAmount
@@ -340,9 +340,9 @@ func (l *Logic) Updatecashaccount(order *cachemodel.UserOrder, use bool) (bool, 
 	phone, _ := l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, accphone)
 	account, ok := cashfinish(order, phone, use)
 	if ok {
-		l.oplog("cash_account", order.OrderSn, "开始更新", order.LogId)
+		l.Oplog("cash_account", order.OrderSn, "开始更新", order.LogId)
 		l.svcCtx.CashAccount.Update(l.ctx, account)
-		l.oplog("cash_account", order.OrderSn, "结束更新", order.LogId)
+		l.Oplog("cash_account", order.OrderSn, "结束更新", order.LogId)
 		if use {
 			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "消费", Phone: accphone, Balance: phone.Balance, ChangeAmount: l.cashaccount.Balance})
 		} else {
@@ -356,14 +356,14 @@ func (l *Logic) Updatecashaccount(order *cachemodel.UserOrder, use bool) (bool, 
 }
 func cashfinish(order *cachemodel.UserOrder, cashaccount *cachemodel.CashAccount, use bool) (*cachemodel.CashAccount, bool) {
 	if use {
-		if (cashaccount.Balance - float64(order.CashAccountPayAmount)/100) < 0 {
+		if (cashaccount.Balance - order.CashAccountPayAmount) < 0 {
 			return cashaccount, false
 		} else {
-			cashaccount.Balance = cashaccount.Balance - float64(order.CashAccountPayAmount)/100
+			cashaccount.Balance = cashaccount.Balance - order.CashAccountPayAmount
 			return cashaccount, true
 		}
 	} else {
-		cashaccount.Balance = cashaccount.Balance + float64(order.CashAccountPayAmount)/100
+		cashaccount.Balance = cashaccount.Balance + order.CashAccountPayAmount
 		return cashaccount, true
 	}
 }

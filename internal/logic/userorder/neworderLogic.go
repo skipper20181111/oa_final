@@ -46,11 +46,11 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	if !ok {
 		return &types.NewOrderResp{Code: "4004", Msg: "服务器查找商品列表失败"}, nil
 	}
-	productsMap := PMcache.(map[int64]*types.ProductInfo)
+	productsMap := PMcache.(map[int64]*cachemodel.Product)
 	lu := NewLogic(l.ctx, l.svcCtx)
 	order := lu.Order2db(req, productsMap, UseCache(false))
 	order.LogId = lid
-	lu.oplog("付款啊", order.OrderSn, "开始更新", lid)
+	lu.Oplog("付款啊", order.OrderSn, "开始更新", lid)
 	l.svcCtx.UserOrder.Insert(l.ctx, order)
 	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, order.OrderSn)
 	if sn2order == nil {
@@ -67,7 +67,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: false, UseAccount: UseAccount}}, nil
 	}
 	// 此处开始生成订单
-	lu.oplog("微信支付啊", l.userorder.OrderSn, "开始更新", lid)
+	lu.Oplog("微信支付啊", l.userorder.OrderSn, "开始更新", lid)
 	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
 	// 得到prepay_id，以及调起支付所需的参数和签名
 	payment, result, err := jssvc.PrepayWithRequestPayment(l.ctx,

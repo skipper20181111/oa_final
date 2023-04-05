@@ -30,11 +30,14 @@ func (l *RefreshPLLogic) RefreshPL() (resp *types.RefreshResp, err error) {
 	if err != nil {
 		return &types.RefreshResp{Code: "4004", Msg: "失败"}, err
 	}
-	productsMap := make(map[int64]*types.ProductInfo)
+	productsInfoMap := make(map[int64]*types.ProductInfo)
+	productsMap := make(map[int64]*cachemodel.Product)
 	for _, product := range productList {
 		info := product2info(product)
-		productsMap[product.Pid] = &info
+		productsMap[product.Pid] = product
+		productsInfoMap[product.Pid] = &info
 	}
+	l.svcCtx.LocalCache.Set(svc.ProductsInfoMap, productsInfoMap)
 	l.svcCtx.LocalCache.Set(svc.ProductsMap, productsMap)
 	all, _ := l.svcCtx.RechargeProduct.FindAll(l.ctx)
 	rcpmap := make(map[int64]*cachemodel.RechargeProduct)
@@ -53,9 +56,9 @@ func product2info(product *cachemodel.Product) (info types.ProductInfo) {
 	info.Status = int(product.Status)
 	info.Reserve_time = time.Time.String(product.ReserveTime)
 	info.Sale = int(product.Sale)
-	info.Promotion_price = product.PromotionPrice
-	info.Original_price = product.OriginalPrice
-	info.Cut_price = product.CutPrice
+	info.Promotion_price = float64(product.PromotionPrice) / 100
+	info.Original_price = float64(product.OriginalPrice) / 100
+	info.Cut_price = float64(product.CutPrice) / 100
 	info.Description = product.Description
 	info.Unit = product.Unit
 	info.Weight = product.Weight

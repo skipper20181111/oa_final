@@ -6,7 +6,7 @@ import (
 	"github.com/wechatpay-apiv3/wechatpay-go/core/notify"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments"
 	"math/rand"
-	"oa_final/cachemodel"
+	"oa_final/internal/logic/userorder"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 	"time"
@@ -31,10 +31,11 @@ func NewTellmesoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Tellmeso
 func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payments.Transaction) (resp *types.TellMeSoResp, err error) {
 	fmt.Println("************** START ******************")
 	lid := time.Now().UnixNano() - int64(rand.Intn(1024))
-	l.oplog("user_order", *transaction.OutTradeNo, "开始更新", lid)
+	lu := userorder.NewLogic(l.ctx, l.svcCtx)
+	lu.Oplog("user_order", *transaction.OutTradeNo, "开始更新", lid)
 	if *transaction.TradeState == "SUCCESS" {
 		no, _ := l.svcCtx.UserOrder.FindOneByOutTradeNo(l.ctx, *transaction.OutTradeNo)
-		l.oplog("付款啊", no.OrderSn, "结束更新", no.LogId)
+		lu.Oplog("付款啊", no.OrderSn, "结束更新", no.LogId)
 		if no != nil {
 			cache, _ := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, no.Phone)
 			if cache != nil {
@@ -48,7 +49,7 @@ func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payment
 				no.PaymentTime = time.Now()
 				no.ModifyTime = time.Now()
 				l.svcCtx.UserOrder.Update(l.ctx, no)
-				l.oplog("user_order", *transaction.OutTradeNo, "结束更新", lid)
+				lu.Oplog("user_order", *transaction.OutTradeNo, "结束更新", lid)
 				return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil
 			} else {
 				no.OrderStatus = 99
@@ -62,9 +63,4 @@ func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payment
 	}
 	fmt.Println("*************** END *******************")
 	return &types.TellMeSoResp{Code: "FAIL", Message: "失败"}, nil
-}
-func (l *TellmesoLogic) oplog(tablename, event, describe string, lid int64) error {
-	aol := &cachemodel.AccountOperateLog{Phone: l.ctx.Value("phone").(string), TableName: tablename, Event: event, Describe: describe, Timestamp: time.Now(), Lid: lid}
-	_, err := l.svcCtx.AccountOperateLog.Insert(l.ctx, aol)
-	return err
 }

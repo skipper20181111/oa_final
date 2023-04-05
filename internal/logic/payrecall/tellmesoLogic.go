@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/notify"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments"
-	"math/rand"
 	"oa_final/internal/logic/userorder"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
@@ -30,11 +29,13 @@ func NewTellmesoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Tellmeso
 
 func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payments.Transaction) (resp *types.TellMeSoResp, err error) {
 	fmt.Println("************** START ******************")
-	lid := time.Now().UnixNano() - int64(rand.Intn(1024))
 	lu := userorder.NewLogic(l.ctx, l.svcCtx)
-	lu.Oplog("user_order", *transaction.OutTradeNo, "开始更新", lid)
+
 	if *transaction.TradeState == "SUCCESS" {
+
 		no, _ := l.svcCtx.UserOrder.FindOneByOutTradeNo(l.ctx, *transaction.OutTradeNo)
+		l.svcCtx.UserOrder.FinishAccountPay(l.ctx, no.OrderSn)
+		lu.Oplog("user_order", *transaction.OutTradeNo, "开始更新", no.LogId)
 		lu.Oplog("付款啊", no.OrderSn, "结束更新", no.LogId)
 		if no != nil {
 			cache, _ := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, no.Phone)
@@ -44,15 +45,13 @@ func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payment
 				l.svcCtx.UserPoints.Update(l.ctx, cache)
 			}
 			if no.OrderStatus == 0 {
-				no.OrderStatus = 1
 				no.TransactionId = *transaction.TransactionId
 				no.PaymentTime = time.Now()
 				no.ModifyTime = time.Now()
 				l.svcCtx.UserOrder.Update(l.ctx, no)
-				lu.Oplog("user_order", *transaction.OutTradeNo, "结束更新", lid)
+				lu.Oplog("user_order", *transaction.OutTradeNo, "结束更新", no.LogId)
 				return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil
 			} else {
-				no.OrderStatus = 99
 				no.TransactionId = *transaction.TransactionId
 				no.PaymentTime = time.Now()
 				no.ModifyTime = time.Now()

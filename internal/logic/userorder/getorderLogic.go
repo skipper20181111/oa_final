@@ -51,6 +51,7 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 		if *no2payment.TradeState != "SUCCESS" {
 			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order)}}, nil
 		} else {
+			sn2order.FinishWeixinpay = 1
 			sn2order.OrderStatus = 1
 			sn2order.ModifyTime = time.Now()
 			sn2order.PaymentTime = sn2order.ModifyTime

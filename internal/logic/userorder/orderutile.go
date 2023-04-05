@@ -115,6 +115,8 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
 	order := &cachemodel.UserOrder{}
 	order.Phone = l.userphone
+	order.FinishWeixinpay = 0
+	order.FinishAccountpay = 0
 	order.CreateOrderTime = time.Now()
 	order.OutTradeNo = randStr(32)
 	marshal, err := json.Marshal(req.ProductTinyList)

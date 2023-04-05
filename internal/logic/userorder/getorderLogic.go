@@ -39,6 +39,18 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 	if sn2order.Phone != l.userphone {
 		return &types.GetOrderResp{Code: "4004", Msg: "不要使用别人的token"}, nil
 	}
+	if sn2order.WexinPayAmount == 0 {
+		if sn2order.FinishAccountpay == 1 {
+			sn2order.OrderStatus = 1
+			sn, _ := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, sn2order.OrderSn)
+			if sn == nil {
+				return &types.GetOrderResp{Code: "10000", Msg: "数据库失效", Data: &types.GetOrderRp{OrderInfo: &types.OrderInfo{}}}, nil
+			}
+			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order)}}, nil
+		} else {
+			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order)}}, nil
+		}
+	}
 	if sn2order.OrderStatus == 0 { // 说明还没有付款，去查一查究竟有没有付款
 		jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
 		no2payment, result, err := jssvc.QueryOrderByOutTradeNo(l.ctx, jsapi.QueryOrderByOutTradeNoRequest{

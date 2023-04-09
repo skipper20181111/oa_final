@@ -40,10 +40,12 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 		return &types.GetOrderResp{Code: "4004", Msg: "不要使用别人的token"}, nil
 	}
 	if IfFinished(sn) {
-		sn2order.OrderStatus = 1
-		sn2order.WexinPayAmount = sn.WexinPayAmount
-		sn2order.CashAccountPayAmount = sn.CashAccountPayAmount
-		l.svcCtx.UserOrder.Update(l.ctx, sn2order)
+		if sn2order.OrderStatus == 0 {
+			sn2order.OrderStatus = 1
+			sn2order.WexinPayAmount = sn.WexinPayAmount
+			sn2order.CashAccountPayAmount = sn.CashAccountPayAmount
+			l.svcCtx.UserOrder.Update(l.ctx, sn2order)
+		}
 		return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order, nil)}}, nil
 	} else {
 		jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}

@@ -29,29 +29,23 @@ func NewGetorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getorder
 		svcCtx: svcCtx,
 	}
 }
-
 func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderResp, err error) {
 	l.userphone = l.ctx.Value("phone").(string)
 	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
-	if sn2order == nil {
+	sn, err := l.svcCtx.TransactionInfo.FindOneByOrderSn(l.ctx, req.OrderSn)
+	if sn2order == nil || sn == nil {
 		return &types.GetOrderResp{Code: "4004", Msg: err.Error()}, nil
 	}
 	if sn2order.Phone != l.userphone {
 		return &types.GetOrderResp{Code: "4004", Msg: "不要使用别人的token"}, nil
 	}
-	if sn2order.WexinPayAmount == 0 {
-		if sn2order.FinishAccountpay == 1 {
-			sn2order.OrderStatus = 1
-			sn, _ := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, sn2order.OrderSn)
-			if sn == nil {
-				return &types.GetOrderResp{Code: "10000", Msg: "数据库失效", Data: &types.GetOrderRp{OrderInfo: &types.OrderInfo{}}}, nil
-			}
-			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order)}}, nil
-		} else {
-			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order)}}, nil
-		}
-	}
-	if sn2order.OrderStatus == 0 { // 说明还没有付款，去查一查究竟有没有付款
+	if IfFinished(sn) {
+		sn2order.OrderStatus = 1
+		sn2order.WexinPayAmount = sn.WexinPayAmount
+		sn2order.CashAccountPayAmount = sn.CashAccountPayAmount
+		l.svcCtx.UserOrder.Update(l.ctx, sn2order)
+		return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order, nil)}}, nil
+	} else {
 		jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
 		no2payment, result, err := jssvc.QueryOrderByOutTradeNo(l.ctx, jsapi.QueryOrderByOutTradeNoRequest{
 			OutTradeNo: core.String(sn2order.OutTradeNo),
@@ -61,19 +55,15 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 			return &types.GetOrderResp{Code: "4004", Msg: err.Error()}, nil
 		}
 		if *no2payment.TradeState != "SUCCESS" {
-			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order)}}, nil
-		} else {
-			sn2order.FinishWeixinpay = 1
-			sn2order.OrderStatus = 1
-			sn2order.ModifyTime = time.Now()
-			sn2order.PaymentTime = sn2order.ModifyTime
-			l.svcCtx.UserOrder.Update(l.ctx, sn2order)
-			sn, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, sn2order.OrderSn)
-			if sn == nil {
-				fmt.Println(err.Error())
-				return &types.GetOrderResp{Code: "10000", Msg: "查询失败", Data: &types.GetOrderRp{OrderInfo: &types.OrderInfo{}}}, nil
+			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, sn.Phone)
+			sn.FinishWeixinpay = 1
+			if IfFinished(sn) {
+				sn2order.OrderStatus = 1
+				sn2order.WexinPayAmount = sn.WexinPayAmount
+				sn2order.CashAccountPayAmount = sn.CashAccountPayAmount
+				l.svcCtx.UserOrder.Update(l.ctx, sn2order)
 			}
-			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn)}}, nil
+			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order, nil)}}, nil
 		}
 	}
 	if sn2order.OrderStatus == 6 { // 说明已经发起了退款，具体有没有成功呢？
@@ -97,14 +87,14 @@ func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderRe
 			if err != nil {
 				fmt.Println(err.Error())
 			}
-			sn, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, sn2order.OrderSn)
+			sn2order, err = l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, sn2order.OrderSn)
 			if err != nil {
 				fmt.Println(err.Error())
 			}
-			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn)}}, nil
+			return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order, nil)}}, nil
 
 		}
 	}
-	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order)}}, nil
+	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(sn2order, nil)}}, nil
 
 }

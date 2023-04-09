@@ -183,14 +183,10 @@ type NewOrderRes struct {
 }
 
 type NewOrderRp struct {
-	OrderInfo    *OrderInfo `json:"orderInfo"`
-	UseWechatPay bool       `json:"useWechatPay"`
-	UseAccount   bool       `json:"useAccount"`
-	TimeStamp    string     `json:"timeStamp"`
-	NonceStr     string     `json:"nonceStr"`
-	Package      string     `json:"package"`
-	SignType     string     `json:"signType"`
-	PaySign      string     `json:"paySign"`
+	OrderInfo    *OrderInfo    `json:"orderInfo"`
+	UseWechatPay bool          `json:"useWechatPay"`
+	UseAccount   bool          `json:"useAccount"`
+	WeiXinPayMsg *WeiXinPayMsg `json:"weiXinPayMsg"`
 }
 
 type NewOrderResp struct {
@@ -437,4 +433,28 @@ type StarMallOrderResp struct {
 	Code string     `json:"code"`
 	Msg  string     `json:"msg"`
 	Data *OrderInfo `json:"data"`
+}
+
+type TransactionInit struct {
+	Phone           string `json:"phone"`
+	OrderSn         string `json:"orderSn"`
+	NeedCashAccount bool   `json:"needCashAccount"`
+	Ammount         int64  `json:"account"`
+	TransactionType string `json:"transactionType"`
+}
+
+type WeiXinPayMsg struct {
+	TimeStamp string `json:"timeStamp"`
+	NonceStr  string `json:"nonceStr"`
+	Package   string `json:"package"`
+	SignType  string `json:"signType"`
+	PaySign   string `json:"paySign"`
+}
+
+type PayMsg struct {
+	WeiXinPayMsg       *WeiXinPayMsg `json:"weiXinPayMsg"`
+	NeedWeiXinPay      bool          `json:"neadWeiXinPay"`
+	NeedCashAccountPay bool          `json:"neadCashAccountPay"`
+	WeiXinPayAmmount   int64         `json:"weiXinPayAmmount"`
+	CashPayAmmount     int64         `json:"cashPayAmmount"`
 }

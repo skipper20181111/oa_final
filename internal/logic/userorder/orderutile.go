@@ -71,8 +71,14 @@ func Uuidstr2map(str string) (uuidmap map[int64]map[string]*types.CouponStoreInf
 	json.Unmarshal([]byte(str), &uuidmap)
 	return uuidmap
 }
-func OrderDb2info(order *cachemodel.UserOrder) *types.OrderInfo {
+
+func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo) *types.OrderInfo {
+
 	orderinfo := &types.OrderInfo{}
+	if info != nil {
+		orderinfo.CashAccountPayAmount = float64(info.CashAccountPayAmount) / 100
+		orderinfo.WeXinPayAmount = float64(info.WexinPayAmount) / 100
+	}
 	orderinfo.Phone = order.Phone
 	orderinfo.PointAmount = order.PointAmount
 	orderinfo.OrderSn = order.OrderSn
@@ -191,8 +197,6 @@ func (l *Logic) coupondb2storeinfo() string {
 }
 func (l *Logic) calculatemoney(UseCoupon, usecash bool, options ...func(logic *Logic)) *cachemodel.UserOrder {
 	l.usecoupon = false
-	l.usecash = false
-
 	if UseCoupon {
 		//计算打折后的钱
 		l.Orderdb.UsedCouponinfo = ""
@@ -235,30 +239,30 @@ func (l *Logic) calculatemoney(UseCoupon, usecash bool, options ...func(logic *L
 		l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount
 	}
 
-	// usecash
-	if usecash {
-		cash := l.cashaccount
-		if cash != nil {
-			if cash.Balance*100 > 0 {
-				l.usecash = true
-				if (l.Orderdb.ActualAmount - cash.Balance) >= 0 {
-					l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount - cash.Balance*100
-					l.Orderdb.CashAccountPayAmount = cash.Balance
-				} else {
-					l.Orderdb.WexinPayAmount = 0
-					l.Orderdb.CashAccountPayAmount = l.Orderdb.ActualAmount
-				}
-			} else {
-				l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount
-				l.Orderdb.CashAccountPayAmount = 0
-			}
-
-		} else {
-			l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount
-		}
-	} else {
-		l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount
-	}
+	// usecash 暂时不用了
+	//if usecash {
+	//	cash := l.cashaccount
+	//	if cash != nil {
+	//		if cash.Balance*100 > 0 {
+	//			l.usecash = true
+	//			if (l.Orderdb.ActualAmount - cash.Balance) >= 0 {
+	//				l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount - cash.Balance*100
+	//				l.Orderdb.CashAccountPayAmount = cash.Balance
+	//			} else {
+	//				l.Orderdb.WexinPayAmount = 0
+	//				l.Orderdb.CashAccountPayAmount = l.Orderdb.ActualAmount
+	//			}
+	//		} else {
+	//			l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount
+	//			l.Orderdb.CashAccountPayAmount = 0
+	//		}
+	//
+	//	} else {
+	//		l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount
+	//	}
+	//} else {
+	//	l.Orderdb.WexinPayAmount = l.Orderdb.ActualAmount
+	//}
 
 	return l.Orderdb
 }
@@ -327,7 +331,7 @@ func UseCache(usecash bool) Option {
 		} else {
 			l.coupon, _ = l.svcCtx.Coupon.FindOneByCouponIdNoCache(l.ctx, l.couponid)
 			l.usercoupon, _ = l.svcCtx.UserCoupon.FindOneByPhoneNoCache(l.ctx, l.userphone)
-			l.cashaccount, _ = l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, l.userphone)
+			//l.cashaccount, _ = l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, l.userphone)
 			l.userpoints, _ = l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, l.userphone)
 		}
 	}
@@ -348,6 +352,7 @@ func (l *Logic) Updatecashaccount(order *cachemodel.UserOrder, use bool) (bool, 
 		l.Oplog("cash_account", order.OrderSn, "结束更新", order.LogId)
 		if use {
 			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "消费", Phone: accphone, Balance: phone.Balance, ChangeAmount: l.cashaccount.Balance})
+			l.svcCtx.TransactionInfo.UpdateCashPay(l.ctx, order.Phone)
 		} else {
 			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "退款", Phone: accphone, Balance: phone.Balance, ChangeAmount: l.cashaccount.Balance})
 		}

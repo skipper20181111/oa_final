@@ -49,11 +49,12 @@ func (l *ChangeorderaddressLogic) Changeorderaddress(req *types.ChangeOrdeRaddre
 		fmt.Println(err.Error())
 	}
 	sn, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
+	info, err := l.svcCtx.TransactionInfo.FindOneByOrderSn(l.ctx, req.OrderSn)
 	if sn == nil || sn.Address != string(addr) {
 		return &types.ChangeOrdeRaddressResp{
 			Code: "4004",
 			Msg:  "数据库失效",
 		}, nil
 	}
-	return &types.ChangeOrdeRaddressResp{Code: "10000", Msg: "修改成功", Data: &types.ChangeOrdeRaddressRp{OrderInfo: OrderDb2info(sn)}}, nil
+	return &types.ChangeOrdeRaddressResp{Code: "10000", Msg: "修改成功", Data: &types.ChangeOrdeRaddressRp{OrderInfo: OrderDb2info(sn, info)}}, nil
 }

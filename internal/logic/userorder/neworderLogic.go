@@ -3,13 +3,7 @@ package userorder
 import (
 	"context"
 	"fmt"
-	"github.com/wechatpay-apiv3/wechatpay-go/core"
-	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
-	"log"
-	"math/rand"
 	"oa_final/cachemodel"
-	"time"
-
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 
@@ -37,7 +31,6 @@ func NewNeworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Neworder
 }
 
 func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderResp, err error) {
-	lid := time.Now().UnixNano() + int64(rand.Intn(1024))
 	UseAccount := false
 	if len(req.ProductTinyList) == 0 {
 		return &types.NewOrderResp{Code: "4004", Msg: "无商品，订单金额为0", Data: &types.NewOrderRp{}}, nil
@@ -49,8 +42,6 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	productsMap := PMcache.(map[int64]*cachemodel.Product)
 	lu := NewLogic(l.ctx, l.svcCtx)
 	order := lu.Order2db(req, productsMap, UseCache(false))
-	order.LogId = lid
-	lu.Oplog("付款啊", order.OrderSn, "开始更新", lid)
 	l.svcCtx.UserOrder.Insert(l.ctx, order)
 	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, order.OrderSn)
 	if sn2order == nil {
@@ -58,48 +49,16 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 		return &types.NewOrderResp{Code: "4004", Msg: "数据库失效"}, nil
 	}
 	l.userorder = sn2order
-	orderinfo := OrderDb2info(sn2order)
-	if lu.usecoupon || lu.usecash || lu.usepoint {
-		UseAccount = true
-	}
-	money := sn2order.WexinPayAmount
-	if money == 0 {
-		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &types.NewOrderRp{OrderInfo: orderinfo, UseWechatPay: false, UseAccount: UseAccount}}, nil
-	}
-	// 此处开始生成订单
-	lu.Oplog("微信支付啊", l.userorder.OrderSn, "开始更新", lid)
-	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
-	// 得到prepay_id，以及调起支付所需的参数和签名
-	payment, result, err := jssvc.PrepayWithRequestPayment(l.ctx,
-		jsapi.PrepayRequest{
-			Appid:       core.String(l.svcCtx.Config.WxConf.AppId),
-			Mchid:       core.String(l.svcCtx.Config.WxConf.MchID),
-			Description: core.String("沾还是不沾芥末，这是一个问题"),
-			OutTradeNo:  core.String(orderinfo.OutTradeNo),
-			Attach:      core.String(randStr(16)),
-			NotifyUrl:   core.String(l.svcCtx.Config.ServerInfo.Url + "/payrecall/tellmeso"),
-			Amount: &jsapi.Amount{
-				Total: core.Int64(money),
-			},
-			Payer: &jsapi.Payer{
-				Openid: core.String(l.ctx.Value("openid").(string)),
-			},
-		},
-	)
-	defer result.Response.Body.Close()
-	if err == nil {
-		log.Println(payment, result)
-	} else {
-		log.Println(err)
-		return &types.NewOrderResp{Code: "4004", Msg: err.Error()}, nil
-	}
-	// 用于返回给前端调起支付的变量与签名串生成器
-	timestampsec := *payment.TimeStamp
-	nonceStr := *payment.NonceStr
-	packagestr := *payment.Package
-	paySign := *payment.PaySign
-	signType := *payment.SignType
-	neworderrp := types.NewOrderRp{OrderInfo: orderinfo, UseAccount: UseAccount, UseWechatPay: true, TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
-	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 
+	payl := NewPayLogic(l.ctx, l.svcCtx)
+	payorder, success := payl.Payorder(&types.TransactionInit{TransactionType: "普通商品", OrderSn: l.userorder.OrderSn, NeedCashAccount: req.UseCashFirst, Ammount: l.userorder.ActualAmount, Phone: l.userphone})
+	if success {
+		if l.usepoint || l.usecoupon || payorder.NeedCashAccountPay {
+			UseAccount = true
+		}
+		info, _ := l.svcCtx.TransactionInfo.FindOneByOrderSn(l.ctx, sn2order.OrderSn)
+		neworderrp := types.NewOrderRp{OrderInfo: OrderDb2info(sn2order, info), UseAccount: UseAccount, UseWechatPay: true, WeiXinPayMsg: payorder.WeiXinPayMsg}
+		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
+	}
+	return &types.NewOrderResp{Code: "4004", Msg: "支付失败"}, nil
 }

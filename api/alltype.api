@@ -201,11 +201,7 @@ type (
         OrderInfo *OrderInfo `json:"orderInfo"`
         UseWechatPay bool `json:"useWechatPay"`
         UseAccount bool `json:"useAccount"`
-        TimeStamp string `json:"timeStamp"`
-        NonceStr string `json:"nonceStr"`
-        Package string `json:"package"`
-        SignType string `json:"signType"`
-        PaySign string `json:"paySign"`
+        WeiXinPayMsg *WeiXinPayMsg `json:"weiXinPayMsg"`
     }
     NewOrderResp {
         Code string `json:"code"`
@@ -448,6 +444,32 @@ type (
         Data *OrderInfo `json:"data"`
     }
 )
+
+type (
+    TransactionInit {
+        Phone string `json:"phone"`
+        OrderSn string `json:"orderSn"`
+        NeedCashAccount bool `json:"needCashAccount"`
+        Ammount int64 `json:"account"`
+        TransactionType string `json:"transactionType"`
+    }
+    WeiXinPayMsg {
+        TimeStamp string `json:"timeStamp"`
+        NonceStr string `json:"nonceStr"`
+        Package string `json:"package"`
+        SignType string `json:"signType"`
+        PaySign string `json:"paySign"`
+    }
+    PayMsg {
+        WeiXinPayMsg *WeiXinPayMsg `json:"weiXinPayMsg"`
+        NeedWeiXinPay bool `json:"neadWeiXinPay"`
+        NeedCashAccountPay bool `json:"neadCashAccountPay"`
+        WeiXinPayAmmount int64 `json:"weiXinPayAmmount"`
+        CashPayAmmount int64 `json:"cashPayAmmount"`
+    }
+)
+
+
 
 
 

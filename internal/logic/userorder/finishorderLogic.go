@@ -37,9 +37,13 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 	userphone := l.ctx.Value("phone").(string)
 	userpoint := &cachemodel.UserPoints{}
 	// 根据ordersn获取order信息 判定究竟使用什么，这三个应当是独立的，不应写在一起
-	order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
+	order, _ := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
+	transactioninfo, _ := l.svcCtx.TransactionInfo.FindOneByOrderSn(l.ctx, req.OrderSn)
+	if order == nil || transactioninfo == nil {
+		return &types.FinishOrderResp{Code: "4004", Msg: "数据库失效，请重新下单"}, nil
+	}
 	l.userorder = order
-	if l.userorder.CashAccountPayAmount > 0 {
+	if transactioninfo.CashAccountPayAmount > 0 {
 		l.usecash = true
 	}
 	if l.userorder.UsedCouponinfo != "" {
@@ -77,9 +81,9 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 			}
 			lu.closelock(lockmsglist)
 			l.svcCtx.UserOrder.FinishAccountPay(l.ctx, order.OrderSn)
-			return &types.FinishOrderResp{Code: "10000", Msg: "完全成功", Data: OrderDb2info(order)}, nil
+			return &types.FinishOrderResp{Code: "10000", Msg: "完全成功", Data: OrderDb2info(order, transactioninfo)}, nil
 		} else {
-			return &types.FinishOrderResp{Code: "10000", Msg: "未获取到锁，请重试", Data: OrderDb2info(order)}, nil
+			return &types.FinishOrderResp{Code: "10000", Msg: "未获取到锁，请重试", Data: OrderDb2info(order, transactioninfo)}, nil
 		}
 	}
 

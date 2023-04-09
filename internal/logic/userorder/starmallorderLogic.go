@@ -47,7 +47,7 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 		db := starreq2db(req, phone)
 		cache.AvailablePoints = cache.AvailablePoints - StarMallMap[req.Pid].ExchangePoints
 		l.svcCtx.UserPoints.Update(l.ctx, cache)
-		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(db)}, nil
+		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(db, nil)}, nil
 	} else {
 		return &types.StarMallOrderResp{Code: "10000", Msg: "积分不足", Data: orderinfo}, nil
 	}

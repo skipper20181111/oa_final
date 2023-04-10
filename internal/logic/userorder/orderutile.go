@@ -275,16 +275,25 @@ func (l *Logic) calculatemoney(UseCoupon, usecash bool, options ...func(logic *L
 
 	return l.Orderdb
 }
-func (l *Logic) getlock(lockmsglist []*types.LockMsg) bool {
+func (l *Logic) getlocktry(lockmsglist []*types.LockMsg) bool {
+	trytime := 3
+	for i := 0; i < trytime; i++ {
+		ok := l.getlocksingletry(lockmsglist)
+		if ok {
+			return ok
+		} else {
+			time.Sleep(time.Second)
+		}
+	}
+	return false
+}
+func (l *Logic) getlocksingletry(lockmsglist []*types.LockMsg) bool {
 	//phone := l.ctx.Value("phone").(string)
 	lockhost := l.svcCtx.Config.Lock.Host
 	urlPath := fmt.Sprintf("%s%s%s", "http://", lockhost, "/pcc/getlock")
-
 	res := types.GetLockRes{LockMsgList: lockmsglist}
-
 	resp, err := httpc.Do(context.Background(), http.MethodPost, urlPath, res)
 	if err != nil {
-
 		fmt.Println(err)
 	}
 	if resp == nil || resp.Body == nil {
@@ -300,7 +309,6 @@ func (l *Logic) getlock(lockmsglist []*types.LockMsg) bool {
 		}
 	}
 	return true
-
 }
 func (l *Logic) closelock(lockmsglist []*types.LockMsg) bool {
 	//phone := l.ctx.Value("phone").(string)
@@ -361,7 +369,7 @@ func (l *Logic) Updatecashaccount(order *cachemodel.UserOrder, use bool) (bool, 
 		l.Oplog("cash_account", order.OrderSn, "结束更新", order.LogId)
 		if use {
 			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "消费", Phone: accphone, Balance: phone.Balance, ChangeAmount: l.cashaccount.Balance})
-			l.svcCtx.TransactionInfo.UpdateCashPay(l.ctx, order.Phone)
+			l.svcCtx.TransactionInfo.UpdateCashPay(l.ctx, order.OrderSn)
 		} else {
 			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "退款", Phone: accphone, Balance: phone.Balance, ChangeAmount: l.cashaccount.Balance})
 		}

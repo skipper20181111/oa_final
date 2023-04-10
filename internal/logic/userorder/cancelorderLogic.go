@@ -64,7 +64,7 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 		lockmsglist := make([]*types.LockMsg, 0)
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "user_coupon"})
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "cash_account"})
-		if lu.getlock(lockmsglist) {
+		if lu.getlocktry(lockmsglist) {
 
 			if sn2order.CashAccountPayAmount > 0 {
 				ok, _ := lu.Updatecashaccount(sn2order, false)

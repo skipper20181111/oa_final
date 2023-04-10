@@ -30,8 +30,8 @@ type (
 		FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*TransactionInfo, error)
 		Update(ctx context.Context, data *TransactionInfo) error
 		Delete(ctx context.Context, id int64) error
-		UpdateCashPay(ctx context.Context, phone string) error
-		UpdateWeixinPay(ctx context.Context, phone string) error
+		UpdateCashPay(ctx context.Context, OrderSn string) error
+		UpdateWeixinPay(ctx context.Context, OrderSn string) error
 	}
 
 	defaultTransactionInfoModel struct {
@@ -127,15 +127,15 @@ func (m *defaultTransactionInfoModel) Update(ctx context.Context, newData *Trans
 	return err
 }
 
-func (m *defaultTransactionInfoModel) UpdateWeixinPay(ctx context.Context, phone string) error {
-	query := fmt.Sprintf("update %s set `finish_weixinpay`=1,`wexin_payment_time`=? where `phone` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, phone, time.Now())
+func (m *defaultTransactionInfoModel) UpdateWeixinPay(ctx context.Context, OrderSn string) error {
+	query := fmt.Sprintf("update %s set `finish_weixinpay`=1,`wexin_payment_time`=? where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OrderSn)
 	return err
 }
 
-func (m *defaultTransactionInfoModel) UpdateCashPay(ctx context.Context, phone string) error {
-	query := fmt.Sprintf("update %s set `finish_accountpay`=1,`cash_account_payment_time`=? where `phone` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, phone, time.Now())
+func (m *defaultTransactionInfoModel) UpdateCashPay(ctx context.Context, OrderSn string) error {
+	query := fmt.Sprintf("update %s set `finish_accountpay`=1,`cash_account_payment_time`=? where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OrderSn)
 	return err
 }
 

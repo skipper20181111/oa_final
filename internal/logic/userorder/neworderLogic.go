@@ -2,7 +2,6 @@ package userorder
 
 import (
 	"context"
-	"fmt"
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
@@ -20,13 +19,16 @@ type NeworderLogic struct {
 	usecoupon   bool
 	usepoint    bool
 	userphone   string
+	useropenid  string
 }
 
 func NewNeworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *NeworderLogic {
 	return &NeworderLogic{
-		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
-		svcCtx: svcCtx,
+		Logger:     logx.WithContext(ctx),
+		ctx:        ctx,
+		svcCtx:     svcCtx,
+		userphone:  ctx.Value("phone").(string),
+		useropenid: ctx.Value("openid").(string),
 	}
 }
 
@@ -43,22 +45,18 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	lu := NewLogic(l.ctx, l.svcCtx)
 	order := lu.Order2db(req, productsMap, UseCache(false))
 	l.svcCtx.UserOrder.Insert(l.ctx, order)
-	sn2order, err := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, order.OrderSn)
-	if sn2order == nil {
-		fmt.Println(err.Error())
-		return &types.NewOrderResp{Code: "4004", Msg: "数据库失效"}, nil
-	}
-	l.userorder = sn2order
-
+	l.userorder = order
 	payl := NewPayLogic(l.ctx, l.svcCtx)
 	payorder, success := payl.Payorder(&types.TransactionInit{TransactionType: "普通商品", OrderSn: l.userorder.OrderSn, NeedCashAccount: req.UseCashFirst, Ammount: l.userorder.ActualAmount, Phone: l.userphone})
-	if success {
-		if l.usepoint || l.usecoupon || payorder.NeedCashAccountPay {
-			UseAccount = true
-		}
-		info, _ := l.svcCtx.TransactionInfo.FindOneByOrderSn(l.ctx, sn2order.OrderSn)
-		neworderrp := types.NewOrderRp{OrderInfo: OrderDb2info(sn2order, info), UseAccount: UseAccount, UseWechatPay: true, WeiXinPayMsg: payorder.WeiXinPayMsg}
-		return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
+	if !success {
+		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}
-	return &types.NewOrderResp{Code: "4004", Msg: "支付失败"}, nil
+	if l.usepoint || l.usecoupon || payorder.NeedCashAccountPay {
+		UseAccount = true
+	}
+	order.WexinPayAmount = payorder.WeiXinPayAmmount
+	order.CashAccountPayAmount = payorder.CashPayAmmount
+	l.svcCtx.UserOrder.Insert(l.ctx, order)
+	neworderrp := types.NewOrderRp{OrderInfo: OrderDb2info(order, nil), UseAccount: UseAccount, UseWechatPay: payorder.NeedWeiXinPay, WeiXinPayMsg: payorder.WeiXinPayMsg}
+	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 }

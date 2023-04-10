@@ -2,6 +2,7 @@ package userorder
 
 import (
 	"context"
+	"fmt"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -42,8 +43,10 @@ func (l *PayLogic) Payorder(req *types.TransactionInit) (resp *types.PayMsg, suc
 	resp = l.db2resp()
 	sn, _ := l.svcCtx.TransactionInfo.FindOneByOrderSn(l.ctx, req.OrderSn)
 	if sn != nil {
+		fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 		l.svcCtx.TransactionInfo.Update(l.ctx, l.transantioninfo)
 	} else {
+		fmt.Println("(((((((((((((((((((((((((((((@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@)))))))))))))))))))))))))))))")
 		l.svcCtx.TransactionInfo.Insert(l.ctx, l.transantioninfo)
 	}
 	return resp, true
@@ -69,11 +72,11 @@ func IfFinished(info *cachemodel.TransactionInfo) bool {
 func (l *PayLogic) db2resp() *types.PayMsg {
 	resp := &types.PayMsg{}
 	resp.WeiXinPayMsg = l.weixinpayinit
-	if l.transantioninfo.CashAccountPayAmount == 0 {
-		resp.NeedCashAccountPay = false
+	if l.transantioninfo.CashAccountPayAmount != 0 {
+		resp.NeedCashAccountPay = true
 	}
-	if l.transantioninfo.WexinPayAmount == 0 {
-		resp.NeedWeiXinPay = false
+	if l.transantioninfo.WexinPayAmount != 0 {
+		resp.NeedWeiXinPay = true
 	}
 	resp.WeiXinPayAmmount = l.transantioninfo.WexinPayAmount
 	resp.CashPayAmmount = l.transantioninfo.CashAccountPayAmount
@@ -102,6 +105,7 @@ func (l *PayLogic) weixinpayall() {
 	l.transantioninfo.WexinPayAmount = l.transantioninfo.Amount
 }
 func (l *PayLogic) transactioninfoinit() {
+	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	transantioninfo := &cachemodel.TransactionInfo{}
 	transantioninfo.OutTradeNo = randStr(32)
 	transantioninfo.Phone = l.req.Phone
@@ -111,6 +115,8 @@ func (l *PayLogic) transactioninfoinit() {
 	transantioninfo.TransactionType = l.req.TransactionType
 	transantioninfo.Status = 0
 	transantioninfo.CreateOrderTime = time.Now()
+	transantioninfo.CashAccountPaymentTime = inittime
+	transantioninfo.WexinPaymentTime = inittime
 	l.transantioninfo = transantioninfo
 }
 func int2bool(a int64) bool {

@@ -80,7 +80,6 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 				}
 			}
 			lu.closelock(lockmsglist)
-			l.svcCtx.UserOrder.FinishAccountPay(l.ctx, order.OrderSn)
 			return &types.FinishOrderResp{Code: "10000", Msg: "完全成功", Data: OrderDb2info(order, transactioninfo)}, nil
 		} else {
 			return &types.FinishOrderResp{Code: "10000", Msg: "未获取到锁，请重试", Data: OrderDb2info(order, transactioninfo)}, nil

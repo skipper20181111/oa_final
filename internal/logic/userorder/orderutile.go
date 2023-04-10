@@ -71,7 +71,16 @@ func Uuidstr2map(str string) (uuidmap map[int64]map[string]*types.CouponStoreInf
 	json.Unmarshal([]byte(str), &uuidmap)
 	return uuidmap
 }
-
+func storedcouponinfo2typeinfo(infostr string) *types.CouponStoreInfo {
+	couponinfo := make(map[int64]map[string]*types.CouponStoreInfo)
+	json.Unmarshal([]byte(infostr), &couponinfo)
+	for _, V := range couponinfo {
+		for _, info := range V {
+			return info
+		}
+	}
+	return nil
+}
 func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo) *types.OrderInfo {
 
 	orderinfo := &types.OrderInfo{}
@@ -79,6 +88,7 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 		orderinfo.CashAccountPayAmount = float64(info.CashAccountPayAmount) / 100
 		orderinfo.WeXinPayAmount = float64(info.WexinPayAmount) / 100
 	}
+
 	orderinfo.Phone = order.Phone
 	orderinfo.PointAmount = order.PointAmount
 	orderinfo.OrderSn = order.OrderSn
@@ -88,6 +98,7 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 	pidlist := make([]*types.ProductTiny, 0)
 	json.Unmarshal([]byte(order.Pidlist), &pidlist)
 	orderinfo.PidList = pidlist
+	orderinfo.UsedCouponInfo = storedcouponinfo2typeinfo(order.UsedCouponinfo)
 	orderinfo.OriginalAmount = float64(order.OriginalAmount) / 100
 	orderinfo.ActualAmount = float64(order.ActualAmount) / 100
 	orderinfo.CouponAmount = float64(order.CouponAmount) / 100
@@ -95,12 +106,11 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 	orderinfo.CashAccountPayAmount = float64(order.CashAccountPayAmount) / 100
 	orderinfo.FreightAmount = float64(order.FreightAmount) / 100
 	orderinfo.Growth = order.Growth
-	orderinfo.BillType = order.BillType
-	orderinfo.BillInfo = &types.Billinfo{}
+
 	orderinfo.OrderStatus = order.OrderStatus
 	orderinfo.DeliveryCompany = order.DeliveryCompany
 	orderinfo.DeliverySn = order.DeliverySn
-	orderinfo.AutoConfirmDay = order.AutoConfirmDay
+
 	address := types.AddressInfo{}
 	json.Unmarshal([]byte(order.Address), &address)
 	orderinfo.Address = &address
@@ -122,7 +132,7 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 	order := &cachemodel.UserOrder{}
 	order.Phone = l.userphone
 	order.FinishWeixinpay = 0
-	order.PointSorder = 0
+	order.PointsOrder = 0
 	order.FinishAccountpay = 0
 	order.CreateOrderTime = time.Now()
 	order.OutTradeNo = randStr(32)
@@ -134,14 +144,15 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 	for _, tiny := range req.ProductTinyList {
 		order.OriginalAmount = order.OriginalAmount + productsMap[tiny.PId].PromotionPrice*int64(tiny.Amount)
 	}
+	order.ActualAmount = order.OriginalAmount
 	if req.UsePointFirst {
-
 		if l.userpoints != nil && l.userpoints.AvailablePoints > 0 {
 			l.usepoint = true
-			order.PointAmount = int64(mathx.MinInt(int(order.OriginalAmount), int(l.userpoints.AvailablePoints)))
-			order.OriginalAmount = order.OriginalAmount - order.PointAmount
+			order.PointAmount = int64(mathx.MinInt(int(order.OriginalAmount), int(l.userpoints.AvailablePoints/100)))
+			order.ActualAmount = order.ActualAmount - order.PointAmount/100
 		}
 	}
+	l.Orderdb = order
 	l.calculatemoney(req.UseCouponFirst, req.UseCashFirst, opts...)
 	order.FreightAmount = 4000
 	order.OrderStatus = 0
@@ -189,10 +200,12 @@ func (l *Logic) Oplog(tablename, event, describe string, lid int64) error {
 	return err
 }
 func (l *Logic) coupondb2storeinfo() string {
-	couponstoreinfomap := make(map[int64]map[string]*types.CouponStoreInfo)
-	couponstoreinfomap[l.couponid] = make(map[string]*types.CouponStoreInfo)
-	couponstoreinfomap[l.couponid][l.couponuuid] = l.couponinfomap[l.couponid][l.couponuuid]
-	marshal, _ := json.Marshal(couponstoreinfomap)
+	couponstoreinfomapori := make(map[int64]map[string]*types.CouponStoreInfo)
+	json.Unmarshal([]byte(l.usercoupon.CouponIdMap), &couponstoreinfomapori)
+	storemap := make(map[int64]map[string]*types.CouponStoreInfo)
+	storemap[l.couponid] = make(map[string]*types.CouponStoreInfo)
+	storemap[l.couponid][l.couponuuid] = couponstoreinfomapori[l.couponid][l.couponuuid]
+	marshal, _ := json.Marshal(storemap)
 	return string(marshal)
 }
 func (l *Logic) calculatemoney(UseCoupon, usecash bool, options ...func(logic *Logic)) *cachemodel.UserOrder {
@@ -200,43 +213,39 @@ func (l *Logic) calculatemoney(UseCoupon, usecash bool, options ...func(logic *L
 	if UseCoupon {
 		//计算打折后的钱
 		l.Orderdb.UsedCouponinfo = ""
+		l.Orderdb.CouponAmount = 0
 		if l.coupon == nil || l.usercoupon == nil {
-			l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount
 		} else {
-			l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount // 初始化不需要使用优惠券
 			usercouponmap := make(map[int64]map[string]*types.CouponStoreInfo)
 			json.Unmarshal([]byte(l.usercoupon.CouponIdMap), &usercouponmap)
 			_, ok := usercouponmap[l.couponid] //连续两次判断我是否有这个优惠券
 			if ok {
 				_, ok := usercouponmap[l.couponid][l.couponuuid]
 				if ok {
-					{
+					disabledtime, _ := time.Parse("2006-01-02 15:04:05", usercouponmap[l.couponid][l.couponuuid].DisabledTime)
+					if disabledtime.After(time.Now()) {
 						if l.coupon.Discount != 0 {
 							l.usecoupon = true
+							discountammount := int64(float64(l.Orderdb.ActualAmount) * float64(l.coupon.Discount) / 100)
 							l.Orderdb.UsedCouponinfo = l.coupondb2storeinfo()
-							l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount * (l.coupon.Discount) / 100
+							l.Orderdb.CouponAmount = l.Orderdb.ActualAmount - discountammount
+							l.Orderdb.ActualAmount = discountammount
 
 						} else if l.coupon.MinPoint != 0 && l.coupon.Cut != 0 {
-							if l.Orderdb.ActualAmount < l.coupon.MinPoint {
-								l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount
-							} else {
+							if l.Orderdb.ActualAmount >= l.coupon.MinPoint {
 								l.usecoupon = true
 								l.Orderdb.UsedCouponinfo = l.coupondb2storeinfo()
-								l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount - l.Orderdb.OriginalAmount/(l.coupon.MinPoint*100)
+								l.Orderdb.CouponAmount = l.coupon.Cut
+								l.Orderdb.ActualAmount = l.Orderdb.ActualAmount - l.Orderdb.CouponAmount
 							}
-						} else {
-							l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount
 						}
 					}
 				}
 			}
-
 		}
-		l.Orderdb.CouponAmount = l.Orderdb.OriginalAmount - l.Orderdb.ActualAmount
 
 	} else {
 		l.Orderdb.CouponAmount = 0
-		l.Orderdb.ActualAmount = l.Orderdb.OriginalAmount
 	}
 
 	// usecash 暂时不用了

@@ -160,19 +160,16 @@ type (
         PointAmount int64 `json:"pointAmount"`
         ActualAmount float64 `json:"actualAmount"`
         CouponAmount float64 `json:"couponAmount"`
-        UsedCouponId int64 `json:"usedCouponId"`
+        UsedCouponInfo *CouponStoreInfo `json:"usedCouponInfo"`
         WeXinPayAmount float64 `json:"weXinPayAmount"`
         CashAccountPayAmount float64 `json:"cashAccountPayAmount"`
         FreightAmount float64 `json:"freightAmount"`
         Growth int64 `json:"growth"`
         Address *AddressInfo `json:"addressInfo"`
-        BillType int64 `json:"billType"`
-        BillInfo *Billinfo `json:"billInfo"`
         OrderNote string `json:"orderNote"`
         OrderStatus int64 `json:"orderStatus"`
         DeliveryCompany string `json:"deliveryCompany"`
         DeliverySn string `json:"deliverySn"`
-        AutoConfirmDay int64 `json:"autoConfirmDay"`
         ConfirmStatus int64 `json:"confirmStatus"`
         DeleteStatus int64 `json:"deleteStatus"`
         PaymentTime string `json:"paymentTime"`

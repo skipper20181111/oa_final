@@ -133,33 +133,30 @@ type PreOrderInfo struct {
 }
 
 type OrderInfo struct {
-	Phone                string         `json:"phone"`
-	OrderSn              string         `json:"orderSn"`
-	OutTradeNo           string         `json:"outTradeNo"`
-	TransactionId        string         `json:"transactionId"`
-	CreateTime           string         `json:"createTime"`
-	PidList              []*ProductTiny `json:"pidList"`
-	OriginalAmount       float64        `json:"originalAmount"`
-	PointAmount          int64          `json:"pointAmount"`
-	ActualAmount         float64        `json:"actualAmount"`
-	CouponAmount         float64        `json:"couponAmount"`
-	UsedCouponId         int64          `json:"usedCouponId"`
-	WeXinPayAmount       float64        `json:"weXinPayAmount"`
-	CashAccountPayAmount float64        `json:"cashAccountPayAmount"`
-	FreightAmount        float64        `json:"freightAmount"`
-	Growth               int64          `json:"growth"`
-	Address              *AddressInfo   `json:"addressInfo"`
-	BillType             int64          `json:"billType"`
-	BillInfo             *Billinfo      `json:"billInfo"`
-	OrderNote            string         `json:"orderNote"`
-	OrderStatus          int64          `json:"orderStatus"`
-	DeliveryCompany      string         `json:"deliveryCompany"`
-	DeliverySn           string         `json:"deliverySn"`
-	AutoConfirmDay       int64          `json:"autoConfirmDay"`
-	ConfirmStatus        int64          `json:"confirmStatus"`
-	DeleteStatus         int64          `json:"deleteStatus"`
-	PaymentTime          string         `json:"paymentTime"`
-	ModifyTime           string         `json:"modifyTime"`
+	Phone                string           `json:"phone"`
+	OrderSn              string           `json:"orderSn"`
+	OutTradeNo           string           `json:"outTradeNo"`
+	TransactionId        string           `json:"transactionId"`
+	CreateTime           string           `json:"createTime"`
+	PidList              []*ProductTiny   `json:"pidList"`
+	OriginalAmount       float64          `json:"originalAmount"`
+	PointAmount          int64            `json:"pointAmount"`
+	ActualAmount         float64          `json:"actualAmount"`
+	CouponAmount         float64          `json:"couponAmount"`
+	UsedCouponInfo       *CouponStoreInfo `json:"usedCouponInfo"`
+	WeXinPayAmount       float64          `json:"weXinPayAmount"`
+	CashAccountPayAmount float64          `json:"cashAccountPayAmount"`
+	FreightAmount        float64          `json:"freightAmount"`
+	Growth               int64            `json:"growth"`
+	Address              *AddressInfo     `json:"addressInfo"`
+	OrderNote            string           `json:"orderNote"`
+	OrderStatus          int64            `json:"orderStatus"`
+	DeliveryCompany      string           `json:"deliveryCompany"`
+	DeliverySn           string           `json:"deliverySn"`
+	ConfirmStatus        int64            `json:"confirmStatus"`
+	DeleteStatus         int64            `json:"deleteStatus"`
+	PaymentTime          string           `json:"paymentTime"`
+	ModifyTime           string           `json:"modifyTime"`
 }
 
 type Billinfo struct {

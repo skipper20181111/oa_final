@@ -57,7 +57,7 @@ func starreq2db(req *types.StarMallOrderRes, phone string) *cachemodel.UserOrder
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
 	order := &cachemodel.UserOrder{}
 	order.Phone = phone
-	order.PointSorder = 1
+	order.PointsOrder = 1
 	order.FinishWeixinpay = 0
 	order.FinishAccountpay = 0
 	order.CreateOrderTime = time.Now()

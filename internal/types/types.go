@@ -140,7 +140,7 @@ type OrderInfo struct {
 	CreateTime           string           `json:"createTime"`
 	PidList              []*ProductTiny   `json:"pidList"`
 	OriginalAmount       float64          `json:"originalAmount"`
-	PointAmount          int64            `json:"pointAmount"`
+	PointAmount          float64          `json:"pointAmount"`
 	ActualAmount         float64          `json:"actualAmount"`
 	CouponAmount         float64          `json:"couponAmount"`
 	UsedCouponInfo       *CouponStoreInfo `json:"usedCouponInfo"`

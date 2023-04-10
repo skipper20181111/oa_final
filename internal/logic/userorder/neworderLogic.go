@@ -56,7 +56,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	}
 	order.WexinPayAmount = payorder.WeiXinPayAmmount
 	order.CashAccountPayAmount = payorder.CashPayAmmount
-	l.svcCtx.UserOrder.Insert(l.ctx, order)
+	l.svcCtx.UserOrder.UpdateByOrderSn(l.ctx, order)
 	neworderrp := types.NewOrderRp{OrderInfo: OrderDb2info(order, nil), UseAccount: UseAccount, UseWechatPay: payorder.NeedWeiXinPay, WeiXinPayMsg: payorder.WeiXinPayMsg}
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 }

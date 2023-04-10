@@ -36,9 +36,9 @@ service oa-api {
 	@handler finishorder
 	post /finishorder (FinishOrderRes) returns (FinishOrderResp)
 	
-	@doc "预支付"
-	@handler prepay
-	post /prepay (FinishOrderRes) returns (PrePayResp)
+	@doc "继续支付"
+	@handler continuepay
+	post /continuepay (FinishOrderRes) returns (NewOrderResp)
 	
 	@doc "自定义支付"
 	@handler paybill

@@ -31,6 +31,7 @@ type (
 		Update(ctx context.Context, data *UserOrder) error
 		Delete(ctx context.Context, id int64) error
 		FindAllByPhone(ctx context.Context, phone string) ([]*UserOrder, error)
+		UpdateByOrderSn(ctx context.Context, newData *UserOrder) error
 	}
 
 	defaultUserOrderModel struct {
@@ -153,6 +154,11 @@ func (m *defaultUserOrderModel) Insert(ctx context.Context, data *UserOrder) (sq
 func (m *defaultUserOrderModel) Update(ctx context.Context, newData *UserOrder) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userOrderRowsWithPlaceHolder)
 	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.OriginalAmount, newData.PointAmount, newData.ActualAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.Id)
+	return err
+}
+func (m *defaultUserOrderModel) UpdateByOrderSn(ctx context.Context, newData *UserOrder) error {
+	query := fmt.Sprintf("update %s set %s where `order_sn` = ?", m.table, userOrderRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.OriginalAmount, newData.PointAmount, newData.ActualAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.OrderSn)
 	return err
 }
 

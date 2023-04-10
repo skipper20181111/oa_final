@@ -90,7 +90,7 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 	}
 
 	orderinfo.Phone = order.Phone
-	orderinfo.PointAmount = order.PointAmount
+	orderinfo.PointAmount = float64(order.PointAmount) / 100
 	orderinfo.OrderSn = order.OrderSn
 	orderinfo.OutTradeNo = order.OutTradeNo
 	orderinfo.TransactionId = order.TransactionId
@@ -128,7 +128,7 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 	for _, option := range opts {
 		option(l)
 	}
-	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
+	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	order := &cachemodel.UserOrder{}
 	order.Phone = l.userphone
 	order.FinishWeixinpay = 0
@@ -148,8 +148,8 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 	if req.UsePointFirst {
 		if l.userpoints != nil && l.userpoints.AvailablePoints > 0 {
 			l.usepoint = true
-			order.PointAmount = int64(mathx.MinInt(int(order.OriginalAmount), int(l.userpoints.AvailablePoints/100)))
-			order.ActualAmount = order.ActualAmount - order.PointAmount/100
+			order.PointAmount = int64(mathx.MinInt(int(order.OriginalAmount), int(l.userpoints.AvailablePoints)))
+			order.ActualAmount = order.ActualAmount - order.PointAmount
 		}
 	}
 	l.Orderdb = order

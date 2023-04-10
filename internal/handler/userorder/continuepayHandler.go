@@ -9,7 +9,7 @@ import (
 	"oa_final/internal/types"
 )
 
-func PrepayHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func ContinuepayHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.FinishOrderRes
 		if err := httpx.Parse(r, &req); err != nil {
@@ -17,8 +17,8 @@ func PrepayHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		l := userorder.NewPrepayLogic(r.Context(), svcCtx)
-		resp, err := l.Prepay(&req)
+		l := userorder.NewContinuepayLogic(r.Context(), svcCtx)
+		resp, err := l.Continuepay(&req)
 		if err != nil {
 			httpx.Error(w, err)
 		} else {

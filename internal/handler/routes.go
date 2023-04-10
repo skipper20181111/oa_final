@@ -46,8 +46,8 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
-				Path:    "/prepay",
-				Handler: userorder.PrepayHandler(serverCtx),
+				Path:    "/continuepay",
+				Handler: userorder.ContinuepayHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,

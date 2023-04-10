@@ -2,7 +2,6 @@ package userorder
 
 import (
 	"context"
-	"fmt"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -43,10 +42,9 @@ func (l *PayLogic) Payorder(req *types.TransactionInit) (resp *types.PayMsg, suc
 	resp = l.db2resp()
 	sn, _ := l.svcCtx.TransactionInfo.FindOneByOrderSn(l.ctx, req.OrderSn)
 	if sn != nil {
-		fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+		l.transantioninfo.Id = sn.Id
 		l.svcCtx.TransactionInfo.Update(l.ctx, l.transantioninfo)
 	} else {
-		fmt.Println("(((((((((((((((((((((((((((((@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@)))))))))))))))))))))))))))))")
 		l.svcCtx.TransactionInfo.Insert(l.ctx, l.transantioninfo)
 	}
 	return resp, true

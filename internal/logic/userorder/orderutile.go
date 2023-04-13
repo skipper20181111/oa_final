@@ -372,6 +372,7 @@ func (l *Logic) Updatecashaccount(order *cachemodel.UserOrder, use bool) (bool, 
 			l.svcCtx.TransactionInfo.UpdateCashPay(l.ctx, order.OrderSn)
 		} else {
 			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "退款", Phone: accphone, Balance: phone.Balance, ChangeAmount: l.cashaccount.Balance})
+			l.svcCtx.TransactionInfo.UpdateCashReject(l.ctx, order.OrderSn)
 		}
 		return ok, "yes"
 	} else {

@@ -50,13 +50,14 @@ func (l *PayLogic) Payorder(req *types.TransactionInit) (resp *types.PayMsg, suc
 	return resp, true
 
 }
-func IfFinished(info *cachemodel.TransactionInfo) bool {
-	cash := false
-	weixin := false
+func IfFinished(info *cachemodel.TransactionInfo) (total bool, cash bool, weixin bool) {
+	total = false
+	cash = false
+	weixin = false
 	if info.NeedCashAccount == 1 && info.FinishAccountpay == 1 {
 		cash = true
 	}
-	if info.NeedCashAccount != 1 {
+	if info.NeedCashAccount == 0 {
 		cash = true
 	}
 	if info.WexinPayAmount > 0 && info.FinishWeixinpay == 1 {
@@ -65,8 +66,27 @@ func IfFinished(info *cachemodel.TransactionInfo) bool {
 	if info.WexinPayAmount <= 0 {
 		weixin = true
 	}
-	return weixin && cash
+	return weixin && cash, cash, weixin
 }
+func IfRejected(info *cachemodel.TransactionInfo) (total bool, cash bool, weixin bool) {
+	total = false
+	cash = false
+	weixin = false
+	if info.NeedCashAccount == 1 && info.FinishAccountpay == -1 {
+		cash = true
+	}
+	if info.NeedCashAccount == 0 {
+		cash = true
+	}
+	if info.WexinPayAmount > 0 && info.FinishWeixinpay == -1 {
+		weixin = true
+	}
+	if info.WexinPayAmount <= 0 {
+		weixin = true
+	}
+	return weixin && cash, cash, weixin
+}
+
 func (l *PayLogic) db2resp() *types.PayMsg {
 	resp := &types.PayMsg{}
 	resp.WeiXinPayMsg = l.weixinpayinit
@@ -80,6 +100,7 @@ func (l *PayLogic) db2resp() *types.PayMsg {
 	resp.CashPayAmmount = l.transantioninfo.CashAccountPayAmount
 	return resp
 }
+
 func (l *PayLogic) transactionend() {
 	if l.req.NeedCashAccount {
 		wxammount, cashammount, _, needcash, ok := l.CalculatePayAmmount(l.req.Ammount)

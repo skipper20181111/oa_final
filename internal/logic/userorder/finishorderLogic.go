@@ -70,10 +70,6 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 				cashok, okstr := lu.Updatecashaccount(l.userorder, true)
 				if !cashok || okstr != "yes" {
 					lu.Oplog("支付模块更新现金账户失败", order.OrderSn, "开始更新", l.userorder.LogId)
-				} else {
-					userpoint.HistoryPoints = userpoint.HistoryPoints + l.userorder.CashAccountPayAmount
-					userpoint.AvailablePoints = userpoint.AvailablePoints + l.userorder.CashAccountPayAmount
-					l.svcCtx.UserPoints.Update(l.ctx, userpoint)
 				}
 			}
 			if l.usecoupon {

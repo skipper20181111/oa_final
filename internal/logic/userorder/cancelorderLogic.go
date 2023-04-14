@@ -74,5 +74,13 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 		lu.closelock(lockmsglist)
 	}
 	//结束更新现金账户与优惠券账户
+	// 开始退积分账户
+	if order.PointAmount > 0 {
+		userpoints, _ := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, order.Phone)
+		if userpoints != nil {
+			userpoints.AvailablePoints = userpoints.AvailablePoints + order.PointAmount
+			l.svcCtx.UserPoints.Update(l.ctx, userpoints)
+		}
+	}
 	return &types.CancelOrderResp{Code: "10000", Msg: "发起退款成功", Data: &types.CancelOrderRp{OrderInfo: OrderDb2info(order, transactioninfo)}}, nil
 }

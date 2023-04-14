@@ -9,6 +9,7 @@ import (
 	"log"
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
+	"oa_final/internal/types"
 )
 
 type WeChatUtilLogic struct {
@@ -87,4 +88,42 @@ func (l *WeChatUtilLogic) IfCancelOrderSuccess(order *cachemodel.UserOrder) bool
 		return true
 	}
 	return false
+}
+func (l *WeChatUtilLogic) Weixinpayinit(OutTradeNo string, ammount int64) *types.WeiXinPayMsg {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
+	// 得到prepay_id，以及调起支付所需的参数和签名
+	payment, result, err := jssvc.PrepayWithRequestPayment(l.ctx,
+		jsapi.PrepayRequest{
+			Appid:       core.String(l.svcCtx.Config.WxConf.AppId),
+			Mchid:       core.String(l.svcCtx.Config.WxConf.MchID),
+			Description: core.String("沾还是不沾芥末，这是一个问题"),
+			OutTradeNo:  core.String(OutTradeNo),
+			Attach:      core.String(randStr(16)),
+			NotifyUrl:   core.String(l.svcCtx.Config.ServerInfo.Url + "/payrecall/tellmeso"),
+			Amount: &jsapi.Amount{
+				Total: core.Int64(ammount),
+			},
+			Payer: &jsapi.Payer{
+				Openid: core.String(l.ctx.Value("openid").(string)),
+			},
+		},
+	)
+	defer result.Response.Body.Close()
+	if err == nil {
+		log.Println(payment, result)
+	} else {
+		log.Println(err)
+	}
+	// 用于返回给前端调起支付的变量与签名串生成器
+	timestampsec := *payment.TimeStamp
+	nonceStr := *payment.NonceStr
+	packagestr := *payment.Package
+	paySign := *payment.PaySign
+	signType := *payment.SignType
+	return &types.WeiXinPayMsg{PaySign: paySign, NonceStr: nonceStr, TimeStamp: timestampsec, Package: packagestr, SignType: signType}
 }

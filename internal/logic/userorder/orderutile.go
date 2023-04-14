@@ -276,7 +276,7 @@ func (l *Logic) calculatemoney(UseCoupon, usecash bool, options ...func(logic *L
 
 	return l.Orderdb
 }
-func (l *Logic) getlocktry(lockmsglist []*types.LockMsg) bool {
+func (l *Logic) Getlocktry(lockmsglist []*types.LockMsg) bool {
 	trytime := 3
 	for i := 0; i < trytime; i++ {
 		ok := l.getlocksingletry(lockmsglist)
@@ -311,7 +311,7 @@ func (l *Logic) getlocksingletry(lockmsglist []*types.LockMsg) bool {
 	}
 	return true
 }
-func (l *Logic) closelock(lockmsglist []*types.LockMsg) bool {
+func (l *Logic) Closelock(lockmsglist []*types.LockMsg) bool {
 	//phone := l.ctx.Value("phone").(string)
 	lockhost := l.svcCtx.Config.Lock.Host
 	urlPath := fmt.Sprintf("%s%s%s", "http://", lockhost, "/pcc/closelock")
@@ -485,4 +485,29 @@ func HaveKey(orderpart, couponpart string) bool {
 		}
 	}
 	return false
+}
+
+func order2req(order *cachemodel.UserOrder) *types.NewOrderRes {
+	req := &types.NewOrderRes{}
+	pidlist := make([]*types.ProductTiny, 0)
+	json.Unmarshal([]byte(order.Pidlist), &pidlist)
+	req.ProductTinyList = pidlist
+	req.Address = &types.AddressInfo{}
+	if order.CashAccountPayAmount > 0 {
+		req.UseCashFirst = true
+	}
+	if order.PointAmount > 0 {
+		req.UsePointFirst = true
+	}
+	if order.UsedCouponinfo != "" {
+		uuidmap := Uuidstr2map(order.UsedCouponinfo)
+		for idk, couponmap := range uuidmap {
+			for uuidk, _ := range couponmap {
+				req.UseCouponFirst = true
+				req.UsedCouponId = idk
+				req.UsedCouponUUID = uuidk
+			}
+		}
+	}
+	return req
 }

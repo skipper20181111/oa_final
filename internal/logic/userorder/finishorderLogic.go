@@ -65,7 +65,7 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 		lockmsglist := make([]*types.LockMsg, 0)
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: userphone, Field: "user_coupon"})
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: userphone, Field: "cash_account"})
-		if lu.getlocktry(lockmsglist) {
+		if lu.Getlocktry(lockmsglist) {
 			if l.usecash { // 现金账户部分
 				cashok, okstr := lu.Updatecashaccount(l.userorder, true)
 				if !cashok || okstr != "yes" {
@@ -78,7 +78,7 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 					lu.Oplog("支付模块更新优惠券失败", order.OrderSn, "开始更新", l.userorder.LogId)
 				}
 			}
-			lu.closelock(lockmsglist)
+			lu.Closelock(lockmsglist)
 			l.userorder.FinishAccountpay = 1
 			l.svcCtx.UserOrder.Update(l.ctx, l.userorder)
 			return &types.FinishOrderResp{Code: "10000", Msg: "完全成功", Data: OrderDb2info(order, transactioninfo)}, nil

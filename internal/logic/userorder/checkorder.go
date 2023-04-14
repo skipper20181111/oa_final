@@ -110,3 +110,39 @@ func (l *CheckOrderLogic) check67(order *cachemodel.UserOrder, transactioninfo *
 	l.svcCtx.UserOrder.Update(l.ctx, order)
 	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(order, nil)}}, nil
 }
+func IfFinished(info *cachemodel.TransactionInfo) (total bool, cash bool, weixin bool) {
+	total = false
+	cash = false
+	weixin = false
+	if info.NeedCashAccount == 1 && info.FinishAccountpay == 1 {
+		cash = true
+	}
+	if info.NeedCashAccount == 0 {
+		cash = true
+	}
+	if info.WexinPayAmount > 0 && info.FinishWeixinpay == 1 {
+		weixin = true
+	}
+	if info.WexinPayAmount <= 0 {
+		weixin = true
+	}
+	return weixin && cash, cash, weixin
+}
+func IfRejected(info *cachemodel.TransactionInfo) (total bool, cash bool, weixin bool) {
+	total = false
+	cash = false
+	weixin = false
+	if info.NeedCashAccount == 1 && info.FinishAccountpay == -1 {
+		cash = true
+	}
+	if info.NeedCashAccount == 0 {
+		cash = true
+	}
+	if info.WexinPayAmount > 0 && info.FinishWeixinpay == -1 {
+		weixin = true
+	}
+	if info.WexinPayAmount <= 0 {
+		weixin = true
+	}
+	return weixin && cash, cash, weixin
+}

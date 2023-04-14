@@ -56,7 +56,7 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 		lockmsglist := make([]*types.LockMsg, 0)
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.userphone, Field: "user_coupon"})
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.userphone, Field: "cash_account"})
-		if lu.getlocktry(lockmsglist) {
+		if lu.Getlocktry(lockmsglist) {
 			if order.CashAccountPayAmount > 0 {
 				ok, _ := lu.Updatecashaccount(order, false)
 				if !ok {
@@ -71,7 +71,7 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 			}
 		}
 
-		lu.closelock(lockmsglist)
+		lu.Closelock(lockmsglist)
 	}
 	//结束更新现金账户与优惠券账户
 	// 开始退积分账户

@@ -2,7 +2,6 @@ package userorder
 
 import (
 	"context"
-	"encoding/json"
 	"oa_final/cachemodel"
 
 	"oa_final/internal/svc"
@@ -60,28 +59,4 @@ func (l *ContinuepayLogic) Continuepay(req *types.FinishOrderRes) (resp *types.N
 	l.svcCtx.UserOrder.Update(l.ctx, neworder)
 	neworderrp := types.NewOrderRp{OrderInfo: OrderDb2info(neworder, nil), UseAccount: UseAccount, UseWechatPay: payorder.NeedWeiXinPay, WeiXinPayMsg: payorder.WeiXinPayMsg}
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
-}
-func order2req(order *cachemodel.UserOrder) *types.NewOrderRes {
-	req := &types.NewOrderRes{}
-	pidlist := make([]*types.ProductTiny, 0)
-	json.Unmarshal([]byte(order.Pidlist), &pidlist)
-	req.ProductTinyList = pidlist
-	req.Address = &types.AddressInfo{}
-	if order.CashAccountPayAmount > 0 {
-		req.UseCashFirst = true
-	}
-	if order.PointAmount > 0 {
-		req.UsePointFirst = true
-	}
-	if order.UsedCouponinfo != "" {
-		uuidmap := Uuidstr2map(order.UsedCouponinfo)
-		for idk, couponmap := range uuidmap {
-			for uuidk, _ := range couponmap {
-				req.UseCouponFirst = true
-				req.UsedCouponId = idk
-				req.UsedCouponUUID = uuidk
-			}
-		}
-	}
-	return req
 }

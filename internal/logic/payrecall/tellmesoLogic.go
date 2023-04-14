@@ -30,12 +30,6 @@ func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payment
 		no, _ := l.svcCtx.UserOrder.FindOneByOutTradeNo(l.ctx, *transaction.OutTradeNo)
 		if no != nil {
 			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, no.Phone)
-			cache, _ := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, no.Phone)
-			if cache != nil {
-				cache.HistoryPoints = cache.HistoryPoints + no.WexinPayAmount
-				cache.AvailablePoints = cache.AvailablePoints + no.WexinPayAmount
-				l.svcCtx.UserPoints.Update(l.ctx, cache)
-			}
 			no.TransactionId = *transaction.TransactionId
 			l.svcCtx.UserOrder.Update(l.ctx, no)
 			return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil

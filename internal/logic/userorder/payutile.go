@@ -2,10 +2,7 @@ package userorder
 
 import (
 	"context"
-	"github.com/wechatpay-apiv3/wechatpay-go/core"
-	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
 	"github.com/zeromicro/go-zero/core/logx"
-	"log"
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
@@ -21,14 +18,16 @@ type PayLogic struct {
 	transantioninfo *cachemodel.TransactionInfo
 	weixinpayinit   *types.WeiXinPayMsg
 	orderutile      *Logic
+	WeChatUtilLogic *WeChatUtilLogic
 }
 
 func NewPayLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PayLogic {
 	return &PayLogic{
-		Logger:     logx.WithContext(ctx),
-		ctx:        ctx,
-		svcCtx:     svcCtx,
-		orderutile: NewLogic(ctx, svcCtx),
+		Logger:          logx.WithContext(ctx),
+		ctx:             ctx,
+		svcCtx:          svcCtx,
+		orderutile:      NewLogic(ctx, svcCtx),
+		WeChatUtilLogic: NewWeChatUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -51,42 +50,6 @@ func (l *PayLogic) Payorder(req *types.TransactionInit) (resp *types.PayMsg, suc
 	}
 	return resp, true
 
-}
-func IfFinished(info *cachemodel.TransactionInfo) (total bool, cash bool, weixin bool) {
-	total = false
-	cash = false
-	weixin = false
-	if info.NeedCashAccount == 1 && info.FinishAccountpay == 1 {
-		cash = true
-	}
-	if info.NeedCashAccount == 0 {
-		cash = true
-	}
-	if info.WexinPayAmount > 0 && info.FinishWeixinpay == 1 {
-		weixin = true
-	}
-	if info.WexinPayAmount <= 0 {
-		weixin = true
-	}
-	return weixin && cash, cash, weixin
-}
-func IfRejected(info *cachemodel.TransactionInfo) (total bool, cash bool, weixin bool) {
-	total = false
-	cash = false
-	weixin = false
-	if info.NeedCashAccount == 1 && info.FinishAccountpay == -1 {
-		cash = true
-	}
-	if info.NeedCashAccount == 0 {
-		cash = true
-	}
-	if info.WexinPayAmount > 0 && info.FinishWeixinpay == -1 {
-		weixin = true
-	}
-	if info.WexinPayAmount <= 0 {
-		weixin = true
-	}
-	return weixin && cash, cash, weixin
 }
 
 func (l *PayLogic) db2resp() *types.PayMsg {
@@ -115,7 +78,7 @@ func (l *PayLogic) transactionend() {
 				l.transantioninfo.NeedCashAccount = 1
 				l.transantioninfo.WexinPayAmount = wxammount
 				l.transantioninfo.CashAccountPayAmount = cashammount
-				l.weixinpayinit = l.Weixinpayinit(l.transantioninfo.OutTradeNo, l.transantioninfo.WexinPayAmount)
+				l.weixinpayinit = l.WeChatUtilLogic.Weixinpayinit(l.transantioninfo.OutTradeNo, l.transantioninfo.WexinPayAmount)
 			}
 		}
 	} else {
@@ -123,7 +86,7 @@ func (l *PayLogic) transactionend() {
 	}
 }
 func (l *PayLogic) weixinpayall() {
-	l.weixinpayinit = l.Weixinpayinit(l.transantioninfo.OutTradeNo, l.transantioninfo.Amount)
+	l.weixinpayinit = l.WeChatUtilLogic.Weixinpayinit(l.transantioninfo.OutTradeNo, l.transantioninfo.Amount)
 	l.transantioninfo.WexinPayAmount = l.transantioninfo.Amount
 }
 func (l *PayLogic) transactioninfoinit() {
@@ -166,42 +129,4 @@ func (l *PayLogic) CalculatePayAmmount(totalammount int64) (wxammount, cashammou
 			return totalammount - cash.Balance, cash.Balance, true, true, true
 		}
 	}
-}
-func (l *PayLogic) Weixinpayinit(OutTradeNo string, ammount int64) *types.WeiXinPayMsg {
-	defer func() {
-		if e := recover(); e != nil {
-			return
-		}
-	}()
-	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
-	// 得到prepay_id，以及调起支付所需的参数和签名
-	payment, result, err := jssvc.PrepayWithRequestPayment(l.ctx,
-		jsapi.PrepayRequest{
-			Appid:       core.String(l.svcCtx.Config.WxConf.AppId),
-			Mchid:       core.String(l.svcCtx.Config.WxConf.MchID),
-			Description: core.String("沾还是不沾芥末，这是一个问题"),
-			OutTradeNo:  core.String(OutTradeNo),
-			Attach:      core.String(randStr(16)),
-			NotifyUrl:   core.String(l.svcCtx.Config.ServerInfo.Url + "/payrecall/tellmeso"),
-			Amount: &jsapi.Amount{
-				Total: core.Int64(ammount),
-			},
-			Payer: &jsapi.Payer{
-				Openid: core.String(l.ctx.Value("openid").(string)),
-			},
-		},
-	)
-	defer result.Response.Body.Close()
-	if err == nil {
-		log.Println(payment, result)
-	} else {
-		log.Println(err)
-	}
-	// 用于返回给前端调起支付的变量与签名串生成器
-	timestampsec := *payment.TimeStamp
-	nonceStr := *payment.NonceStr
-	packagestr := *payment.Package
-	paySign := *payment.PaySign
-	signType := *payment.SignType
-	return &types.WeiXinPayMsg{PaySign: paySign, NonceStr: nonceStr, TimeStamp: timestampsec, Package: packagestr, SignType: signType}
 }

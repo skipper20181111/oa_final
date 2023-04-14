@@ -42,6 +42,9 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 	if order == nil || transactioninfo == nil {
 		return &types.FinishOrderResp{Code: "4004", Msg: "数据库失效，请重新下单"}, nil
 	}
+	if order.FinishAccountpay == 1 || transactioninfo.FinishAccountpay == 1 {
+		return &types.FinishOrderResp{Code: "10000", Msg: "已经完成支付，请勿重复支付"}, nil
+	}
 	l.userorder = order
 	if transactioninfo.CashAccountPayAmount > 0 {
 		l.usecash = true

@@ -2,6 +2,8 @@ package userorder
 
 import (
 	"context"
+	"encoding/json"
+	"oa_final/cachemodel"
 
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
@@ -32,17 +34,54 @@ func (l *ContinuepayLogic) Continuepay(req *types.FinishOrderRes) (resp *types.N
 	if order.OrderStatus == 1 {
 		return &types.NewOrderResp{Code: "4004", Msg: "此订单已支付"}, nil
 	}
+	PMcache, ok := l.svcCtx.LocalCache.Get(svc.ProductsMap)
+	if !ok {
+		return &types.NewOrderResp{Code: "4004", Msg: "服务器查找商品列表失败"}, nil
+	}
+	productsMap := PMcache.(map[int64]*cachemodel.Product)
+	lu := NewLogic(l.ctx, l.svcCtx)
+	neworder := lu.Order2db(order2req(order), productsMap, UseCache(false))
+	neworder.Id = order.Id
+	neworder.Address = order.Address
+	neworder.OrderSn = order.OrderSn
+	neworder.OutTradeNo = order.OutTradeNo
+	neworder.LogId = order.LogId
 	payl := NewPayLogic(l.ctx, l.svcCtx)
+	l.svcCtx.UserOrder.Update(l.ctx, neworder)
 	payorder, success := payl.Payorder(&types.TransactionInit{TransactionType: "普通商品", OrderSn: order.OrderSn, NeedCashAccount: true, Ammount: order.ActualAmount, Phone: order.Phone})
 	if !success {
 		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}
-	if order.PointAmount > 0 || order.UsedCouponinfo != "" || payorder.NeedCashAccountPay {
+	if neworder.PointAmount > 0 || neworder.UsedCouponinfo != "" || payorder.NeedCashAccountPay {
 		UseAccount = true
 	}
-	order.WexinPayAmount = payorder.WeiXinPayAmmount
-	order.CashAccountPayAmount = payorder.CashPayAmmount
-	l.svcCtx.UserOrder.Update(l.ctx, order)
-	neworderrp := types.NewOrderRp{OrderInfo: OrderDb2info(order, nil), UseAccount: UseAccount, UseWechatPay: payorder.NeedWeiXinPay, WeiXinPayMsg: payorder.WeiXinPayMsg}
+	neworder.WexinPayAmount = payorder.WeiXinPayAmmount
+	neworder.CashAccountPayAmount = payorder.CashPayAmmount
+	l.svcCtx.UserOrder.Update(l.ctx, neworder)
+	neworderrp := types.NewOrderRp{OrderInfo: OrderDb2info(neworder, nil), UseAccount: UseAccount, UseWechatPay: payorder.NeedWeiXinPay, WeiXinPayMsg: payorder.WeiXinPayMsg}
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
+}
+func order2req(order *cachemodel.UserOrder) *types.NewOrderRes {
+	req := &types.NewOrderRes{}
+	pidlist := make([]*types.ProductTiny, 0)
+	json.Unmarshal([]byte(order.Pidlist), &pidlist)
+	req.ProductTinyList = pidlist
+	req.Address = &types.AddressInfo{}
+	if order.CashAccountPayAmount > 0 {
+		req.UseCashFirst = true
+	}
+	if order.PointAmount > 0 {
+		req.UsePointFirst = true
+	}
+	if order.UsedCouponinfo != "" {
+		uuidmap := Uuidstr2map(order.UsedCouponinfo)
+		for idk, couponmap := range uuidmap {
+			for uuidk, _ := range couponmap {
+				req.UseCouponFirst = true
+				req.UsedCouponId = idk
+				req.UsedCouponUUID = uuidk
+			}
+		}
+	}
+	return req
 }

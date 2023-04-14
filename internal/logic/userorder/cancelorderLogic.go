@@ -39,7 +39,7 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 		return &types.CancelOrderResp{Code: "4004", Msg: "未查询到订单"}, nil
 	}
 	if order.OrderStatus != 1 {
-		return &types.CancelOrderResp{Code: "10000", Msg: "您好，您订购的商品已进入运输环节，暂不可取消订单，若商品有质量问题请点击投诉按钮投诉，我们会在24小时内为您处理！"}, nil
+		return &types.CancelOrderResp{Code: "10000", Msg: "您好，您的订单非已付款未发货状态，暂不可取消订单，若商品有质量问题请点击投诉按钮投诉，我们会在24小时内为您处理！"}, nil
 	}
 	order.OrderStatus = 6 // 删除订单，设置为开始退款。
 	order.WexinPayAmount = transactioninfo.WexinPayAmount
@@ -70,6 +70,7 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 				}
 			}
 		}
+
 		lu.closelock(lockmsglist)
 	}
 	//结束更新现金账户与优惠券账户

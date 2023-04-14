@@ -20,13 +20,15 @@ type PayLogic struct {
 	req             *types.TransactionInit
 	transantioninfo *cachemodel.TransactionInfo
 	weixinpayinit   *types.WeiXinPayMsg
+	orderutile      *Logic
 }
 
 func NewPayLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PayLogic {
 	return &PayLogic{
-		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
-		svcCtx: svcCtx,
+		Logger:     logx.WithContext(ctx),
+		ctx:        ctx,
+		svcCtx:     svcCtx,
+		orderutile: NewLogic(ctx, svcCtx),
 	}
 }
 
@@ -113,6 +115,7 @@ func (l *PayLogic) transactionend() {
 				l.transantioninfo.NeedCashAccount = 1
 				l.transantioninfo.WexinPayAmount = wxammount
 				l.transantioninfo.CashAccountPayAmount = cashammount
+				l.weixinpayinit = l.Weixinpayinit(l.transantioninfo.OutTradeNo, l.transantioninfo.WexinPayAmount)
 			}
 		}
 	} else {

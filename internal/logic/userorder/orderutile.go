@@ -176,6 +176,7 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 	order.ReceiveTime = inittime
 	order.CloseTime = inittime
 	order.OrderSn = getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + order.Address)
+	order.LogId = time.Now().UnixNano()
 	l.Orderdb = order
 	return order
 }
@@ -361,17 +362,17 @@ func (l *Logic) Updatecashaccount(order *cachemodel.UserOrder, use bool) (bool, 
 		}
 	}()
 	accphone := order.Phone
-	phone, _ := l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, accphone)
-	account, ok := cashfinish(order, phone, use)
+	cashaccount, _ := l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, accphone)
+	account, ok := cashfinish(order, cashaccount, use)
 	if ok {
 		l.Oplog("cash_account", order.OrderSn, "开始更新", order.LogId)
 		l.svcCtx.CashAccount.Update(l.ctx, account)
 		l.Oplog("cash_account", order.OrderSn, "结束更新", order.LogId)
 		if use {
-			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "消费", Phone: accphone, Balance: phone.Balance, ChangeAmount: l.cashaccount.Balance})
+			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "消费", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: order.CashAccountPayAmount})
 			l.svcCtx.TransactionInfo.UpdateCashPay(l.ctx, order.OrderSn)
 		} else {
-			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "退款", Phone: accphone, Balance: phone.Balance, ChangeAmount: l.cashaccount.Balance})
+			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "退款", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: order.CashAccountPayAmount})
 			l.svcCtx.TransactionInfo.UpdateCashReject(l.ctx, order.OrderSn)
 		}
 		return ok, "yes"

@@ -349,11 +349,7 @@ type RechargeOrderInfo struct {
 
 type CashRechargeRp struct {
 	RechargeOrderInfo *RechargeOrderInfo `json:"rechargeOrderInfo"`
-	TimeStamp         string             `json:"timeStamp"`
-	NonceStr          string             `json:"nonceStr"`
-	Package           string             `json:"package"`
-	SignType          string             `json:"signType"`
-	PaySign           string             `json:"paySign"`
+	WeiXinPayMsg      *WeiXinPayMsg      `json:"weiXinPayMsg"`
 }
 
 type CashRechargeResp struct {

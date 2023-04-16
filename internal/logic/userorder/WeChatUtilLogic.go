@@ -14,22 +14,30 @@ import (
 
 type WeChatUtilLogic struct {
 	logx.Logger
-	ctx        context.Context
-	svcCtx     *svc.ServiceContext
-	userphone  string
-	useropenid string
+	ctx         context.Context
+	svcCtx      *svc.ServiceContext
+	userphone   string
+	useropenid  string
+	tellmesodir string
 }
+
+type WeChatPayOpt func(*WeChatUtilLogic)
 
 func NewWeChatUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *WeChatUtilLogic {
 	return &WeChatUtilLogic{
-		Logger:     logx.WithContext(ctx),
-		ctx:        ctx,
-		svcCtx:     svcCtx,
-		userphone:  ctx.Value("phone").(string),
-		useropenid: ctx.Value("openid").(string),
+		Logger:      logx.WithContext(ctx),
+		ctx:         ctx,
+		svcCtx:      svcCtx,
+		userphone:   ctx.Value("phone").(string),
+		useropenid:  ctx.Value("openid").(string),
+		tellmesodir: svcCtx.Config.ServerInfo.Url + "/payrecall/tellmeso",
 	}
 }
-
+func UseRecallDir(dir string) WeChatPayOpt {
+	return func(l *WeChatUtilLogic) {
+		l.tellmesodir = l.svcCtx.Config.ServerInfo.Url + dir
+	}
+}
 func (l *WeChatUtilLogic) CheckWeiXinPayFinished(OutTradeNo string) bool {
 	defer func() {
 		if e := recover(); e != nil {
@@ -89,12 +97,15 @@ func (l *WeChatUtilLogic) IfCancelOrderSuccess(order *cachemodel.UserOrder) bool
 	}
 	return false
 }
-func (l *WeChatUtilLogic) Weixinpayinit(OutTradeNo string, ammount int64) *types.WeiXinPayMsg {
+func (l *WeChatUtilLogic) Weixinpayinit(OutTradeNo string, ammount int64, options ...func(logic *WeChatUtilLogic)) *types.WeiXinPayMsg {
 	defer func() {
 		if e := recover(); e != nil {
 			return
 		}
 	}()
+	for _, option := range options {
+		option(l)
+	}
 	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
 	// 得到prepay_id，以及调起支付所需的参数和签名
 	payment, result, err := jssvc.PrepayWithRequestPayment(l.ctx,
@@ -104,7 +115,7 @@ func (l *WeChatUtilLogic) Weixinpayinit(OutTradeNo string, ammount int64) *types
 			Description: core.String("沾还是不沾芥末，这是一个问题"),
 			OutTradeNo:  core.String(OutTradeNo),
 			Attach:      core.String(randStr(16)),
-			NotifyUrl:   core.String(l.svcCtx.Config.ServerInfo.Url + "/payrecall/tellmeso"),
+			NotifyUrl:   core.String(l.tellmesodir),
 			Amount: &jsapi.Amount{
 				Total: core.Int64(ammount),
 			},

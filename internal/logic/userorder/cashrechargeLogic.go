@@ -2,9 +2,6 @@ package userorder
 
 import (
 	"context"
-	"github.com/wechatpay-apiv3/wechatpay-go/core"
-	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
-	"log"
 	"math/rand"
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
@@ -17,25 +14,27 @@ import (
 
 type CashrechargeLogic struct {
 	logx.Logger
-	ctx       context.Context
-	svcCtx    *svc.ServiceContext
-	userphone string
-	lid       int64
+	ctx             context.Context
+	svcCtx          *svc.ServiceContext
+	userphone       string
+	useropenid      string
+	lid             int64
+	WeChatUtilLogic *WeChatUtilLogic
 }
 
 func NewCashrechargeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CashrechargeLogic {
 	return &CashrechargeLogic{
-		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
-		svcCtx: svcCtx,
+		Logger:          logx.WithContext(ctx),
+		ctx:             ctx,
+		svcCtx:          svcCtx,
+		userphone:       ctx.Value("phone").(string),
+		useropenid:      ctx.Value("openid").(string),
+		WeChatUtilLogic: NewWeChatUtilLogic(ctx, svcCtx),
 	}
 }
 
 func (l *CashrechargeLogic) Cashrecharge(req *types.CashRechargeRes) (resp *types.CashRechargeResp, err error) {
-	l.userphone = l.ctx.Value("phone").(string)
-	useropenid := l.ctx.Value("openid").(string)
 	l.lid = time.Now().UnixNano() + int64(rand.Intn(1024))
-
 	get, ok := l.svcCtx.LocalCache.Get(svc.RechargeProductKey)
 	if !ok {
 		return &types.CashRechargeResp{Code: "4004", Msg: "数据库失效"}, nil
@@ -53,38 +52,8 @@ func (l *CashrechargeLogic) Cashrecharge(req *types.CashRechargeRes) (resp *type
 	if order == nil {
 		return &types.CashRechargeResp{Code: "4004", Msg: "数据库失效"}, nil
 	}
-	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
-	// 得到prepay_id，以及调起支付所需的参数和签名
-	payment, result, err := jssvc.PrepayWithRequestPayment(l.ctx,
-		jsapi.PrepayRequest{
-			Appid:       core.String(l.svcCtx.Config.WxConf.AppId),
-			Mchid:       core.String(l.svcCtx.Config.WxConf.MchID),
-			Description: core.String("不沾芥末没灵魂"),
-			OutTradeNo:  core.String(order.OutTradeNo),
-			Attach:      core.String(randStr(16)),
-			NotifyUrl:   core.String(l.svcCtx.Config.ServerInfo.Url + "/payrecall/coupontellmeso"),
-			Amount: &jsapi.Amount{
-				Total: core.Int64(order.WexinPayAmount),
-			},
-			Payer: &jsapi.Payer{
-				Openid: core.String(useropenid),
-			},
-		},
-	)
-	defer result.Response.Body.Close()
-	if err == nil {
-		log.Println(payment, result)
-	} else {
-		log.Println(err)
-		return &types.CashRechargeResp{Code: "4004", Msg: err.Error()}, nil
-	}
-	// 用于返回给前端调起支付的变量与签名串生成器
-	timestampsec := *payment.TimeStamp
-	nonceStr := *payment.NonceStr
-	packagestr := *payment.Package
-	paySign := *payment.PaySign
-	signType := *payment.SignType
-	cashrecharge := &types.CashRechargeRp{RechargeOrderInfo: db2info(order), TimeStamp: timestampsec, NonceStr: nonceStr, Package: packagestr, SignType: signType, PaySign: paySign}
+	weixinpayinit := l.WeChatUtilLogic.Weixinpayinit(order.OutTradeNo, order.WexinPayAmount, UseRecallDir("/payrecall/coupontellmeso"))
+	cashrecharge := &types.CashRechargeRp{RechargeOrderInfo: db2info(order), WeiXinPayMsg: weixinpayinit}
 	return &types.CashRechargeResp{Code: "10000", Msg: "success", Data: cashrecharge}, nil
 }
 func db2info(order *cachemodel.RechargeOrder) *types.RechargeOrderInfo {
@@ -103,7 +72,7 @@ func db2info(order *cachemodel.RechargeOrder) *types.RechargeOrderInfo {
 }
 
 func (l *CashrechargeLogic) order2db(rproduct *cachemodel.RechargeProduct) *cachemodel.RechargeOrder {
-	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
+	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	db := &cachemodel.RechargeOrder{}
 	db.LogId = l.lid
 	db.OutTradeNo = randStr(32)

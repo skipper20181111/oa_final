@@ -42,9 +42,9 @@ func (l *CoupontellmesoLogic) Coupontellmeso(notifyReq *notify.Request, transact
 				if phone == nil {
 					_, err := l.svcCtx.CashAccount.Insert(l.ctx, &cachemodel.CashAccount{Phone: order.Phone, Balance: order.WexinPayAmount})
 					if err != nil {
-						l.lu.Closelock(lockmsglist)
 						return &types.TellMeSoResp{Code: "FAIL", Message: "失败"}, nil
 					}
+					l.lu.Closelock(lockmsglist)
 				} else {
 					phone.Balance = phone.Balance + order.WexinPayAmount
 					l.svcCtx.CashAccount.Update(l.ctx, phone)
@@ -53,7 +53,7 @@ func (l *CoupontellmesoLogic) Coupontellmeso(notifyReq *notify.Request, transact
 				l.lu.Oplog("现金账户充值", order.OrderSn, "结束更新", order.LogId)
 				l.lu.Closelock(lockmsglist)
 			} else {
-				return &types.TellMeSoResp{Code: "FAIL", Message: "失败"}, nil
+				return &types.TellMeSoResp{Code: "FAIL", Message: "未获取到锁"}, nil
 			}
 		}
 	}

@@ -29,7 +29,7 @@ func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payment
 	if *transaction.TradeState == "SUCCESS" {
 		no, _ := l.svcCtx.UserOrder.FindOneByOutTradeNo(l.ctx, *transaction.OutTradeNo)
 		if no != nil {
-			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, no.Phone)
+			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, no.OrderSn)
 			no.TransactionId = *transaction.TransactionId
 			l.svcCtx.UserOrder.Update(l.ctx, no)
 			return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil

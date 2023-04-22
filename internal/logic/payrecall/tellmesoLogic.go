@@ -27,7 +27,7 @@ func NewTellmesoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Tellmeso
 func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payments.Transaction) (resp *types.TellMeSoResp, err error) {
 	fmt.Println("************** START ******************")
 	if *transaction.TradeState == "SUCCESS" {
-		sn, _ := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, *transaction.OutTradeNo)
+		sn, _ := l.svcCtx.UserOrder.FindOneByOutTradeNo(l.ctx, *transaction.OutTradeNo)
 		if sn != nil {
 			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, sn.OrderSn)
 			sn.TransactionId = *transaction.TransactionId

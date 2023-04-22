@@ -16,7 +16,9 @@ func TellmesoHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		transaction := new(payments.Transaction)
 		//var transaction *types.SuccessInfo
 		notifyReq, err := svcCtx.Handler.ParseNotifyRequest(r.Context(), r, transaction)
-		defer notifyReq.RawRequest.Body.Close()
+		if notifyReq.RawRequest != nil {
+			defer notifyReq.RawRequest.Body.Close()
+		}
 		if err != nil {
 			fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&,解密失败了", err.Error(), "&&&&&&&&&&&&&&&&&&&&&&&&")
 			httpx.Error(w, err)

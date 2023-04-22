@@ -93,7 +93,7 @@ func (l *PayLogic) weixinpayall() {
 func (l *PayLogic) transactioninfoinit() {
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	transantioninfo := &cachemodel.TransactionInfo{}
-	transantioninfo.OutTradeNo = randStr(32)
+	transantioninfo.OutTradeNo = l.req.OutTradeSn
 	transantioninfo.Phone = l.req.Phone
 	transantioninfo.OrderSn = l.req.OrderSn
 	transantioninfo.NeedCashAccount = bool2int(l.req.NeedCashAccount)

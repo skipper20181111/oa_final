@@ -443,6 +443,7 @@ type (
     TransactionInit {
         Phone string `json:"phone"`
         OrderSn string `json:"orderSn"`
+        OutTradeSn string `json:"outTradeSn"`
         NeedCashAccount bool `json:"needCashAccount"`
         Ammount int64 `json:"account"`
         TransactionType string `json:"transactionType"`

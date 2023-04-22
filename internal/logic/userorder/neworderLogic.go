@@ -47,7 +47,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	l.svcCtx.UserOrder.Insert(l.ctx, order)
 	l.userorder = order
 	payl := NewPayLogic(l.ctx, l.svcCtx)
-	payorder, success := payl.Payorder(&types.TransactionInit{TransactionType: "普通商品", OrderSn: l.userorder.OrderSn, NeedCashAccount: req.UseCashFirst, Ammount: l.userorder.ActualAmount, Phone: l.userphone})
+	payorder, success := payl.Payorder(&types.TransactionInit{TransactionType: "普通商品", OrderSn: l.userorder.OrderSn, OutTradeSn: l.userorder.OutTradeNo, NeedCashAccount: req.UseCashFirst, Ammount: l.userorder.ActualAmount, Phone: l.userphone})
 	if !success {
 		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}

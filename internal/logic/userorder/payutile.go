@@ -88,6 +88,7 @@ func (l *PayLogic) transactionend() {
 func (l *PayLogic) weixinpayall() {
 	l.weixinpayinit = l.WeChatUtilLogic.Weixinpayinit(l.transantioninfo.OutTradeNo, l.transantioninfo.Amount)
 	l.transantioninfo.WexinPayAmount = l.transantioninfo.Amount
+	l.transantioninfo.NeedCashAccount = 0
 }
 func (l *PayLogic) transactioninfoinit() {
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")

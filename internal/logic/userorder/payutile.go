@@ -68,11 +68,11 @@ func (l *PayLogic) db2resp() *types.PayMsg {
 
 func (l *PayLogic) transactionend() {
 	if l.req.NeedCashAccount {
-		wxammount, cashammount, _, needcash, ok := l.CalculatePayAmmount(l.req.Ammount)
+		wxammount, cashammount, _, _, ok := l.CalculatePayAmmount(l.req.Ammount)
 		if !ok {
 			l.weixinpayall()
 		} else {
-			if !needcash {
+			if cashammount == 0 {
 				l.weixinpayall()
 			} else {
 				l.transantioninfo.NeedCashAccount = 1

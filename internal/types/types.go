@@ -247,6 +247,7 @@ type PreNewOrderResp struct {
 }
 
 type GetAllOrderRes struct {
+	PageNumber int `json:"pageNumber"`
 }
 
 type GetAllOrderRp struct {
@@ -451,4 +452,13 @@ type PayMsg struct {
 	NeedCashAccountPay bool          `json:"neadCashAccountPay"`
 	WeiXinPayAmmount   int64         `json:"weiXinPayAmmount"`
 	CashPayAmmount     int64         `json:"cashPayAmmount"`
+}
+
+type DeletOrderRes struct {
+	OrderSn string `json:"orderSn"`
+}
+
+type DeletOrderResp struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
 }

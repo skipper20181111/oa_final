@@ -82,5 +82,5 @@ func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.C
 			l.svcCtx.UserPoints.Update(l.ctx, userpoints)
 		}
 	}
-	return &types.CancelOrderResp{Code: "10000", Msg: "发起退款成功", Data: &types.CancelOrderRp{OrderInfo: OrderDb2info(order, transactioninfo)}}, nil
+	return &types.CancelOrderResp{Code: "10000", Msg: "yes", Data: &types.CancelOrderRp{OrderInfo: OrderDb2info(order, transactioninfo)}}, nil
 }

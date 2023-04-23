@@ -74,6 +74,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/cancelorder",
 				Handler: userorder.CancelorderHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/deleteorder",
+				Handler: userorder.DeleteorderHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/userorder"),

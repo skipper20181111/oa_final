@@ -30,7 +30,7 @@ type (
 		FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*UserOrder, error)
 		Update(ctx context.Context, data *UserOrder) error
 		Delete(ctx context.Context, id int64) error
-		FindAllByPhone(ctx context.Context, phone string) ([]*UserOrder, error)
+		FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*UserOrder, error)
 		UpdateByOrderSn(ctx context.Context, newData *UserOrder) error
 	}
 
@@ -84,10 +84,15 @@ func newUserOrderModel(conn sqlx.SqlConn) *defaultUserOrderModel {
 		table: "`user_order`",
 	}
 }
-func (m *defaultUserOrderModel) FindAllByPhone(ctx context.Context, phone string) ([]*UserOrder, error) {
-	query := fmt.Sprintf("select %s from %s where `phone` = ? ", userOrderRows, m.table)
+func (m *defaultUserOrderModel) FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*UserOrder, error) {
+	if pagenumber <= 0 || pagenumber > 10 {
+		pagenumber = 1
+	}
+	sheetlen := 10
+	offset := sheetlen * (pagenumber - 1)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? and `order_status`<99  order by create_order_time desc  limit ? OFFSET ?", userOrderRows, m.table)
 	var resp []*UserOrder
-	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone)
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone, sheetlen, offset)
 	switch err {
 	case nil:
 		return resp, nil

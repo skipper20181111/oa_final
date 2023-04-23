@@ -261,6 +261,7 @@ type (
 )
 type (
     GetAllOrderRes {
+        PageNumber int `json:"pageNumber"`
     }
     GetAllOrderRp {
         OrderInfos []*OrderInfo `json:"orderInfos"`
@@ -357,7 +358,6 @@ type (
     CashRechargeRp {
         RechargeOrderInfo *RechargeOrderInfo `json:"rechargeOrderInfo"`
         WeiXinPayMsg *WeiXinPayMsg `json:"weiXinPayMsg"`
-
     }
     CashRechargeResp {
         Code string `json:"code"`
@@ -463,6 +463,16 @@ type (
         CashPayAmmount int64 `json:"cashPayAmmount"`
     }
 )
+type (
+DeletOrderRes{
+    OrderSn string `json:"orderSn"`
+}
+DeletOrderResp{
+    Code string `json:"code"`
+    Msg string `json:"msg"`
+}
+)
+
 
 
 

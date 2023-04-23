@@ -57,6 +57,72 @@ func (l *CheckOrderLogic) CheckWeiXinPay(OutTradeNo string) bool {
 func (l *CheckOrderLogic) CheckWeiXinReject(Order *cachemodel.UserOrder) bool {
 	return l.WeChatUtilLogic.IfCancelOrderSuccess(Order)
 }
+func OrderCanBeDeleted(order *cachemodel.UserOrder, transactioninfo *cachemodel.TransactionInfo) bool {
+	if order.OrderStatus == 7 || order.OrderStatus == 3 {
+		return true
+	}
+	if order.OrderStatus == 0 {
+		if !PartPay(order, transactioninfo) {
+			return true
+		} else {
+			return false
+		}
+	}
+	return false
+}
+func PartPay(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo) bool {
+	cash := false
+	weixin := false
+	if info.CashAccountPayAmount > 0 && info.FinishAccountpay == 1 {
+		cash = true
+	}
+	if info.WexinPayAmount > 0 && info.FinishWeixinpay == 1 {
+		weixin = true
+	}
+	if cash == false && weixin == false {
+		return false
+	} else {
+		return true
+	}
+}
+func OrderNeedChange(order *cachemodel.UserOrder) bool {
+	if order.OrderStatus == 0 || order.OrderStatus == 6 {
+		return true
+	} else {
+		return false
+	}
+}
+func (l *CheckOrderLogic) checkall(order *cachemodel.UserOrder, transactioninfo *cachemodel.TransactionInfo) *cachemodel.UserOrder {
+	if transactioninfo == nil {
+		return order
+	}
+	if order.OrderStatus == 0 {
+		total, cash, weixin := IfFinished(transactioninfo)
+		if total {
+			return l.check01(order, transactioninfo)
+		}
+		if cash && !weixin && l.CheckWeiXinPay(order.OutTradeNo) {
+			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, transactioninfo.OrderSn)
+			order = l.check01(order, transactioninfo)
+			return l.check01(order, transactioninfo)
+		}
+		return order
+	}
+	if order.OrderStatus == 6 {
+		total, cash, weixin := IfRejected(transactioninfo)
+		if total {
+			return l.check67(order, transactioninfo)
+
+		}
+		if cash && !weixin && l.CheckWeiXinReject(order) {
+			l.svcCtx.TransactionInfo.UpdateWeixinReject(l.ctx, transactioninfo.OrderSn)
+			order = l.check67(order, transactioninfo)
+			return l.check67(order, transactioninfo)
+		}
+		return order
+	}
+	return order
+}
 func (l *CheckOrderLogic) MonitorOrderStatus(OrderSn string) (*types.GetOrderResp, error) {
 	order, _ := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, OrderSn)
 	transactioninfo, _ := l.svcCtx.TransactionInfo.FindOneByOrderSn(l.ctx, OrderSn)
@@ -66,31 +132,10 @@ func (l *CheckOrderLogic) MonitorOrderStatus(OrderSn string) (*types.GetOrderRes
 	if order.Phone != l.userphone {
 		return &types.GetOrderResp{Code: "4004", Msg: "不要使用别人的token"}, nil
 	}
-	if order.OrderStatus == 0 {
-		total, cash, weixin := IfFinished(transactioninfo)
-		if total {
-			return l.check01(order, transactioninfo)
-		}
-		if cash && !weixin && l.CheckWeiXinPay(order.OutTradeNo) {
-			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, transactioninfo.OrderSn)
-			return l.check01(order, transactioninfo)
-		}
-		return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(order, transactioninfo)}}, nil
-
-	}
-	if order.OrderStatus == 6 {
-		total, cash, weixin := IfRejected(transactioninfo)
-		if total {
-			return l.check67(order, transactioninfo)
-		}
-		if cash && !weixin && l.CheckWeiXinReject(order) {
-			l.svcCtx.TransactionInfo.UpdateWeixinReject(l.ctx, transactioninfo.OrderSn)
-			return l.check01(order, transactioninfo)
-		}
-	}
+	order = l.checkall(order, transactioninfo)
 	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(order, transactioninfo)}}, nil
 }
-func (l *CheckOrderLogic) check01(order *cachemodel.UserOrder, transactioninfo *cachemodel.TransactionInfo) (*types.GetOrderResp, error) {
+func (l *CheckOrderLogic) check01(order *cachemodel.UserOrder, transactioninfo *cachemodel.TransactionInfo) *cachemodel.UserOrder {
 	order.OrderStatus = 1
 	order.WexinPayAmount = transactioninfo.WexinPayAmount
 	order.CashAccountPayAmount = transactioninfo.CashAccountPayAmount
@@ -98,9 +143,9 @@ func (l *CheckOrderLogic) check01(order *cachemodel.UserOrder, transactioninfo *
 	order.PaymentTime = time.Now()
 	order.ModifyTime = time.Now()
 	l.svcCtx.UserOrder.Update(l.ctx, order)
-	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(order, nil)}}, nil
+	return order
 }
-func (l *CheckOrderLogic) check67(order *cachemodel.UserOrder, transactioninfo *cachemodel.TransactionInfo) (*types.GetOrderResp, error) {
+func (l *CheckOrderLogic) check67(order *cachemodel.UserOrder, transactioninfo *cachemodel.TransactionInfo) *cachemodel.UserOrder {
 	order.OrderStatus = 7
 	order.WexinPayAmount = transactioninfo.WexinPayAmount
 	order.CashAccountPayAmount = transactioninfo.CashAccountPayAmount
@@ -108,7 +153,7 @@ func (l *CheckOrderLogic) check67(order *cachemodel.UserOrder, transactioninfo *
 	order.CloseTime = time.Now()
 	order.ModifyTime = time.Now()
 	l.svcCtx.UserOrder.Update(l.ctx, order)
-	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(order, nil)}}, nil
+	return order
 }
 func IfFinished(info *cachemodel.TransactionInfo) (total bool, cash bool, weixin bool) {
 	total = false

@@ -127,7 +127,7 @@ func (l *CheckOrderLogic) MonitorOrderStatus(OrderSn string) (*types.GetOrderRes
 	order, _ := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, OrderSn)
 	transactioninfo, _ := l.svcCtx.TransactionInfo.FindOneByOrderSn(l.ctx, OrderSn)
 	if order == nil || transactioninfo == nil {
-		return &types.GetOrderResp{Code: "4004", Msg: "数据库失效"}, nil
+		return &types.GetOrderResp{Code: "10000", Msg: "此订单不存在"}, nil
 	}
 	if order.Phone != l.userphone {
 		return &types.GetOrderResp{Code: "4004", Msg: "不要使用别人的token"}, nil

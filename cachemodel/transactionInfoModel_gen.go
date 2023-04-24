@@ -34,6 +34,8 @@ type (
 		UpdateWeixinPay(ctx context.Context, OrderSn string) error
 		UpdateWeixinReject(ctx context.Context, OrderSn string) error
 		UpdateCashReject(ctx context.Context, OrderSn string) error
+		UpdateAllReject(ctx context.Context, OrderSn string) error
+		UpdateAllPay(ctx context.Context, OrderSn string) error
 	}
 
 	defaultTransactionInfoModel struct {
@@ -149,6 +151,17 @@ func (m *defaultTransactionInfoModel) UpdateWeixinReject(ctx context.Context, Or
 
 func (m *defaultTransactionInfoModel) UpdateCashReject(ctx context.Context, OrderSn string) error {
 	query := fmt.Sprintf("update %s set `finish_accountpay`=-1 where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, OrderSn)
+	return err
+}
+
+func (m *defaultTransactionInfoModel) UpdateAllReject(ctx context.Context, OrderSn string) error {
+	query := fmt.Sprintf("update %s set `status`=-1 where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, OrderSn)
+	return err
+}
+func (m *defaultTransactionInfoModel) UpdateAllPay(ctx context.Context, OrderSn string) error {
+	query := fmt.Sprintf("update %s set `status`=1 where `order_sn` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, OrderSn)
 	return err
 }

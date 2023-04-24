@@ -142,6 +142,7 @@ func (l *CheckOrderLogic) check01(order *cachemodel.UserOrder, transactioninfo *
 	order.FinishWeixinpay = transactioninfo.FinishWeixinpay
 	order.PaymentTime = time.Now()
 	order.ModifyTime = time.Now()
+	l.svcCtx.TransactionInfo.UpdateAllPay(l.ctx, order.OrderSn)
 	l.svcCtx.UserOrder.Update(l.ctx, order)
 	return order
 }
@@ -152,6 +153,7 @@ func (l *CheckOrderLogic) check67(order *cachemodel.UserOrder, transactioninfo *
 	order.FinishWeixinpay = transactioninfo.FinishWeixinpay
 	order.CloseTime = time.Now()
 	order.ModifyTime = time.Now()
+	l.svcCtx.TransactionInfo.UpdateAllReject(l.ctx, order.OrderSn)
 	l.svcCtx.UserOrder.Update(l.ctx, order)
 	return order
 }

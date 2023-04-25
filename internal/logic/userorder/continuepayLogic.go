@@ -43,11 +43,11 @@ func (l *ContinuepayLogic) Continuepay(req *types.FinishOrderRes) (resp *types.N
 	neworder.Id = order.Id
 	neworder.Address = order.Address
 	neworder.OrderSn = order.OrderSn
-	neworder.OutTradeNo = order.OutTradeNo
+
 	neworder.LogId = order.LogId
 	payl := NewPayLogic(l.ctx, l.svcCtx)
 	l.svcCtx.UserOrder.Update(l.ctx, neworder)
-	payorder, success := payl.Payorder(&types.TransactionInit{TransactionType: "普通商品", OrderSn: order.OrderSn, NeedCashAccount: true, Ammount: order.ActualAmount, Phone: order.Phone})
+	payorder, success := payl.Payorder(&types.TransactionInit{TransactionType: "普通商品", OrderSn: order.OrderSn, OutTradeSn: neworder.OutTradeNo, NeedCashAccount: true, Ammount: order.ActualAmount, Phone: order.Phone})
 	if !success {
 		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}

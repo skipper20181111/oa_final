@@ -51,7 +51,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	if !success {
 		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}
-	if l.usepoint || l.usecoupon || payorder.NeedCashAccountPay {
+	if order.PointAmount > 0 || order.UsedCouponinfo != "" || payorder.NeedCashAccountPay {
 		UseAccount = true
 	}
 	order.WexinPayAmount = payorder.WeiXinPayAmmount

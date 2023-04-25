@@ -30,8 +30,8 @@ func (l *ContinuepayLogic) Continuepay(req *types.FinishOrderRes) (resp *types.N
 	if order == nil {
 		return &types.NewOrderResp{Code: "4004", Msg: "未查询到订单,请重建订单"}, nil
 	}
-	if order.OrderStatus == 1 {
-		return &types.NewOrderResp{Code: "4004", Msg: "此订单已支付"}, nil
+	if order.OrderStatus != 0 {
+		return &types.NewOrderResp{Code: "4004", Msg: "此订单不可支付"}, nil
 	}
 	PMcache, ok := l.svcCtx.LocalCache.Get(svc.ProductsMap)
 	if !ok {
@@ -43,7 +43,8 @@ func (l *ContinuepayLogic) Continuepay(req *types.FinishOrderRes) (resp *types.N
 	neworder.Id = order.Id
 	neworder.Address = order.Address
 	neworder.OrderSn = order.OrderSn
-
+	neworder.CreateOrderTime = order.CreateOrderTime
+	neworder.ModifyTime = order.ModifyTime
 	neworder.LogId = order.LogId
 	payl := NewPayLogic(l.ctx, l.svcCtx)
 	l.svcCtx.UserOrder.Update(l.ctx, neworder)

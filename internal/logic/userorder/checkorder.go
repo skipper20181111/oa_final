@@ -49,7 +49,7 @@ func (l *CheckOrderLogic) CheckWeiXinPay(OutTradeNo string) bool {
 		OutTradeNo: core.String(OutTradeNo),
 		Mchid:      core.String(l.svcCtx.Config.WxConf.MchID)})
 	defer result.Response.Body.Close()
-	if *no2payment.TradeState != "SUCCESS" {
+	if *no2payment.TradeState == "SUCCESS" {
 		return true
 	}
 	return false
@@ -103,7 +103,6 @@ func (l *CheckOrderLogic) checkall(order *cachemodel.UserOrder, transactioninfo 
 		}
 		if cash && !weixin && l.CheckWeiXinPay(order.OutTradeNo) {
 			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, transactioninfo.OrderSn)
-			order = l.check01(order, transactioninfo)
 			return l.check01(order, transactioninfo)
 		}
 		return order

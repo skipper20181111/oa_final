@@ -10,7 +10,7 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type CancelorderLogic struct {
+type RefundorderLogic struct {
 	logx.Logger
 	ctx        context.Context
 	svcCtx     *svc.ServiceContext
@@ -19,8 +19,8 @@ type CancelorderLogic struct {
 	wechatutil *WeChatUtilLogic
 }
 
-func NewCancelorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CancelorderLogic {
-	return &CancelorderLogic{
+func NewRefundorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefundorderLogic {
+	return &RefundorderLogic{
 		Logger:     logx.WithContext(ctx),
 		ctx:        ctx,
 		svcCtx:     svcCtx,
@@ -30,7 +30,7 @@ func NewCancelorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Cance
 	}
 }
 
-func (l *CancelorderLogic) Cancelorder(req *types.CancelOrderRes) (resp *types.CancelOrderResp, err error) {
+func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.CancelOrderResp, err error) {
 	//必须注意，这个接口是发起退款接口，不参与判定是否退款成功
 	lu := NewLogic(l.ctx, l.svcCtx)
 	order, _ := l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)

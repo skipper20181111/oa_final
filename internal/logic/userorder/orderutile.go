@@ -145,6 +145,8 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 		order.OriginalAmount = order.OriginalAmount + productsMap[tiny.PId].PromotionPrice*int64(tiny.Amount)
 	}
 	order.ActualAmount = order.OriginalAmount
+	l.Orderdb = order
+	l.calculatemoney(req.UseCouponFirst, req.UseCashFirst, opts...)
 	if req.UsePointFirst {
 		if l.userpoints != nil && l.userpoints.AvailablePoints > 0 {
 			l.usepoint = true
@@ -152,8 +154,6 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 			order.ActualAmount = order.ActualAmount - order.PointAmount
 		}
 	}
-	l.Orderdb = order
-	l.calculatemoney(req.UseCouponFirst, req.UseCashFirst, opts...)
 	order.FreightAmount = 4000
 	order.OrderStatus = 0
 	order.DeliveryCompany = "顺丰"

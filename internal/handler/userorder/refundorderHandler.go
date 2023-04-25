@@ -9,7 +9,7 @@ import (
 	"oa_final/internal/types"
 )
 
-func CancelorderHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func RefundorderHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.CancelOrderRes
 		if err := httpx.Parse(r, &req); err != nil {
@@ -17,8 +17,8 @@ func CancelorderHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		l := userorder.NewCancelorderLogic(r.Context(), svcCtx)
-		resp, err := l.Cancelorder(&req)
+		l := userorder.NewRefundorderLogic(r.Context(), svcCtx)
+		resp, err := l.Refundorder(&req)
 		if err != nil {
 			httpx.Error(w, err)
 		} else {

@@ -209,38 +209,48 @@ func (l *Logic) coupondb2storeinfo() string {
 	marshal, _ := json.Marshal(storemap)
 	return string(marshal)
 }
+func (l *Logic) couponeeffective() bool {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	if l.coupon != nil && l.usercoupon != nil {
+		usercouponmap := make(map[int64]map[string]*types.CouponStoreInfo)
+		json.Unmarshal([]byte(l.usercoupon.CouponIdMap), &usercouponmap)
+		_, ok := usercouponmap[l.couponid] //连续两次判断我是否有这个优惠券
+		if ok {
+			_, ok := usercouponmap[l.couponid][l.couponuuid]
+			if ok {
+				disabledtime, _ := time.Parse("2006-01-02 15:04:05", usercouponmap[l.couponid][l.couponuuid].DisabledTime)
+				if disabledtime.After(time.Now()) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
 func (l *Logic) calculatemoney(UseCoupon, usecash bool, options ...func(logic *Logic)) *cachemodel.UserOrder {
 	l.usecoupon = false
+	l.Orderdb.UsedCouponinfo = ""
+	l.Orderdb.CouponAmount = 0
 	if UseCoupon {
 		//计算打折后的钱
-		l.Orderdb.UsedCouponinfo = ""
-		l.Orderdb.CouponAmount = 0
-		if l.coupon == nil || l.usercoupon == nil {
-		} else {
-			usercouponmap := make(map[int64]map[string]*types.CouponStoreInfo)
-			json.Unmarshal([]byte(l.usercoupon.CouponIdMap), &usercouponmap)
-			_, ok := usercouponmap[l.couponid] //连续两次判断我是否有这个优惠券
-			if ok {
-				_, ok := usercouponmap[l.couponid][l.couponuuid]
-				if ok {
-					disabledtime, _ := time.Parse("2006-01-02 15:04:05", usercouponmap[l.couponid][l.couponuuid].DisabledTime)
-					if disabledtime.After(time.Now()) {
-						if l.coupon.Discount != 0 {
-							l.usecoupon = true
-							discountammount := int64(float64(l.Orderdb.ActualAmount) * float64(l.coupon.Discount) / 100)
-							l.Orderdb.UsedCouponinfo = l.coupondb2storeinfo()
-							l.Orderdb.CouponAmount = l.Orderdb.ActualAmount - discountammount
-							l.Orderdb.ActualAmount = discountammount
+		if l.couponeeffective() {
+			if l.coupon.Discount != 0 {
+				l.usecoupon = true
+				discountammount := int64(float64(l.Orderdb.ActualAmount) * float64(l.coupon.Discount) / 100)
+				l.Orderdb.UsedCouponinfo = l.coupondb2storeinfo()
+				l.Orderdb.CouponAmount = l.Orderdb.ActualAmount - discountammount
+				l.Orderdb.ActualAmount = discountammount
 
-						} else if l.coupon.MinPoint != 0 && l.coupon.Cut != 0 {
-							if l.Orderdb.ActualAmount >= l.coupon.MinPoint {
-								l.usecoupon = true
-								l.Orderdb.UsedCouponinfo = l.coupondb2storeinfo()
-								l.Orderdb.CouponAmount = l.coupon.Cut
-								l.Orderdb.ActualAmount = l.Orderdb.ActualAmount - l.Orderdb.CouponAmount
-							}
-						}
-					}
+			} else if l.coupon.MinPoint != 0 && l.coupon.Cut != 0 {
+				if l.Orderdb.ActualAmount >= l.coupon.MinPoint {
+					l.usecoupon = true
+					l.Orderdb.UsedCouponinfo = l.coupondb2storeinfo()
+					l.Orderdb.CouponAmount = l.coupon.Cut
+					l.Orderdb.ActualAmount = l.Orderdb.ActualAmount - l.Orderdb.CouponAmount
 				}
 			}
 		}

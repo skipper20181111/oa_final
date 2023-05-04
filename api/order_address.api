@@ -96,7 +96,7 @@ service oa-api {
 	@handler getaddress
 	post /getaddress (GetAddressRes) returns (GetAddressResp)
 	
-	@doc "获取收货地址"
+	@doc "获取默认收货地址"
 	@handler getdefaultaddress
 	post /getdefaultaddress (GetAddressRes) returns (GetDefaultAddressResp)
 }

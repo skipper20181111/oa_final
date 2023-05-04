@@ -95,6 +95,10 @@ service oa-api {
 	@doc "获取收货地址"
 	@handler getaddress
 	post /getaddress (GetAddressRes) returns (GetAddressResp)
+	
+	@doc "获取收货地址"
+	@handler getdefaultaddress
+	post /getdefaultaddress (GetAddressRes) returns (GetDefaultAddressResp)
 }
 
 @server(

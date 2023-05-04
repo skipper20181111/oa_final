@@ -113,6 +113,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/getaddress",
 				Handler: address.GetaddressHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getdefaultaddress",
+				Handler: address.GetdefaultaddressHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/address"),

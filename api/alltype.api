@@ -72,6 +72,14 @@ type (
         Msg string `json:"msg"`
         Data *GetAddressRp `json:"data"`
     }
+    GetDefaultAddressRp{
+        Address *AddressInfo `json:"address"`
+    }
+    GetDefaultAddressResp{
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetDefaultAddressRp `json:"data"`
+    }
 )
 
 type (

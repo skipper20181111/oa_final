@@ -68,6 +68,16 @@ type GetAddressResp struct {
 	Data *GetAddressRp `json:"data"`
 }
 
+type GetDefaultAddressRp struct {
+	Address *AddressInfo `json:"address"`
+}
+
+type GetDefaultAddressResp struct {
+	Code string               `json:"code"`
+	Msg  string               `json:"msg"`
+	Data *GetDefaultAddressRp `json:"data"`
+}
+
 type ProductInfo struct {
 	ProductId       int64   `json:"productId"`
 	Amount          int     `json:"amount"`

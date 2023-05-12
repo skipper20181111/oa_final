@@ -119,6 +119,8 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 	orderinfo.DeleteStatus = order.DeleteStatus
 	orderinfo.PaymentTime = order.PaymentTime.Format("2006-01-02 15:04:05")
 	orderinfo.ModifyTime = order.ModifyTime.Format("2006-01-02 15:04:05")
+	orderinfo.DeliveryTime = order.DeliveryTime.Format("2006-01-02 15:04:05")
+	orderinfo.ReceiveTime = order.ReceiveTime.Format("2006-01-02 15:04:05")
 	return orderinfo
 }
 func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemodel.Product, opts ...func(logic *Logic)) *cachemodel.UserOrder {

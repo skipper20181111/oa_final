@@ -21,6 +21,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodPost,
+				Path:    "/ifovertime",
+				Handler: userorder.IfovertimeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/preneworder",
 				Handler: userorder.PreneworderHandler(serverCtx),
 			},

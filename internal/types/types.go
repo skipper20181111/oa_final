@@ -166,6 +166,8 @@ type OrderInfo struct {
 	ConfirmStatus        int64            `json:"confirmStatus"`
 	DeleteStatus         int64            `json:"deleteStatus"`
 	PaymentTime          string           `json:"paymentTime"`
+	DeliveryTime         string           `json:"deliveryTime"`
+	ReceiveTime          string           `json:"receiveTime"`
 	ModifyTime           string           `json:"modifyTime"`
 }
 
@@ -471,4 +473,11 @@ type DeletOrderRes struct {
 type DeletOrderResp struct {
 	Code string `json:"code"`
 	Msg  string `json:"msg"`
+}
+
+type IfOvertimeRes struct {
+	OrderSn string `json:"orderSn"`
+}
+
+type IfOvertimeResp struct {
 }

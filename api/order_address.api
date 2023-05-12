@@ -16,6 +16,10 @@ import "alltype.api"
 	//    middleware : Limit_count
 )
 service oa-api {
+	@doc "查看订单是否超时"
+	@handler ifovertime
+	post /ifovertime (IfOvertimeRes) returns (IfOvertimeResp)
+	
 	@doc "结算接口，用来计算订单金额"
 	@handler preneworder
 	post /preneworder (NewOrderRes) returns (PreNewOrderResp)
@@ -126,7 +130,6 @@ service oa-api {
 	@doc "购买优惠券支付成功回调接口"
 	@handler coupontellmeso
 	post /coupontellmeso (TellMeSoRes) returns (TellMeSoResp)
-	
 }
 
 @server(

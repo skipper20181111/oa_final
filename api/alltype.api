@@ -181,6 +181,8 @@ type (
         ConfirmStatus int64 `json:"confirmStatus"`
         DeleteStatus int64 `json:"deleteStatus"`
         PaymentTime string `json:"paymentTime"`
+        DeliveryTime string `json:"deliveryTime"`
+        ReceiveTime string `json:"receiveTime"`
         ModifyTime string `json:"modifyTime"`
     }
     Billinfo {
@@ -480,6 +482,15 @@ DeletOrderResp{
     Msg string `json:"msg"`
 }
 )
+type (
+IfOvertimeRes{
+    OrderSn string `json:"orderSn"`
+}
+IfOvertimeResp{
+
+}
+)
+
 
 
 

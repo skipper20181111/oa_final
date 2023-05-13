@@ -32,6 +32,7 @@ type (
 		Delete(ctx context.Context, id int64) error
 		FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*UserOrder, error)
 		UpdateByOrderSn(ctx context.Context, newData *UserOrder) error
+		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
 	}
 
 	defaultUserOrderModel struct {
@@ -164,6 +165,12 @@ func (m *defaultUserOrderModel) Update(ctx context.Context, newData *UserOrder) 
 func (m *defaultUserOrderModel) UpdateByOrderSn(ctx context.Context, newData *UserOrder) error {
 	query := fmt.Sprintf("update %s set %s where `order_sn` = ?", m.table, userOrderRowsWithPlaceHolder)
 	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.OriginalAmount, newData.PointAmount, newData.ActualAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.OrderSn)
+	return err
+}
+
+func (m *defaultUserOrderModel) UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error {
+	query := fmt.Sprintf("update %s set `order_status`=? where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, status, orderSn)
 	return err
 }
 

@@ -34,8 +34,7 @@ func (l *IfovertimeLogic) Ifovertime(req *types.IfOvertimeRes) (resp *types.IfOv
 		return
 	}
 	if OrderCanBeDeleted(order, transactionInfo) {
-		order.OrderStatus = 8
-		l.svcCtx.UserOrder.UpdateByOrderSn(l.ctx, order)
+		l.svcCtx.UserOrder.UpdateStatusByOrderSn(l.ctx, 8, order.OrderSn)
 		return
 	}
 	return

@@ -156,6 +156,7 @@ type OrderInfo struct {
 	UsedCouponInfo       *CouponStoreInfo `json:"usedCouponInfo"`
 	WeXinPayAmount       float64          `json:"weXinPayAmount"`
 	CashAccountPayAmount float64          `json:"cashAccountPayAmount"`
+	CutPrice             float64          `json:"cutPrice"`
 	FreightAmount        float64          `json:"freightAmount"`
 	Growth               int64            `json:"growth"`
 	Address              *AddressInfo     `json:"addressInfo"`

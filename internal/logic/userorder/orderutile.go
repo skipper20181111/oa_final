@@ -105,6 +105,7 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 	orderinfo.WeXinPayAmount = float64(order.WexinPayAmount) / 100
 	orderinfo.CashAccountPayAmount = float64(order.CashAccountPayAmount) / 100
 	orderinfo.FreightAmount = float64(order.FreightAmount) / 100
+	orderinfo.CutPrice = orderinfo.PointAmount + orderinfo.CouponAmount
 	orderinfo.Growth = order.Growth
 
 	orderinfo.OrderStatus = order.OrderStatus

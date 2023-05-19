@@ -150,6 +150,7 @@ type OrderInfo struct {
 	CreateTime           string           `json:"createTime"`
 	PidList              []*ProductTiny   `json:"pidList"`
 	OriginalAmount       float64          `json:"originalAmount"`
+	ProductCutAmount     float64          `json:"promotionCutAmount"`
 	PointAmount          float64          `json:"pointAmount"`
 	ActualAmount         float64          `json:"actualAmount"`
 	CouponAmount         float64          `json:"couponAmount"`
@@ -158,6 +159,9 @@ type OrderInfo struct {
 	CashAccountPayAmount float64          `json:"cashAccountPayAmount"`
 	CutPrice             float64          `json:"cutPrice"`
 	FreightAmount        float64          `json:"freightAmount"`
+	RealFreightAmount    float64          `json:"realFreightAmount"`
+	CutFreightAmount     float64          `json:"cutFreightAmount"`
+	IfCutFreight         bool             `json:"ifCutFreight"`
 	Growth               int64            `json:"growth"`
 	Address              *AddressInfo     `json:"addressInfo"`
 	OrderNote            string           `json:"orderNote"`

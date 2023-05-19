@@ -41,41 +41,42 @@ type (
 	}
 
 	UserOrder struct {
-		Id                   int64     `db:"id"`                      // id
-		Phone                string    `db:"phone"`                   // 账户手机号
-		OrderSn              string    `db:"order_sn"`                // 订单编号
-		OutTradeNo           string    `db:"out_trade_no"`            // 微信交易编号
-		TransactionId        string    `db:"transaction_id"`          // 微信支付编号
-		CreateOrderTime      time.Time `db:"create_order_time"`       // 订单产生时间
-		Pidlist              string    `db:"pidlist"`                 // 订单商品列表
-		OriginalAmount       int64     `db:"original_amount"`         // 原始金额
-		PointAmount          int64     `db:"point_amount"`            // 积分点数(金额)
-		ActualAmount         int64     `db:"actual_amount"`           // 实际支付金额
-		CouponAmount         int64     `db:"coupon_amount"`           // 优惠券抵扣金额
-		UsedCouponinfo       string    `db:"used_couponinfo"`         // 使用的优惠券信息 空值意味着没有使用优惠券
-		WexinPayAmount       int64     `db:"wexin_pay_amount"`        // 微信支付金额
-		CashAccountPayAmount int64     `db:"cash_account_pay_amount"` // 现金账户支付金额
-		FreightAmount        int64     `db:"freight_amount"`          // 运费金额
-		Address              string    `db:"address"`                 // 收货人信息
-		OrderNote            string    `db:"order_note"`              // 订单备注
-		FinishWeixinpay      int64     `db:"finish_weixinpay"`        // 是否完成微信支付
-		FinishAccountpay     int64     `db:"finish_accountpay"`       // 是否完成账户支付
-		PointsOrder          int64     `db:"points_order"`            // 是否为积分兑换账单
-		OrderStatus          int64     `db:"order_status"`            // 订单状态：0->待付款；1->待发货；2->已发货；3->已完成；4->已关闭；5->无效订单；6->已退货未退钱；7->已退货已退钱; 99->待复核
-		DeliveryCompany      string    `db:"delivery_company"`        // 物流公司(配送方式)
-		DeliverySn           string    `db:"delivery_sn"`             // 物流单号
-		AutoConfirmDay       int64     `db:"auto_confirm_day"`        // 自动确认时间（天）
-		Growth               int64     `db:"growth"`                  // 可以活动的成长值，等于消费额
-		BillType             int64     `db:"bill_type"`               // 发票类型：0->不开发票；1->电子发票；2->纸质发票
-		BillInfo             string    `db:"bill_info"`               // 发票信息 {单位名称，单位地址，电话，税号，开户银行，银行账户}
-		ConfirmStatus        int64     `db:"confirm_status"`          // 确认收货状态：0->未确认；1->已确认
-		DeleteStatus         int64     `db:"delete_status"`           // 删除状态：0->未删除；1->已删除
-		PaymentTime          time.Time `db:"payment_time"`            // 支付时间
-		DeliveryTime         time.Time `db:"delivery_time"`           // 发货时间
-		ReceiveTime          time.Time `db:"receive_time"`            // 确认收货时间
-		CloseTime            time.Time `db:"close_time"`              // 订单关闭时间
-		ModifyTime           time.Time `db:"modify_time"`             // 修改时间
-		LogId                int64     `db:"log_id"`
+		Id                     int64     `db:"id"`                      // id
+		Phone                  string    `db:"phone"`                   // 账户手机号
+		OrderSn                string    `db:"order_sn"`                // 订单编号
+		OutTradeNo             string    `db:"out_trade_no"`            // 微信交易编号
+		TransactionId          string    `db:"transaction_id"`          // 微信支付编号
+		CreateOrderTime        time.Time `db:"create_order_time"`       // 订单产生时间
+		Pidlist                string    `db:"pidlist"`                 // 订单商品列表
+		OriginalAmount         int64     `db:"original_amount"`         // 原始金额
+		PointAmount            int64     `db:"point_amount"`            // 积分点数(金额)
+		ActualAmount           int64     `db:"actual_amount"`           // 实际支付金额
+		CouponAmount           int64     `db:"coupon_amount"`           // 优惠券抵扣金额
+		UsedCouponinfo         string    `db:"used_couponinfo"`         // 使用的优惠券信息 空值意味着没有使用优惠券
+		WexinPayAmount         int64     `db:"wexin_pay_amount"`        // 微信支付金额
+		CashAccountPayAmount   int64     `db:"cash_account_pay_amount"` // 现金账户支付金额
+		FreightAmount          int64     `db:"freight_amount"`          // 运费金额
+		Address                string    `db:"address"`                 // 收货人信息
+		OrderNote              string    `db:"order_note"`              // 订单备注
+		FinishWeixinpay        int64     `db:"finish_weixinpay"`        // 是否完成微信支付
+		FinishAccountpay       int64     `db:"finish_accountpay"`       // 是否完成账户支付
+		PointsOrder            int64     `db:"points_order"`            // 是否为积分兑换账单
+		OrderStatus            int64     `db:"order_status"`            // 订单状态：0->待付款；1->待发货；2->已发货；3->已完成；4->已关闭；5->无效订单；6->已退货未退钱；7->已退货已退钱; 99->待复核
+		DeliveryCompany        string    `db:"delivery_company"`        // 物流公司(配送方式)
+		DeliverySn             string    `db:"delivery_sn"`             // 物流单号
+		AutoConfirmDay         int64     `db:"auto_confirm_day"`        // 自动确认时间（天）
+		Growth                 int64     `db:"growth"`                  // 可以活动的成长值，等于消费额
+		BillType               int64     `db:"bill_type"`               // 发票类型：0->不开发票；1->电子发票；2->纸质发票
+		BillInfo               string    `db:"bill_info"`               // 发票信息 {单位名称，单位地址，电话，税号，开户银行，银行账户}
+		ConfirmStatus          int64     `db:"confirm_status"`          // 确认收货状态：0->未确认；1->已确认
+		DeleteStatus           int64     `db:"delete_status"`           // 删除状态：0->未删除；1->已删除
+		PaymentTime            time.Time `db:"payment_time"`            // 支付时间
+		DeliveryTime           time.Time `db:"delivery_time"`           // 发货时间
+		ReceiveTime            time.Time `db:"receive_time"`            // 确认收货时间
+		CloseTime              time.Time `db:"close_time"`              // 订单关闭时间
+		ModifyTime             time.Time `db:"modify_time"`             // 修改时间
+		LogId                  int64     `db:"log_id"`
+		OriginalOriginalAmount int64     `db:"original_original_amount"` // 原始原始金额
 	}
 )
 
@@ -85,6 +86,7 @@ func newUserOrderModel(conn sqlx.SqlConn) *defaultUserOrderModel {
 		table: "`user_order`",
 	}
 }
+
 func (m *defaultUserOrderModel) FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*UserOrder, error) {
 	if pagenumber <= 0 || pagenumber > 10 {
 		pagenumber = 1

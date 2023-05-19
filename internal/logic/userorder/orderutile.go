@@ -99,13 +99,17 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 	json.Unmarshal([]byte(order.Pidlist), &pidlist)
 	orderinfo.PidList = pidlist
 	orderinfo.UsedCouponInfo = storedcouponinfo2typeinfo(order.UsedCouponinfo)
-	orderinfo.OriginalAmount = float64(order.OriginalAmount) / 100
+	orderinfo.ProductCutAmount = float64(order.OriginalOriginalAmount-order.OriginalAmount) / 100
+	orderinfo.OriginalAmount = float64(order.OriginalOriginalAmount) / 100
 	orderinfo.ActualAmount = float64(order.ActualAmount) / 100
 	orderinfo.CouponAmount = float64(order.CouponAmount) / 100
 	orderinfo.WeXinPayAmount = float64(order.WexinPayAmount) / 100
 	orderinfo.CashAccountPayAmount = float64(order.CashAccountPayAmount) / 100
 	orderinfo.FreightAmount = float64(order.FreightAmount) / 100
-	orderinfo.CutPrice = orderinfo.PointAmount + orderinfo.CouponAmount
+	orderinfo.CutFreightAmount = 10
+	orderinfo.RealFreightAmount = orderinfo.FreightAmount - orderinfo.CutFreightAmount
+	orderinfo.IfCutFreight = true
+	orderinfo.CutPrice = float64(order.OriginalOriginalAmount-order.WexinPayAmount) / 100
 	orderinfo.Growth = order.Growth
 
 	orderinfo.OrderStatus = order.OrderStatus
@@ -146,6 +150,9 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 	order.Pidlist = string(marshal)
 	for _, tiny := range req.ProductTinyList {
 		order.OriginalAmount = order.OriginalAmount + productsMap[tiny.PId].PromotionPrice*int64(tiny.Amount)
+	}
+	for _, tiny := range req.ProductTinyList {
+		order.OriginalOriginalAmount = order.OriginalOriginalAmount + productsMap[tiny.PId].OriginalPrice*int64(tiny.Amount)
 	}
 	order.ActualAmount = order.OriginalAmount
 	l.Orderdb = order

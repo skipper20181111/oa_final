@@ -166,6 +166,7 @@ type (
         PidList []*ProductTiny `json:"pidList"`
         OriginalAmount float64 `json:"originalAmount"`
         ProductCutAmount float64 `json:"promotionCutAmount"`
+        PromotionAmount float64 `json:"promotionAmount"`
         PointAmount float64 `json:"pointAmount"`
         ActualAmount float64 `json:"actualAmount"`
         CouponAmount float64 `json:"couponAmount"`
@@ -177,6 +178,7 @@ type (
         RealFreightAmount float64 `json:"realFreightAmount"`
         CutFreightAmount float64 `json:"cutFreightAmount"`
         IfCutFreight bool `json:"ifCutFreight"`
+        CutPriceWithFreight float64 `json:"cutPrice"`
         Growth int64 `json:"growth"`
         Address *AddressInfo `json:"addressInfo"`
         OrderNote string `json:"orderNote"`

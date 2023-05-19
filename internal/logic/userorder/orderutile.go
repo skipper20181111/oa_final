@@ -100,6 +100,7 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 	orderinfo.PidList = pidlist
 	orderinfo.UsedCouponInfo = storedcouponinfo2typeinfo(order.UsedCouponinfo)
 	orderinfo.ProductCutAmount = float64(order.OriginalOriginalAmount-order.OriginalAmount) / 100
+	orderinfo.PromotionAmount = float64(order.OriginalAmount) / 100
 	orderinfo.OriginalAmount = float64(order.OriginalOriginalAmount) / 100
 	orderinfo.ActualAmount = float64(order.ActualAmount) / 100
 	orderinfo.CouponAmount = float64(order.CouponAmount) / 100
@@ -110,6 +111,7 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 	orderinfo.RealFreightAmount = orderinfo.FreightAmount - orderinfo.CutFreightAmount
 	orderinfo.IfCutFreight = true
 	orderinfo.CutPrice = float64(order.OriginalOriginalAmount-order.WexinPayAmount) / 100
+	orderinfo.CutPriceWithFreight = orderinfo.CutPrice + orderinfo.CutFreightAmount
 	orderinfo.Growth = order.Growth
 
 	orderinfo.OrderStatus = order.OrderStatus

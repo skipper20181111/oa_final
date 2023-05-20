@@ -152,10 +152,9 @@ func (l *Logic) Order2db(req *types.NewOrderRes, productsMap map[int64]*cachemod
 	order.Pidlist = string(marshal)
 	for _, tiny := range req.ProductTinyList {
 		order.OriginalAmount = order.OriginalAmount + productsMap[tiny.PId].PromotionPrice*int64(tiny.Amount)
-	}
-	for _, tiny := range req.ProductTinyList {
 		order.OriginalOriginalAmount = order.OriginalOriginalAmount + productsMap[tiny.PId].OriginalPrice*int64(tiny.Amount)
 	}
+
 	order.ActualAmount = order.OriginalAmount
 	l.Orderdb = order
 	l.calculatemoney(req.UseCouponFirst, req.UseCashFirst, opts...)

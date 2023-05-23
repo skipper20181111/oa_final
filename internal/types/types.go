@@ -256,7 +256,7 @@ type PreNewOrderRes struct {
 }
 
 type PreNewOrderRp struct {
-	PreOrderInfo *PreOrderInfo `json:"preOrderInfo"`
+	PreOrderInfo *OrderInfo `json:"preOrderInfo"`
 }
 
 type PreNewOrderResp struct {

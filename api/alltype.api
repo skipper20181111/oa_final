@@ -268,7 +268,7 @@ type (
     }
 
     PreNewOrderRp {
-        PreOrderInfo *PreOrderInfo `json:"preOrderInfo"`
+        PreOrderInfo *OrderInfo `json:"preOrderInfo"`
     }
     PreNewOrderResp {
         Code string `json:"code"`

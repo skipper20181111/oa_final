@@ -36,6 +36,6 @@ func (l *PreneworderLogic) Preneworder(req *types.NewOrderRes) (resp *types.PreN
 	productsMap := PMcache.(map[int64]*cachemodel.Product)
 	lu := NewLogic(l.ctx, l.svcCtx)
 
-	orderinfo := OrderDb2Preinfo(lu.Order2db(req, productsMap, UseCache(true)))
+	orderinfo := OrderDb2info(lu.Order2db(req, productsMap, UseCache(true)), nil)
 	return &types.PreNewOrderResp{Code: "10000", Msg: "结算完成，请下订单", Data: &types.PreNewOrderRp{PreOrderInfo: orderinfo}}, nil
 }

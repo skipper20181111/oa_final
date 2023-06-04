@@ -72,10 +72,10 @@ type (
         Msg string `json:"msg"`
         Data *GetAddressRp `json:"data"`
     }
-    GetDefaultAddressRp{
+    GetDefaultAddressRp {
         Address *AddressInfo `json:"address"`
     }
-    GetDefaultAddressResp{
+    GetDefaultAddressResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
         Data *GetDefaultAddressRp `json:"data"`
@@ -481,21 +481,21 @@ type (
     }
 )
 type (
-DeletOrderRes{
-    OrderSn string `json:"orderSn"`
-}
-DeletOrderResp{
-    Code string `json:"code"`
-    Msg string `json:"msg"`
-}
+    DeletOrderRes {
+        OrderSn string `json:"orderSn"`
+    }
+    DeletOrderResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+    }
 )
 type (
-IfOvertimeRes{
-    OrderSn string `json:"orderSn"`
-}
-IfOvertimeResp{
+    IfOvertimeRes {
+        OrderSn string `json:"orderSn"`
+    }
+    IfOvertimeResp {
 
-}
+    }
 )
 
 

@@ -32,9 +32,6 @@ service oa-api {
 	@handler starmallorder
 	post /starmallorder (StarMallOrderRes) returns (StarMallOrderResp)
 
-	@doc "臻星商城购买优惠券"
-	@handler starmallcouponorder
-	post /starmallcouponorder (StarMallCouponOrderRes) returns (StarMallCouponOrderResp)
 	
 	@doc "钱包充值订单"
 	@handler cashrecharge

@@ -30,11 +30,13 @@ func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *t
 	if len(req.AddressInfoList) != 0 {
 		count := 0
 		havedefalt := 0
-		for _, info := range req.AddressInfoList {
+		defaltindex := -1
+		for i, info := range req.AddressInfoList {
 			if havedefalt == 1 {
 				info.IsDefault = 0
 			} else {
 				if info.IsDefault == 1 {
+					defaltindex = i
 					count += 1
 					havedefalt = 1
 				}
@@ -42,6 +44,10 @@ func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *t
 		}
 		if count == 0 {
 			req.AddressInfoList[0].IsDefault = 1
+		} else {
+			se := *req.AddressInfoList[defaltindex]
+			req.AddressInfoList[defaltindex] = req.AddressInfoList[0]
+			req.AddressInfoList[0] = &se
 		}
 	}
 	//以上这一段是为了修正只能有一个默认地址

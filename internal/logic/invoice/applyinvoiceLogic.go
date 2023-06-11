@@ -37,8 +37,8 @@ func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *type
 	}
 	orderSn := &cachemodel.Invoice{}
 	if sn != nil {
-		if sn.Status == 1 {
-			return &types.ApplyInvoiceResp{Code: "10000", Msg: "此订单已经开过发票"}, nil
+		if sn.Status != 0 {
+			return &types.ApplyInvoiceResp{Code: "10000", Msg: "此订单已经开过发票或开票失败"}, nil
 		} else {
 			l.svcCtx.Invoice.Update(l.ctx, l.req2db(req))
 			orderSn, _ = l.svcCtx.Invoice.FindOneByOrderSn(l.ctx, req.OrderSn)

@@ -5,7 +5,6 @@ package cachemodel
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -39,8 +38,8 @@ type (
 
 	UserAddressString struct {
 		Id            int64  `db:"id"`
-		Phone         string `db:"phone"`
-		AddressString string `db:"address_string"`
+		Phone         string `db:"phone"`          // 用户手机号
+		AddressString string `db:"address_string"` // 地址字符串
 	}
 )
 
@@ -79,7 +78,7 @@ func (m *defaultUserAddressStringModel) FindOneByPhone(ctx context.Context, phon
 	case nil:
 		return &resp, nil
 	case sqlc.ErrNotFound:
-		return nil, errors.New("notfind")
+		return nil, ErrNotFound
 	default:
 		return nil, err
 	}
@@ -92,19 +91,16 @@ func (m *defaultUserAddressStringModel) Insert(ctx context.Context, data *UserAd
 }
 
 func (m *defaultUserAddressStringModel) Update(ctx context.Context, newData *UserAddressString) error {
-
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userAddressStringRowsWithPlaceHolder)
 	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.AddressString, newData.Id)
 	return err
 }
-
 func (m *defaultUserAddressStringModel) UpdateByPhone(ctx context.Context, newData *UserAddressString) error {
 
 	query := fmt.Sprintf("update %s set `address_string`=? where `phone` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, newData.AddressString, newData.Phone)
 	return err
 }
-
 func (m *defaultUserAddressStringModel) tableName() string {
 	return m.table
 }

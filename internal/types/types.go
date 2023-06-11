@@ -500,10 +500,12 @@ type CompanyInvoiceInfo struct {
 	TaxId          string `json:"taxId"`
 	OpeningBank    string `json:"openingBank"`
 	BankAccount    string `json:"bankAccount"`
+	IsDefault      int    `json:"isDefault"`
 }
 
 type PersonalInvoiceInfo struct {
 	InvoiceTitle string `json:"invoiceTitle"`
+	IsDefault    int    `json:"isDefault"`
 }
 
 type GetTitleRes struct {

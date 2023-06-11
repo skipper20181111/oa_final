@@ -30,6 +30,7 @@ func NewUpdatetitleLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Updat
 }
 
 func (l *UpdatetitleLogic) Updatetitle(req *types.UpdateTitleRes) (resp *types.GetTitleResp, err error) {
+	req = l.getdefault(req)
 	titleinfo := &types.GetTitleRp{Personal: make([]*types.PersonalInvoiceInfo, 0), Company: make([]*types.CompanyInvoiceInfo, 0)}
 	marshal, _ := json.Marshal(req.TitleInfoList)
 	phone, _ := l.svcCtx.UserInvoiceString.FindOneByPhone(l.ctx, l.userphone)
@@ -44,4 +45,53 @@ func (l *UpdatetitleLogic) Updatetitle(req *types.UpdateTitleRes) (resp *types.G
 		json.Unmarshal([]byte(byPhone.InvoiceString), titleinfo)
 	}
 	return &types.GetTitleResp{Code: "10000", Msg: "success", TitleInfoList: titleinfo}, nil
+}
+func (l *UpdatetitleLogic) getdefault(req *types.UpdateTitleRes) *types.UpdateTitleRes {
+	if len(req.TitleInfoList.Company) != 0 {
+		count := 0
+		havedefalt := 0
+		defaltindex := -1
+		for i, info := range req.TitleInfoList.Company {
+			if havedefalt == 1 {
+				info.IsDefault = 0
+			} else {
+				if info.IsDefault == 1 {
+					defaltindex = i
+					count += 1
+					havedefalt = 1
+				}
+			}
+		}
+		if count == 0 {
+			req.TitleInfoList.Company[0].IsDefault = 1
+		} else {
+			se := *req.TitleInfoList.Company[defaltindex]
+			req.TitleInfoList.Company[defaltindex] = req.TitleInfoList.Company[0]
+			req.TitleInfoList.Company[0] = &se
+		}
+	}
+	if len(req.TitleInfoList.Personal) != 0 {
+		count := 0
+		havedefalt := 0
+		defaltindex := -1
+		for i, info := range req.TitleInfoList.Personal {
+			if havedefalt == 1 {
+				info.IsDefault = 0
+			} else {
+				if info.IsDefault == 1 {
+					defaltindex = i
+					count += 1
+					havedefalt = 1
+				}
+			}
+		}
+		if count == 0 {
+			req.TitleInfoList.Personal[0].IsDefault = 1
+		} else {
+			se := *req.TitleInfoList.Personal[defaltindex]
+			req.TitleInfoList.Personal[defaltindex] = req.TitleInfoList.Personal[0]
+			req.TitleInfoList.Personal[0] = &se
+		}
+	}
+	return req
 }

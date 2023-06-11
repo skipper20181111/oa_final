@@ -520,10 +520,12 @@ type (
         // 开户银行
         BankAccount string `json:"bankAccount"`
         // 银行账户
+        IsDefault int `json:"isDefault"`
     }
     PersonalInvoiceInfo {
         InvoiceTitle string `json:"invoiceTitle"`
         // 发票抬头
+        IsDefault int `json:"isDefault"`
     }
     GetTitleRes {
 

@@ -28,5 +28,5 @@ func (l *GetinvoiceLogic) Getinvoice(req *types.GetInvoiceRes) (resp *types.GetI
 	if sn != nil && sn.Phone == l.ctx.Value("phone").(string) {
 		return &types.GetInvoiceResp{Code: "10000", Msg: "success", Data: db2info(sn)}, nil
 	}
-	return &types.GetInvoiceResp{Code: "10000", Msg: "success", Data: &types.InvoiceInfo{}}, nil
+	return &types.GetInvoiceResp{Code: "10000", Msg: "success", Data: &types.InvoiceRp{}}, nil
 }

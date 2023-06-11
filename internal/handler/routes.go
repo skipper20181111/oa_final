@@ -189,6 +189,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/getallinvoice",
 				Handler: invoice.GetallinvoiceHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/updatetitle",
+				Handler: invoice.UpdatetitleHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/gettitle",
+				Handler: invoice.GettitleHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/invoice"),

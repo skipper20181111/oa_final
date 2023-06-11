@@ -26,6 +26,7 @@ type (
 	invoiceModel interface {
 		Insert(ctx context.Context, data *Invoice) (sql.Result, error)
 		FindOne(ctx context.Context, id int64) (*Invoice, error)
+		FindOneByInvoiceSn(ctx context.Context, invoiceSn string) (*Invoice, error)
 		FindOneByOrderSn(ctx context.Context, orderSn string) (*Invoice, error)
 		Update(ctx context.Context, data *Invoice) error
 		Delete(ctx context.Context, id int64) error
@@ -42,7 +43,13 @@ type (
 		Phone          string    `db:"phone"`           // 账户手机号
 		OrderType      int64     `db:"order_type"`      // 订单类型
 		OrderSn        string    `db:"order_sn"`        // 订单编号
-		Type           int64     `db:"type"`            // 发票类型：0->增值税普通发票；1->增值税专用发票
+		Money          int64     `db:"money"`           // 总金额
+		InvoiceSn      string    `db:"invoice_sn"`      // 发票编号
+		InvoiceType    int64     `db:"invoice_type"`    // 发票类型：0->增值税专用发票；1->增值税普通发票
+		Target         int64     `db:"target"`          // 开票对象：0->对公；1->对私
+		Ifdetail       int64     `db:"ifdetail"`        // 开票方式：0->商品大类；1->商品列表
+		Email          string    `db:"email"`           // 发送邮箱
+		PostAddress    string    `db:"post_address"`    // 邮寄地址
 		InvoiceTitle   string    `db:"invoice_title"`   // 发票抬头---公司名或个人姓名
 		ComponyAddress string    `db:"compony_address"` // 公司地址
 		ComponyPhone   string    `db:"compony_phone"`   // 公司电话
@@ -50,9 +57,8 @@ type (
 		OpeningBank    string    `db:"opening_bank"`    // 开户行
 		BankAccount    string    `db:"bank_account"`    // 银行账号
 		ApplyTime      time.Time `db:"apply_time"`      // 申请时间
-		Status         int64     `db:"status"`          // 处理：0->待付款；1->已完成
+		Status         int64     `db:"status"`          // 处理：0->待付款；1->已完成；2->开票失败
 		FinishTime     time.Time `db:"finish_time"`     // 完成时间
-		LogId          int64     `db:"log_id"`
 	}
 )
 
@@ -68,7 +74,6 @@ func (m *defaultInvoiceModel) Delete(ctx context.Context, id int64) error {
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
-
 func (m *defaultInvoiceModel) FindAllByPhone(ctx context.Context, phone string) ([]*Invoice, error) {
 	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 15", invoiceRows, m.table)
 	var resp []*Invoice
@@ -82,11 +87,24 @@ func (m *defaultInvoiceModel) FindAllByPhone(ctx context.Context, phone string) 
 		return nil, err
 	}
 }
-
 func (m *defaultInvoiceModel) FindOne(ctx context.Context, id int64) (*Invoice, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", invoiceRows, m.table)
 	var resp Invoice
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultInvoiceModel) FindOneByInvoiceSn(ctx context.Context, invoiceSn string) (*Invoice, error) {
+	var resp Invoice
+	query := fmt.Sprintf("select %s from %s where `invoice_sn` = ? limit 1", invoiceRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, invoiceSn)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -112,14 +130,14 @@ func (m *defaultInvoiceModel) FindOneByOrderSn(ctx context.Context, orderSn stri
 }
 
 func (m *defaultInvoiceModel) Insert(ctx context.Context, data *Invoice) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, invoiceRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderType, data.OrderSn, data.Type, data.InvoiceTitle, data.ComponyAddress, data.ComponyPhone, data.TaxId, data.OpeningBank, data.BankAccount, data.ApplyTime, data.Status, data.FinishTime, data.LogId)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, invoiceRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderType, data.OrderSn, data.Money, data.InvoiceSn, data.InvoiceType, data.Target, data.Ifdetail, data.Email, data.PostAddress, data.InvoiceTitle, data.ComponyAddress, data.ComponyPhone, data.TaxId, data.OpeningBank, data.BankAccount, data.ApplyTime, data.Status, data.FinishTime)
 	return ret, err
 }
 
 func (m *defaultInvoiceModel) Update(ctx context.Context, newData *Invoice) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, invoiceRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderType, newData.OrderSn, newData.Type, newData.InvoiceTitle, newData.ComponyAddress, newData.ComponyPhone, newData.TaxId, newData.OpeningBank, newData.BankAccount, newData.ApplyTime, newData.Status, newData.FinishTime, newData.LogId, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderType, newData.OrderSn, newData.Money, newData.InvoiceSn, newData.InvoiceType, newData.Target, newData.Ifdetail, newData.Email, newData.PostAddress, newData.InvoiceTitle, newData.ComponyAddress, newData.ComponyPhone, newData.TaxId, newData.OpeningBank, newData.BankAccount, newData.ApplyTime, newData.Status, newData.FinishTime, newData.Id)
 	return err
 }
 

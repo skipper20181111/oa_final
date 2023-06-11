@@ -56,12 +56,11 @@ func (l *UpdateaddressLogic) Updateaddress(req *types.UpdateAddressRes) (resp *t
 		return &types.UpdateAddressResp{Code: "4004", Msg: "超长"}, nil
 	}
 	findAddressListByPhone, err := l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, userphone)
-	if findAddressListByPhone == nil && err.Error() == "notfind" {
+	if findAddressListByPhone == nil {
 		l.svcCtx.UserAddressString.Insert(l.ctx, &cachemodel.UserAddressString{Phone: userphone, AddressString: string(marshaledList)})
-	} else if findAddressListByPhone == nil {
-		return &types.UpdateAddressResp{Code: "4004", Msg: "猜测是网络问题"}, nil
 	} else {
-		l.svcCtx.UserAddressString.UpdateByPhone(l.ctx, &cachemodel.UserAddressString{Phone: userphone, AddressString: string(marshaledList)})
+		findAddressListByPhone.AddressString = string(marshaledList)
+		l.svcCtx.UserAddressString.UpdateByPhone(l.ctx, findAddressListByPhone)
 	}
 	findAddressListByPhone, err = l.svcCtx.UserAddressString.FindOneByPhone(l.ctx, userphone)
 	addressList := make([]*types.AddressInfo, 0)

@@ -379,37 +379,41 @@ type CashRechargeResp struct {
 }
 
 type ApplyInvoiceRes struct {
-	OrderType      int64  `json:"orderType"`
-	OrderSn        string `json:"orderSn"`
-	InvoiceType    int64  `json:"invoiceType"`
-	InvoiceTitle   string `json:"invoiceTitle"`
-	ComponyAddress string `json:"componyAddress"`
-	ComponyPhone   string `json:"componyPhone"`
-	TaxId          string `json:"taxId"`
-	OpeningBank    string `json:"openingBank"`
-	BankAccount    string `json:"bankAccount"`
+	OrderType    int64        `json:"orderType"`
+	OrderSn      string       `json:"orderSn"`
+	IfDetail     int64        `json:"ifDetail"`
+	PostAddress  *AddressInfo `json:"postAddress"`
+	InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
 }
 
 type InvoiceInfo struct {
-	Phone          string `json:"phone"`
-	OrderType      int64  `json:"orderType"`
-	OrderSn        string `json:"orderSn"`
 	InvoiceType    int64  `json:"invoiceType"`
+	TargetType     int64  `json:"targetType"`
 	InvoiceTitle   string `json:"invoiceTitle"`
 	ComponyAddress string `json:"componyAddress"`
 	ComponyPhone   string `json:"componyPhone"`
 	TaxId          string `json:"taxId"`
 	OpeningBank    string `json:"openingBank"`
 	BankAccount    string `json:"bankAccount"`
-	ApplyTime      string `json:"applyTime"`
-	Status         int64  `json:"status"`
-	FinishTime     string `json:"finishTime"`
+}
+
+type InvoiceRp struct {
+	Phone        string       `json:"phone"`
+	OrderType    int64        `json:"orderType"`
+	OrderSn      string       `json:"orderSn"`
+	PostAddress  *AddressInfo `json:"postAddress"`
+	InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
+	Amount       int64        `json:"amount"`
+	IfDetail     int64        `json:"ifDetail"`
+	ApplyTime    string       `json:"applyTime"`
+	Status       int64        `json:"status"`
+	FinishTime   string       `json:"finishTime"`
 }
 
 type ApplyInvoiceResp struct {
-	Code string       `json:"code"`
-	Msg  string       `json:"msg"`
-	Data *InvoiceInfo `json:"data"`
+	Code string     `json:"code"`
+	Msg  string     `json:"msg"`
+	Data *InvoiceRp `json:"data"`
 }
 
 type GetInvoiceRes struct {
@@ -417,18 +421,18 @@ type GetInvoiceRes struct {
 }
 
 type GetInvoiceResp struct {
-	Code string       `json:"code"`
-	Msg  string       `json:"msg"`
-	Data *InvoiceInfo `json:"data"`
+	Code string     `json:"code"`
+	Msg  string     `json:"msg"`
+	Data *InvoiceRp `json:"data"`
 }
 
 type GetAllInvoiceRes struct {
 }
 
 type GetAllInvoiceResp struct {
-	Code string         `json:"code"`
-	Msg  string         `json:"msg"`
-	Data []*InvoiceInfo `json:"data"`
+	Code string       `json:"code"`
+	Msg  string       `json:"msg"`
+	Data []*InvoiceRp `json:"data"`
 }
 
 type CouponStoreInfo struct {
@@ -487,4 +491,35 @@ type IfOvertimeRes struct {
 }
 
 type IfOvertimeResp struct {
+}
+
+type CompanyInvoiceInfo struct {
+	InvoiceTitle   string `json:"invoiceTitle"`
+	ComponyAddress string `json:"componyAddress"`
+	ComponyPhone   string `json:"componyPhone"`
+	TaxId          string `json:"taxId"`
+	OpeningBank    string `json:"openingBank"`
+	BankAccount    string `json:"bankAccount"`
+}
+
+type PersonalInvoiceInfo struct {
+	InvoiceTitle string `json:"invoiceTitle"`
+}
+
+type GetTitleRes struct {
+}
+
+type GetTitleRp struct {
+	Company  []*CompanyInvoiceInfo  `json:"company"`
+	Personal []*PersonalInvoiceInfo `json:"personal"`
+}
+
+type GetTitleResp struct {
+	Code          string      `json:"code"`
+	Msg           string      `json:"msg"`
+	TitleInfoList *GetTitleRp `json:"titleInfoList"`
+}
+
+type UpdateTitleRes struct {
+	TitleInfoList *GetTitleRp `json:"titleInfoList"`
 }

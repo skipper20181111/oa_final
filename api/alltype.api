@@ -387,8 +387,16 @@ type (
         OrderType int64 `json:"orderType"`
         // 订单类型 0代表order 1代表充值
         OrderSn string `json:"orderSn"`
+        IfDetail int64 `json:"ifDetail"`
+        // 开票类型，0代表商品大类，1代表详细列表
+        PostAddress *AddressInfo `json:"postAddress"`
+        InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
+    }
+    InvoiceInfo {
         InvoiceType int64 `json:"invoiceType"`
-        // 0代表普票，1代表专票
+        // 0代表专票，1代表普票
+        TargetType int64 `json:"targetType"`
+        // 0代表对公，1代表对私
         InvoiceTitle string `json:"invoiceTitle"`
         // 发票抬头
         ComponyAddress string `json:"componyAddress"`
@@ -397,28 +405,29 @@ type (
         OpeningBank string `json:"openingBank"`
         BankAccount string `json:"bankAccount"`
     }
-    InvoiceInfo {
+    InvoiceRp {
         Phone string `json:"phone"`
         OrderType int64 `json:"orderType"`
         // 订单类型 0代表order 1代表充值
         OrderSn string `json:"orderSn"`
-        InvoiceType int64 `json:"invoiceType"`
-        // 0代表普票，1代表专票
-        InvoiceTitle string `json:"invoiceTitle"`
-        // 发票抬头
-        ComponyAddress string `json:"componyAddress"`
-        ComponyPhone string `json:"componyPhone"`
-        TaxId string `json:"taxId"`
-        OpeningBank string `json:"openingBank"`
-        BankAccount string `json:"bankAccount"`
+        // 开发票对应的订单号
+        PostAddress *AddressInfo `json:"postAddress"`
+        InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
+        Amount int64 `json:"amount"`
+        // 发票总金额
+        IfDetail int64 `json:"ifDetail"`
+        // 开票方式：0代表商品大类，1代表详细信息
         ApplyTime string `json:"applyTime"`
+        // 申请开票的时间
         Status int64 `json:"status"`
+        // 开发票的状态
         FinishTime string `json:"finishTime"`
+        // 开票完成的时间
     }
     ApplyInvoiceResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
-        Data *InvoiceInfo `json:"data"`
+        Data *InvoiceRp `json:"data"`
     }
     GetInvoiceRes {
         OrderSn string `json:"orderSn"`
@@ -426,7 +435,7 @@ type (
     GetInvoiceResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
-        Data *InvoiceInfo `json:"data"`
+        Data *InvoiceRp `json:"data"`
     }
     GetAllInvoiceRes {
 
@@ -434,7 +443,7 @@ type (
     GetAllInvoiceResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
-        Data []*InvoiceInfo `json:"data"`
+        Data []*InvoiceRp `json:"data"`
     }
 )
 
@@ -497,6 +506,42 @@ type (
 
     }
 )
+type (
+    CompanyInvoiceInfo {
+        InvoiceTitle string `json:"invoiceTitle"`
+        // 发票抬头
+        ComponyAddress string `json:"componyAddress"`
+        // 单位地址
+        ComponyPhone string `json:"componyPhone"`
+        // 电话
+        TaxId string `json:"taxId"`
+        // 税号
+        OpeningBank string `json:"openingBank"`
+        // 开户银行
+        BankAccount string `json:"bankAccount"`
+        // 银行账户
+    }
+    PersonalInvoiceInfo {
+        InvoiceTitle string `json:"invoiceTitle"`
+        // 发票抬头
+    }
+    GetTitleRes {
+
+    }
+    GetTitleRp {
+        Company []*CompanyInvoiceInfo `json:"company"`
+        personal []*PersonalInvoiceInfo `json:"personal"`
+    }
+    GetTitleResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        TitleInfoList *GetTitleRp `json:"titleInfoList"`
+    }
+    UpdateTitleRes {
+        TitleInfoList *GetTitleRp `json:"titleInfoList"`
+    }
+)
+
 
 
 

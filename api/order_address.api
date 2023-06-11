@@ -31,7 +31,6 @@ service oa-api {
 	@doc "臻星商城订单"
 	@handler starmallorder
 	post /starmallorder (StarMallOrderRes) returns (StarMallOrderResp)
-
 	
 	@doc "钱包充值订单"
 	@handler cashrecharge
@@ -165,4 +164,12 @@ service oa-api {
 	@doc "获取发票信息"
 	@handler getallinvoice
 	post /getallinvoice (GetAllInvoiceRes) returns (GetAllInvoiceResp)
+	
+	@doc "存储发票抬头"
+	@handler updatetitle
+	post /updatetitle (UpdateTitleRes) returns (GetTitleResp)
+	
+	@doc "获取发票抬头"
+	@handler gettitle
+	post /gettitle (GetTitleRes) returns (GetTitleResp)
 }

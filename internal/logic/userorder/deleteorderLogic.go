@@ -33,8 +33,9 @@ func (l *DeleteorderLogic) Deleteorder(req *types.DeletOrderRes) (resp *types.De
 		return &types.DeletOrderResp{Code: "10000", Msg: "yes"}, nil
 	}
 	if OrderCanBeDeleted(order, transactionInfo) {
-		l.svcCtx.UserOrder.Delete(l.ctx, order.Id)
-		l.svcCtx.TransactionInfo.Delete(l.ctx, transactionInfo.Id)
+		//l.svcCtx.UserOrder.Delete(l.ctx, order.Id)
+		//l.svcCtx.TransactionInfo.Delete(l.ctx, transactionInfo.Id)
+		l.svcCtx.UserOrder.UpdateStatusByOrderSn(l.ctx, 9, order.OrderSn)
 		return &types.DeletOrderResp{Code: "10000", Msg: "yes"}, nil
 	}
 	return &types.DeletOrderResp{Code: "10000", Msg: "订单状态不可删除"}, nil

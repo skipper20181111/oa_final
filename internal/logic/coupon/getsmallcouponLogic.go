@@ -48,6 +48,10 @@ func (l *GetsmallcouponLogic) Getsmallcoupon(req *types.GetSmallCouponRes) (resp
 				delete(couponmap, cid)
 				continue
 			}
+			if len(uuidmap) == 0 {
+				delete(couponmap, cid)
+				continue
+			}
 			chilemap := &uuidmap
 			for uuid, storeInfo := range uuidmap {
 				disabletime, _ := time.Parse("2006-01-02 15:04:05", storeInfo.DisabledTime)

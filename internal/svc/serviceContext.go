@@ -28,6 +28,7 @@ const (
 	StarMallMap        = "StarMallMap"
 	CouponMapKey       = "CouponMapKey"
 	CouponInfoMapKey   = "CouponInfoMapKey"
+	Keystr             = "W3WxhhoA9E9VIteCYbnhUTxDbtk2nP1Z"
 )
 
 type ServiceContext struct {
@@ -53,6 +54,7 @@ type ServiceContext struct {
 	StarMallLongList  cachemodel.StarmallLonglistModel
 	TransactionInfo   cachemodel.TransactionInfoModel
 	UserInvoiceString cachemodel.UserInvoiceStringModel
+	Voucher           cachemodel.VoucherModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -116,5 +118,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		StarMallLongList:  cachemodel.NewStarmallLonglistModel(sqlx.NewMysql(c.DB.DataSource)),
 		TransactionInfo:   cachemodel.NewTransactionInfoModel(sqlx.NewMysql(c.DB.DataSource)),
 		UserInvoiceString: cachemodel.NewUserInvoiceStringModel(sqlx.NewMysql(c.DB.DataSource)),
+		Voucher:           cachemodel.NewVoucherModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

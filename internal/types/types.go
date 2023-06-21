@@ -589,3 +589,19 @@ type GetVoucherResp struct {
 	Code string `json:"code"`
 	Msg  string `json:"msg"`
 }
+
+type ScanQRcodeRes struct {
+	QRcodeMsg string `json:"qRcodeMsg"`
+}
+
+type ScanQRcodeResp struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
+}
+
+type QrCode struct {
+	Type       string `json:"type"`
+	Parameter1 string `json:"p1"`
+	Parameter2 string `json:"p2"`
+	Parameter3 string `json:"p3"`
+}

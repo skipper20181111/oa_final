@@ -197,3 +197,14 @@ service oa-api {
 	@handler getvoucher
 	post /getvoucher (GetVoucherRes) returns (GetVoucherResp)
 }
+
+@server(
+	group: qrcode
+	prefix : qrcode
+	jwt : Auth
+)
+service oa-api {
+	@doc "扫描二维码"
+	@handler scanqrcode
+	post /scanqrcode (ScanQRcodeRes) returns (ScanQRcodeResp)
+}

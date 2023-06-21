@@ -604,6 +604,21 @@ type (
         Msg string `json:"msg"`
     }
 )
+type (
+    ScanQRcodeRes {
+        QRcodeMsg string `json:"qRcodeMsg"`
+    }
+    ScanQRcodeResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+    }
+    QrCode {
+        Type string `json:"type"`
+        Parameter1 string `json:"p1"`
+        Parameter2 string `json:"p2"`
+        Parameter3 string `json:"p3"`
+    }
+)
 
 
 

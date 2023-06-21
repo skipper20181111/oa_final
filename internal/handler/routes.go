@@ -9,6 +9,7 @@ import (
 	coupon "oa_final/internal/handler/coupon"
 	invoice "oa_final/internal/handler/invoice"
 	payrecall "oa_final/internal/handler/payrecall"
+	qrcode "oa_final/internal/handler/qrcode"
 	refresh "oa_final/internal/handler/refresh"
 	shoppingcart "oa_final/internal/handler/shoppingcart"
 	userorder "oa_final/internal/handler/userorder"
@@ -230,5 +231,17 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/coupon"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/scanqrcode",
+				Handler: qrcode.ScanqrcodeHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/qrcode"),
 	)
 }

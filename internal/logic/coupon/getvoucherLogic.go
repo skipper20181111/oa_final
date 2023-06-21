@@ -13,6 +13,7 @@ type GetvoucherLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
+	vu     *VoucherUtileLogic
 }
 
 func NewGetvoucherLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetvoucherLogic {
@@ -20,11 +21,11 @@ func NewGetvoucherLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getvou
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
+		vu:     NewVoucherUtileLogic(ctx, svcCtx),
 	}
 }
 
 func (l *GetvoucherLogic) Getvoucher(req *types.GetVoucherRes) (resp *types.GetVoucherResp, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	_, msg := l.vu.voucherbind(req.VoucherCode)
+	return &types.GetVoucherResp{Code: "10000", Msg: msg}, nil
 }

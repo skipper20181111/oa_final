@@ -240,6 +240,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/scanqrcode",
 				Handler: qrcode.ScanqrcodeHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getqrcodetype",
+				Handler: qrcode.GetqrcodetypeHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/qrcode"),

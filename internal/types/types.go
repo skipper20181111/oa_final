@@ -594,9 +594,15 @@ type ScanQRcodeRes struct {
 	QRcodeMsg string `json:"qRcodeMsg"`
 }
 
-type ScanQRcodeResp struct {
-	Code string `json:"code"`
+type ScanQRcodeRp struct {
+	Type string `json:"type"`
 	Msg  string `json:"msg"`
+}
+
+type ScanQRcodeResp struct {
+	Code string        `json:"code"`
+	Msg  string        `json:"msg"`
+	Data *ScanQRcodeRp `json:"data"`
 }
 
 type QrCode struct {

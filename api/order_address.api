@@ -207,4 +207,8 @@ service oa-api {
 	@doc "扫描二维码"
 	@handler scanqrcode
 	post /scanqrcode (ScanQRcodeRes) returns (ScanQRcodeResp)
+	
+	@doc "获取二维码类型"
+	@handler getqrcodetype
+	post /getqrcodetype (ScanQRcodeRes) returns (ScanQRcodeResp)
 }

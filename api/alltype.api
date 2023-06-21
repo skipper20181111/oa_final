@@ -608,9 +608,14 @@ type (
     ScanQRcodeRes {
         QRcodeMsg string `json:"qRcodeMsg"`
     }
+    ScanQRcodeRp {
+        Type string `json:"type"`
+        Msg string `json:"msg"`
+    }
     ScanQRcodeResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
+        Data *ScanQRcodeRp `json:"data"`
     }
     QrCode {
         Type string `json:"type"`

@@ -7,10 +7,8 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
@@ -21,9 +19,6 @@ var (
 	userPointsRows                = strings.Join(userPointsFieldNames, ",")
 	userPointsRowsExpectAutoSet   = strings.Join(stringx.Remove(userPointsFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	userPointsRowsWithPlaceHolder = strings.Join(stringx.Remove(userPointsFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
-
-	cacheDevUserPointsIdPrefix    = "cache:dev:userPoints:id:"
-	cacheDevUserPointsPhonePrefix = "cache:dev:userPoints:phone:"
 )
 
 type (
@@ -33,11 +28,10 @@ type (
 		FindOneByPhone(ctx context.Context, phone string) (*UserPoints, error)
 		Update(ctx context.Context, data *UserPoints) error
 		Delete(ctx context.Context, id int64) error
-		FindOneByPhoneNoCache(ctx context.Context, phone string) (*UserPoints, error)
 	}
 
 	defaultUserPointsModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
@@ -49,50 +43,23 @@ type (
 	}
 )
 
-func newUserPointsModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultUserPointsModel {
+func newUserPointsModel(conn sqlx.SqlConn) *defaultUserPointsModel {
 	return &defaultUserPointsModel{
-		CachedConn: sqlc.NewConn(conn, c, cache.WithExpiry(time.Second*5)),
-		table:      "`user_points`",
-	}
-}
-
-func (m *defaultUserPointsModel) FindOneByPhoneNoCache(ctx context.Context, phone string) (*UserPoints, error) {
-	var resp UserPoints
-
-	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userPointsRows, m.table)
-	err := m.QueryRowNoCacheCtx(ctx, &resp, query, phone)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
+		conn:  conn,
+		table: "`user_points`",
 	}
 }
 
 func (m *defaultUserPointsModel) Delete(ctx context.Context, id int64) error {
-	data, err := m.FindOne(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	devUserPointsIdKey := fmt.Sprintf("%s%v", cacheDevUserPointsIdPrefix, id)
-	devUserPointsPhoneKey := fmt.Sprintf("%s%v", cacheDevUserPointsPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-		return conn.ExecCtx(ctx, query, id)
-	}, devUserPointsIdKey, devUserPointsPhoneKey)
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
 func (m *defaultUserPointsModel) FindOne(ctx context.Context, id int64) (*UserPoints, error) {
-	devUserPointsIdKey := fmt.Sprintf("%s%v", cacheDevUserPointsIdPrefix, id)
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userPointsRows, m.table)
 	var resp UserPoints
-	err := m.QueryRowCtx(ctx, &resp, devUserPointsIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
-		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userPointsRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, id)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -104,15 +71,9 @@ func (m *defaultUserPointsModel) FindOne(ctx context.Context, id int64) (*UserPo
 }
 
 func (m *defaultUserPointsModel) FindOneByPhone(ctx context.Context, phone string) (*UserPoints, error) {
-	devUserPointsPhoneKey := fmt.Sprintf("%s%v", cacheDevUserPointsPhonePrefix, phone)
 	var resp UserPoints
-	err := m.QueryRowIndexCtx(ctx, &resp, devUserPointsPhoneKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
-		query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userPointsRows, m.table)
-		if err := conn.QueryRowCtx(ctx, &resp, query, phone); err != nil {
-			return nil, err
-		}
-		return resp.Id, nil
-	}, m.queryPrimary)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userPointsRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, phone)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -124,37 +85,15 @@ func (m *defaultUserPointsModel) FindOneByPhone(ctx context.Context, phone strin
 }
 
 func (m *defaultUserPointsModel) Insert(ctx context.Context, data *UserPoints) (sql.Result, error) {
-	devUserPointsIdKey := fmt.Sprintf("%s%v", cacheDevUserPointsIdPrefix, data.Id)
-	devUserPointsPhoneKey := fmt.Sprintf("%s%v", cacheDevUserPointsPhonePrefix, data.Phone)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, userPointsRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.HistoryPoints, data.AvailablePoints, data.Phone)
-	}, devUserPointsIdKey, devUserPointsPhoneKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, userPointsRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.HistoryPoints, data.AvailablePoints, data.Phone)
 	return ret, err
 }
 
 func (m *defaultUserPointsModel) Update(ctx context.Context, newData *UserPoints) error {
-	data, err := m.FindOne(ctx, newData.Id)
-	if err != nil {
-		return err
-	}
-
-	devUserPointsIdKey := fmt.Sprintf("%s%v", cacheDevUserPointsIdPrefix, data.Id)
-	devUserPointsPhoneKey := fmt.Sprintf("%s%v", cacheDevUserPointsPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userPointsRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.HistoryPoints, newData.AvailablePoints, newData.Phone, newData.Id)
-	}, devUserPointsIdKey, devUserPointsPhoneKey)
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userPointsRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.HistoryPoints, newData.AvailablePoints, newData.Phone, newData.Id)
 	return err
-}
-
-func (m *defaultUserPointsModel) formatPrimary(primary interface{}) string {
-	return fmt.Sprintf("%s%v", cacheDevUserPointsIdPrefix, primary)
-}
-
-func (m *defaultUserPointsModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userPointsRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultUserPointsModel) tableName() string {

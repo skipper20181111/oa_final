@@ -5,12 +5,10 @@ package cachemodel
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
@@ -21,9 +19,6 @@ var (
 	userShoppingCartRows                = strings.Join(userShoppingCartFieldNames, ",")
 	userShoppingCartRowsExpectAutoSet   = strings.Join(stringx.Remove(userShoppingCartFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	userShoppingCartRowsWithPlaceHolder = strings.Join(stringx.Remove(userShoppingCartFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
-
-	cacheDevUserShoppingCartIdPrefix    = "cache:dev:userShoppingCart:id:"
-	cacheDevUserShoppingCartPhonePrefix = "cache:dev:userShoppingCart:phone:"
 )
 
 type (
@@ -33,50 +28,38 @@ type (
 		FindOneByPhone(ctx context.Context, phone string) (*UserShoppingCart, error)
 		Update(ctx context.Context, data *UserShoppingCart) error
 		Delete(ctx context.Context, id int64) error
-		UpdateByPhone(ctx context.Context, phone, shoppingCart string) error
+		UpdateByPhone(ctx context.Context, phone, sc string) error
 	}
 
 	defaultUserShoppingCartModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
 	UserShoppingCart struct {
 		Id           int64  `db:"id"`
-		Phone        string `db:"phone"`
-		ShoppingCart string `db:"shopping_cart"`
+		Phone        string `db:"phone"`         // 用户手机号
+		ShoppingCart string `db:"shopping_cart"` // 购物车字符串
 	}
 )
 
-func newUserShoppingCartModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultUserShoppingCartModel {
+func newUserShoppingCartModel(conn sqlx.SqlConn) *defaultUserShoppingCartModel {
 	return &defaultUserShoppingCartModel{
-		CachedConn: sqlc.NewConn(conn, c),
-		table:      "`user_shopping_cart`",
+		conn:  conn,
+		table: "`user_shopping_cart`",
 	}
 }
 
 func (m *defaultUserShoppingCartModel) Delete(ctx context.Context, id int64) error {
-	data, err := m.FindOne(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	devUserShoppingCartIdKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartIdPrefix, id)
-	devUserShoppingCartPhoneKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-		return conn.ExecCtx(ctx, query, id)
-	}, devUserShoppingCartIdKey, devUserShoppingCartPhoneKey)
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
 func (m *defaultUserShoppingCartModel) FindOne(ctx context.Context, id int64) (*UserShoppingCart, error) {
-	devUserShoppingCartIdKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartIdPrefix, id)
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userShoppingCartRows, m.table)
 	var resp UserShoppingCart
-	err := m.QueryRowCtx(ctx, &resp, devUserShoppingCartIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
-		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userShoppingCartRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, id)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -88,71 +71,35 @@ func (m *defaultUserShoppingCartModel) FindOne(ctx context.Context, id int64) (*
 }
 
 func (m *defaultUserShoppingCartModel) FindOneByPhone(ctx context.Context, phone string) (*UserShoppingCart, error) {
-	devUserShoppingCartPhoneKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartPhonePrefix, phone)
 	var resp UserShoppingCart
-	err := m.QueryRowIndexCtx(ctx, &resp, devUserShoppingCartPhoneKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
-		query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userShoppingCartRows, m.table)
-		if err := conn.QueryRowCtx(ctx, &resp, query, phone); err != nil {
-			return nil, err
-		}
-		return resp.Id, nil
-	}, m.queryPrimary)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", userShoppingCartRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, phone)
 	switch err {
 	case nil:
 		return &resp, nil
 	case sqlc.ErrNotFound:
-		return nil, errors.New("notfind")
+		return nil, ErrNotFound
 	default:
 		return nil, err
 	}
 }
 
 func (m *defaultUserShoppingCartModel) Insert(ctx context.Context, data *UserShoppingCart) (sql.Result, error) {
-	devUserShoppingCartIdKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartIdPrefix, data.Id)
-	devUserShoppingCartPhoneKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartPhonePrefix, data.Phone)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?)", m.table, userShoppingCartRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.Phone, data.ShoppingCart)
-	}, devUserShoppingCartIdKey, devUserShoppingCartPhoneKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?)", m.table, userShoppingCartRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.ShoppingCart)
 	return ret, err
 }
 
 func (m *defaultUserShoppingCartModel) Update(ctx context.Context, newData *UserShoppingCart) error {
-	data, err := m.FindOne(ctx, newData.Id)
-	if err != nil {
-		return err
-	}
-
-	devUserShoppingCartIdKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartIdPrefix, data.Id)
-	devUserShoppingCartPhoneKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userShoppingCartRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.Phone, newData.ShoppingCart, newData.Id)
-	}, devUserShoppingCartIdKey, devUserShoppingCartPhoneKey)
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userShoppingCartRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.ShoppingCart, newData.Id)
 	return err
 }
 
-func (m *defaultUserShoppingCartModel) UpdateByPhone(ctx context.Context, phone, shoppingCart string) error {
-	data, err := m.FindOneByPhone(ctx, phone)
-	if err != nil {
-		return err
-	}
-	devUserShoppingCartIdKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartIdPrefix, data.Id)
-	devUserShoppingCartPhoneKey := fmt.Sprintf("%s%v", cacheDevUserShoppingCartPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `phone` = ?", m.table, userShoppingCartRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, phone, shoppingCart, phone)
-	}, devUserShoppingCartIdKey, devUserShoppingCartPhoneKey)
+func (m *defaultUserShoppingCartModel) UpdateByPhone(ctx context.Context, phone, sc string) error {
+	query := fmt.Sprintf("update %s set `shopping_cart`=? where `phone` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, sc, phone)
 	return err
-}
-
-func (m *defaultUserShoppingCartModel) formatPrimary(primary interface{}) string {
-	return fmt.Sprintf("%s%v", cacheDevUserShoppingCartIdPrefix, primary)
-}
-
-func (m *defaultUserShoppingCartModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userShoppingCartRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultUserShoppingCartModel) tableName() string {

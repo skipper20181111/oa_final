@@ -20,11 +20,14 @@ import (
 )
 
 const localCacheExpire = time.Duration(time.Second * 800)
+const localCacheExpire2 = time.Duration(time.Second * 20)
 const (
 	RechargeProductKey = "RechargeProductKey"
 	ProductsMap        = "ProductsMap"
 	ProductsInfoMap    = "ProductsInfoMap"
 	StarMallMap        = "StarMallMap"
+	CouponMapKey       = "CouponMapKey"
+	CouponInfoMapKey   = "CouponInfoMapKey"
 )
 
 type ServiceContext struct {
@@ -33,6 +36,7 @@ type ServiceContext struct {
 	Product           cachemodel.ProductModel
 	UserOrder         cachemodel.UserOrderModel
 	LocalCache        *collection.Cache
+	LocalCache2       *collection.Cache
 	UserAddressString cachemodel.UserAddressStringModel
 	AccountOperateLog cachemodel.AccountOperateLogModel
 	CashAccount       cachemodel.CashAccountModel
@@ -53,6 +57,10 @@ type ServiceContext struct {
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	localCache, err := collection.NewCache(localCacheExpire)
+	if err != nil {
+		panic(err)
+	}
+	localCache2, err := collection.NewCache(localCacheExpire2)
 	if err != nil {
 		panic(err)
 	}
@@ -87,20 +95,21 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 	return &ServiceContext{
 		Config:            c,
-		UserShopping:      cachemodel.NewUserShoppingCartModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
+		UserShopping:      cachemodel.NewUserShoppingCartModel(sqlx.NewMysql(c.DB.DataSource)),
 		Product:           cachemodel.NewProductModel(sqlx.NewMysql(c.DB.DataSource)),
 		LocalCache:        localCache,
+		LocalCache2:       localCache2,
 		UserAddressString: cachemodel.NewUserAddressStringModel(sqlx.NewMysql(c.DB.DataSource)),
 		Client:            client,
 		MchPrivateKey:     mchPrivateKey,
 		Handler:           handler,
 		UserOrder:         cachemodel.NewUserOrderModel(sqlx.NewMysql(c.DB.DataSource)),
 		AccountOperateLog: cachemodel.NewAccountOperateLogModel(sqlx.NewMysql(c.DB.DataSource)),
-		Coupon:            cachemodel.NewCouponModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
-		CashAccount:       cachemodel.NewCashAccountModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
-		UserCoupon:        cachemodel.NewUserCouponModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
+		Coupon:            cachemodel.NewCouponModel(sqlx.NewMysql(c.DB.DataSource)),
+		CashAccount:       cachemodel.NewCashAccountModel(sqlx.NewMysql(c.DB.DataSource)),
+		UserCoupon:        cachemodel.NewUserCouponModel(sqlx.NewMysql(c.DB.DataSource)),
 		CashLog:           cachemodel.NewCashLogModel(sqlx.NewMysql(c.DB.DataSource)),
-		UserPoints:        cachemodel.NewUserPointsModel(sqlx.NewMysql(c.DB.DataSource), c.Cache),
+		UserPoints:        cachemodel.NewUserPointsModel(sqlx.NewMysql(c.DB.DataSource)),
 		RechargeProduct:   cachemodel.NewRechargeProductModel(sqlx.NewMysql(c.DB.DataSource)),
 		RechargeOrder:     cachemodel.NewRechargeOrderModel(sqlx.NewMysql(c.DB.DataSource)),
 		Invoice:           cachemodel.NewInvoiceModel(sqlx.NewMysql(c.DB.DataSource)),

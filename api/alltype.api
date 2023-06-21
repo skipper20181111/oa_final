@@ -114,14 +114,14 @@ type (
         // 商品属性，鲜活，冷冻，冰鲜
     }
     ShoppingCart {
-        GoodsList []*ProductInfo `json:"goodsList"`
+        GoodsList []*ProductTiny `json:"goodsList"`
     }
     ProductTiny {
         PId int64 `json:"pId"`
         Amount int `json:"amount"`
     }
     UpdateShoppingCartRes {
-        ShopCartIdList []ProductTiny `json:"shopCartIdList"`
+        ShopCartIdList []*ProductTiny `json:"shopCartIdList"`
     }
     UpdateShoppingCartResp {
         Code string `json:"code"`
@@ -447,10 +447,6 @@ type (
     }
 )
 
-type CouponStoreInfo {
-    CouponId int64 `json:"couponId"`
-    DisabledTime string `json:"disabledTime"`
-}
 
 type (
     StarMallOrderRes {
@@ -543,6 +539,75 @@ type (
         TitleInfoList *GetTitleRp `json:"titleInfoList"`
     }
 )
+type (
+    OrderOptionRes {
+        ProductTinyList []*ProductTiny `json:"productTinyList"`
+    }
+    OrderOptionRp {
+        OriginalAmount float64 `json:"originalAmount"`
+        PromotionAmount float64 `json:"promotionAmount"`
+        AvailableBalance float64 `json:"availableBalance"`
+        AvailableCoupon []*CouponInfo `json:"availableCoupon"`
+    }
+    OrderOptionResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *OrderOptionRp `json:"data"`
+    }
+)
+type (
+    CouponStoreInfo {
+        CouponId int64 `json:"couponId"`
+        DisabledTime string `json:"disabledTime"`
+    }
+    CouponInfo {
+        CouponId int64 `json:"couponId"`
+        CouponUUID string `json:"couponUUID"`
+        EfficientPeriod int64 `json:"efficientPeriod"`
+        TypeCode int64 `json:"typeCode"`
+        Type string `json:"type"`
+        Title string `json:"title"`
+        LeastConsume float64 `json:"leastConsume"`
+        Cut float64 `json:"cut"`
+        Discount int64 `json:"discount"`
+        DisabledTime string `json:"disabledTime"`
+        AvailableRange string `json:"availableRange"`
+        Rules []string `json:"rules"`
+    }
+    GetSmallCouponRes {
+    }
+    GetSmallCouponRp {
+        CouponInfoList []*CouponInfo `json:"couponInfoList"`
+    }
+    GetSmallCouponResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetSmallCouponRp `json:"data"`
+    }
+)
+type (
+    StarMallCouponOrderRes {
+        Cid int64 `json:"cid"`
+    }
+    StarMallCouponOrderResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetSmallCouponRp `json:"data"`
+    }
+)
+type (
+    GetVoucherRes {
+        VoucherCode string `json:"voucherCode"`
+    }
+    GetVoucherResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+    }
+)
+
+
+
+
 
 
 

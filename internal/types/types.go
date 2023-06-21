@@ -96,7 +96,7 @@ type ProductInfo struct {
 }
 
 type ShoppingCart struct {
-	GoodsList []*ProductInfo `json:"goodsList"`
+	GoodsList []*ProductTiny `json:"goodsList"`
 }
 
 type ProductTiny struct {
@@ -105,7 +105,7 @@ type ProductTiny struct {
 }
 
 type UpdateShoppingCartRes struct {
-	ShopCartIdList []ProductTiny `json:"shopCartIdList"`
+	ShopCartIdList []*ProductTiny `json:"shopCartIdList"`
 }
 
 type UpdateShoppingCartResp struct {
@@ -435,11 +435,6 @@ type GetAllInvoiceResp struct {
 	Data []*InvoiceRp `json:"data"`
 }
 
-type CouponStoreInfo struct {
-	CouponId     int64  `json:"couponId"`
-	DisabledTime string `json:"disabledTime"`
-}
-
 type StarMallOrderRes struct {
 	Pid       int64        `json:"pid"`
 	Address   *AddressInfo `json:"address"`
@@ -524,4 +519,73 @@ type GetTitleResp struct {
 
 type UpdateTitleRes struct {
 	TitleInfoList *GetTitleRp `json:"titleInfoList"`
+}
+
+type OrderOptionRes struct {
+	ProductTinyList []*ProductTiny `json:"productTinyList"`
+}
+
+type OrderOptionRp struct {
+	OriginalAmount   float64       `json:"originalAmount"`
+	PromotionAmount  float64       `json:"promotionAmount"`
+	AvailableBalance float64       `json:"availableBalance"`
+	AvailableCoupon  []*CouponInfo `json:"availableCoupon"`
+}
+
+type OrderOptionResp struct {
+	Code string         `json:"code"`
+	Msg  string         `json:"msg"`
+	Data *OrderOptionRp `json:"data"`
+}
+
+type CouponStoreInfo struct {
+	CouponId     int64  `json:"couponId"`
+	DisabledTime string `json:"disabledTime"`
+}
+
+type CouponInfo struct {
+	CouponId        int64    `json:"couponId"`
+	CouponUUID      string   `json:"couponUUID"`
+	EfficientPeriod int64    `json:"efficientPeriod"`
+	TypeCode        int64    `json:"typeCode"`
+	Type            string   `json:"type"`
+	Title           string   `json:"title"`
+	LeastConsume    float64  `json:"leastConsume"`
+	Cut             float64  `json:"cut"`
+	Discount        int64    `json:"discount"`
+	DisabledTime    string   `json:"disabledTime"`
+	AvailableRange  string   `json:"availableRange"`
+	Rules           []string `json:"rules"`
+}
+
+type GetSmallCouponRes struct {
+}
+
+type GetSmallCouponRp struct {
+	CouponInfoList []*CouponInfo `json:"couponInfoList"`
+}
+
+type GetSmallCouponResp struct {
+	Code string            `json:"code"`
+	Msg  string            `json:"msg"`
+	Data *GetSmallCouponRp `json:"data"`
+}
+
+type StarMallCouponOrderRes struct {
+	Cid int64 `json:"cid"`
+}
+
+type StarMallCouponOrderResp struct {
+	Code string            `json:"code"`
+	Msg  string            `json:"msg"`
+	Data *GetSmallCouponRp `json:"data"`
+}
+
+type GetVoucherRes struct {
+	VoucherCode string `json:"voucherCode"`
+}
+
+type GetVoucherResp struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
 }

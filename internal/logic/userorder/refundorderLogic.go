@@ -76,7 +76,7 @@ func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.C
 	//结束更新现金账户与优惠券账户
 	// 开始退积分账户
 	if order.PointAmount > 0 {
-		userpoints, _ := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, order.Phone)
+		userpoints, _ := l.svcCtx.UserPoints.FindOneByPhone(l.ctx, order.Phone)
 		if userpoints != nil {
 			userpoints.AvailablePoints = userpoints.AvailablePoints + order.PointAmount
 			l.svcCtx.UserPoints.Update(l.ctx, userpoints)

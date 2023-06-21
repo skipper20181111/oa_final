@@ -1,9 +1,6 @@
 package cachemodel
 
-import (
-	"github.com/zeromicro/go-zero/core/stores/cache"
-	"github.com/zeromicro/go-zero/core/stores/sqlx"
-)
+import "github.com/zeromicro/go-zero/core/stores/sqlx"
 
 var _ CouponModel = (*customCouponModel)(nil)
 
@@ -20,8 +17,8 @@ type (
 )
 
 // NewCouponModel returns a model for the database table.
-func NewCouponModel(conn sqlx.SqlConn, c cache.CacheConf) CouponModel {
+func NewCouponModel(conn sqlx.SqlConn) CouponModel {
 	return &customCouponModel{
-		defaultCouponModel: newCouponModel(conn, c),
+		defaultCouponModel: newCouponModel(conn),
 	}
 }

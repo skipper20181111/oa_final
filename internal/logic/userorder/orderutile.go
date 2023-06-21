@@ -368,10 +368,10 @@ func UseCache(usecash bool) Option {
 			l.cashaccount, _ = l.svcCtx.CashAccount.FindOneByPhone(l.ctx, l.userphone)
 			l.userpoints, _ = l.svcCtx.UserPoints.FindOneByPhone(l.ctx, l.userphone)
 		} else {
-			l.coupon, _ = l.svcCtx.Coupon.FindOneByCouponIdNoCache(l.ctx, l.couponid)
-			l.usercoupon, _ = l.svcCtx.UserCoupon.FindOneByPhoneNoCache(l.ctx, l.userphone)
+			l.coupon, _ = l.svcCtx.Coupon.FindOneByCouponId(l.ctx, l.couponid)
+			l.usercoupon, _ = l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.userphone)
 			//l.cashaccount, _ = l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, l.userphone)
-			l.userpoints, _ = l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, l.userphone)
+			l.userpoints, _ = l.svcCtx.UserPoints.FindOneByPhone(l.ctx, l.userphone)
 		}
 	}
 }
@@ -383,7 +383,7 @@ func (l *Logic) Updatecashaccount(order *cachemodel.UserOrder, use bool) (bool, 
 		}
 	}()
 	accphone := order.Phone
-	cashaccount, _ := l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, accphone)
+	cashaccount, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, accphone)
 	account, ok := cashfinish(order, cashaccount, use)
 	if ok {
 		l.Oplog("cash_account", order.OrderSn, "开始更新", order.LogId)
@@ -531,4 +531,22 @@ func order2req(order *cachemodel.UserOrder) *types.NewOrderRes {
 		}
 	}
 	return req
+}
+
+func ifcouponuseable(coupon *cachemodel.Coupon, disableTime string, amount int64) bool {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	disabletime, _ := time.Parse("2006-01-02 15:04:05", disableTime)
+	if time.Now().After(disabletime) {
+		return false
+	}
+	if coupon.MinPoint != 0 && coupon.Cut != 0 {
+		if amount >= coupon.MinPoint {
+			return true
+		}
+	}
+	return false
 }

@@ -54,7 +54,7 @@ func (l *FinishorderLogic) Finishorder(req *types.FinishOrderRes) (resp *types.F
 	}
 	if l.userorder.PointAmount > 0 {
 		l.usepoint = true
-		userpoint, _ = l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, userphone)
+		userpoint, _ = l.svcCtx.UserPoints.FindOneByPhone(l.ctx, userphone)
 		if userpoint != nil {
 			userpoint.AvailablePoints = userpoint.AvailablePoints - l.userorder.PointAmount
 			l.svcCtx.UserPoints.Update(l.ctx, userpoint)

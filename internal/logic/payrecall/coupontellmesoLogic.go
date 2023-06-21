@@ -38,7 +38,7 @@ func (l *CoupontellmesoLogic) Coupontellmeso(notifyReq *notify.Request, transact
 			lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "user_coupon"})
 			if l.lu.Getlocktry(lockmsglist) {
 				l.lu.Oplog("cashaccount", order.OrderSn, "开始更新", order.LogId)
-				phone, _ := l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, order.Phone)
+				phone, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, order.Phone)
 				if phone == nil {
 					_, err := l.svcCtx.CashAccount.Insert(l.ctx, &cachemodel.CashAccount{Phone: order.Phone, Balance: order.WexinPayAmount})
 					if err != nil {

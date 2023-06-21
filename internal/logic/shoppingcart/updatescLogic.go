@@ -28,38 +28,16 @@ func (l *UpdatescLogic) Updatesc(req *types.UpdateShoppingCartRes) (resp *types.
 	userphone := l.ctx.Value("phone").(string)
 	shoppingCart, err := json.Marshal(req.ShopCartIdList)
 	scphone, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, userphone)
-	if scphone == nil && err.Error() == "notfind" {
+	if scphone == nil {
 		l.svcCtx.UserShopping.Insert(l.ctx, &cachemodel.UserShoppingCart{Phone: userphone, ShoppingCart: string(shoppingCart)})
-	} else if scphone != nil {
-		l.svcCtx.UserShopping.UpdateByPhone(l.ctx, userphone, string(shoppingCart))
 	} else {
-		goodsList := make([]*types.ProductInfo, 0)
-		return &types.UpdateShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: goodsList}}, nil
+		l.svcCtx.UserShopping.UpdateByPhone(l.ctx, userphone, string(shoppingCart))
+	}
+	scinfo, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, userphone)
+	tinyproductlist := make([]*types.ProductTiny, 0)
+	if scinfo != nil {
+		json.Unmarshal([]byte(scinfo.ShoppingCart), &tinyproductlist)
 	}
 
-	scinfo, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, userphone)
-	if scinfo == nil {
-		goodsList := make([]*types.ProductInfo, 0)
-		return &types.UpdateShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: goodsList}}, nil
-	}
-	tinyproductlist := make([]types.ProductTiny, 0)
-	json.Unmarshal([]byte(scinfo.ShoppingCart), &tinyproductlist)
-	//for i, productTiny := range tinyproductlist {
-	//	productTiny.
-	//}
-	PMcache, ok := l.svcCtx.LocalCache.Get(svc.ProductsMap)
-	if !ok {
-		return &types.UpdateShoppingCartResp{Code: "4004", Msg: "此地无缓存"}, nil
-	}
-	productsMap := PMcache.(map[int64]*types.ProductInfo)
-	goodsList := make([]*types.ProductInfo, 0)
-	for _, tiny := range tinyproductlist {
-		info, ok := productsMap[tiny.PId]
-		if !ok {
-			continue
-		}
-		info.Amount = tiny.Amount
-		goodsList = append(goodsList, productsMap[tiny.PId])
-	}
-	return &types.UpdateShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: goodsList}}, nil
+	return &types.UpdateShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: tinyproductlist}}, nil
 }

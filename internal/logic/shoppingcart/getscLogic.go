@@ -26,25 +26,10 @@ func NewGetscLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetscLogic 
 func (l *GetscLogic) Getsc(req *types.GetShoppingCartRes) (resp *types.GetShoppingCartResp, err error) {
 	userphone := l.ctx.Value("phone").(string)
 	scinfo, err := l.svcCtx.UserShopping.FindOneByPhone(l.ctx, userphone)
-	if scinfo == nil {
-		return &types.GetShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: make([]*types.ProductInfo, 0)}}, nil
+	tinyproductlist := make([]*types.ProductTiny, 0)
+	if scinfo != nil {
+		json.Unmarshal([]byte(scinfo.ShoppingCart), &tinyproductlist)
 	}
-	tinyproductlist := make([]types.ProductTiny, 0)
-	json.Unmarshal([]byte(scinfo.ShoppingCart), &tinyproductlist)
-	PMcache, ok := l.svcCtx.LocalCache.Get(svc.ProductsMap)
-	if !ok {
-		return &types.GetShoppingCartResp{Code: "4004", Msg: "此地无缓存"}, nil
-	}
-	productsMap := PMcache.(map[int64]*types.ProductInfo)
-	goodsList := make([]*types.ProductInfo, 0)
-	for _, tiny := range tinyproductlist {
-		info, ok := productsMap[tiny.PId]
-		if !ok {
-			continue
-		}
-		info.Amount = tiny.Amount
-		goodsList = append(goodsList, productsMap[tiny.PId])
-	}
-	return &types.GetShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: goodsList}}, nil
+	return &types.GetShoppingCartResp{Code: "10000", Msg: "success", Data: &types.ShoppingCart{GoodsList: tinyproductlist}}, nil
 
 }

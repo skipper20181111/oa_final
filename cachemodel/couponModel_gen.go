@@ -5,13 +5,11 @@ package cachemodel
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
@@ -22,9 +20,6 @@ var (
 	couponRows                = strings.Join(couponFieldNames, ",")
 	couponRowsExpectAutoSet   = strings.Join(stringx.Remove(couponFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	couponRowsWithPlaceHolder = strings.Join(stringx.Remove(couponFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
-
-	cacheDevCouponIdPrefix       = "cache:dev:coupon:id:"
-	cacheDevCouponCouponIdPrefix = "cache:dev:coupon:couponId:"
 )
 
 type (
@@ -34,11 +29,11 @@ type (
 		FindOneByCouponId(ctx context.Context, couponId int64) (*Coupon, error)
 		Update(ctx context.Context, data *Coupon) error
 		Delete(ctx context.Context, id int64) error
-		FindOneByCouponIdNoCache(ctx context.Context, couponId int64) (*Coupon, error)
+		FindAll(ctx context.Context) ([]*Coupon, error)
 	}
 
 	defaultCouponModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
@@ -63,47 +58,35 @@ type (
 	}
 )
 
-func newCouponModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultCouponModel {
+func newCouponModel(conn sqlx.SqlConn) *defaultCouponModel {
 	return &defaultCouponModel{
-		CachedConn: sqlc.NewConn(conn, c, cache.WithExpiry(time.Second*5)),
-		table:      "`coupon`",
+		conn:  conn,
+		table: "`coupon`",
 	}
 }
 
 func (m *defaultCouponModel) Delete(ctx context.Context, id int64) error {
-	data, err := m.FindOne(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	devCouponCouponIdKey := fmt.Sprintf("%s%v", cacheDevCouponCouponIdPrefix, data.CouponId)
-	devCouponIdKey := fmt.Sprintf("%s%v", cacheDevCouponIdPrefix, id)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-		return conn.ExecCtx(ctx, query, id)
-	}, devCouponCouponIdKey, devCouponIdKey)
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
-func (m *defaultCouponModel) FindOneByCouponIdNoCache(ctx context.Context, couponId int64) (*Coupon, error) {
-	var resp Coupon
-	query := fmt.Sprintf("select %s from %s where `coupon_id` = ? limit 1", couponRows, m.table)
-	err := m.QueryRowNoCacheCtx(ctx, &resp, query, couponId)
+func (m *defaultCouponModel) FindAll(ctx context.Context) ([]*Coupon, error) {
+	query := fmt.Sprintf("select %s from %s ", couponRows, m.table)
+	var resp []*Coupon
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
 	switch err {
 	case nil:
-		return &resp, nil
+		return resp, nil
 	case sqlc.ErrNotFound:
-		return nil, errors.New("notfind")
+		return nil, ErrNotFound
 	default:
 		return nil, err
 	}
 }
 func (m *defaultCouponModel) FindOne(ctx context.Context, id int64) (*Coupon, error) {
-	devCouponIdKey := fmt.Sprintf("%s%v", cacheDevCouponIdPrefix, id)
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", couponRows, m.table)
 	var resp Coupon
-	err := m.QueryRowCtx(ctx, &resp, devCouponIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
-		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", couponRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, id)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -115,15 +98,9 @@ func (m *defaultCouponModel) FindOne(ctx context.Context, id int64) (*Coupon, er
 }
 
 func (m *defaultCouponModel) FindOneByCouponId(ctx context.Context, couponId int64) (*Coupon, error) {
-	devCouponCouponIdKey := fmt.Sprintf("%s%v", cacheDevCouponCouponIdPrefix, couponId)
 	var resp Coupon
-	err := m.QueryRowIndexCtx(ctx, &resp, devCouponCouponIdKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
-		query := fmt.Sprintf("select %s from %s where `coupon_id` = ? limit 1", couponRows, m.table)
-		if err := conn.QueryRowCtx(ctx, &resp, query, couponId); err != nil {
-			return nil, err
-		}
-		return resp.Id, nil
-	}, m.queryPrimary)
+	query := fmt.Sprintf("select %s from %s where `coupon_id` = ? limit 1", couponRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, couponId)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -135,37 +112,15 @@ func (m *defaultCouponModel) FindOneByCouponId(ctx context.Context, couponId int
 }
 
 func (m *defaultCouponModel) Insert(ctx context.Context, data *Coupon) (sql.Result, error) {
-	devCouponCouponIdKey := fmt.Sprintf("%s%v", cacheDevCouponCouponIdPrefix, data.CouponId)
-	devCouponIdKey := fmt.Sprintf("%s%v", cacheDevCouponIdPrefix, data.Id)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, couponRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.CouponId, data.Type, data.Name, data.Limitation, data.Discount, data.Cut, data.MinPoint, data.AvailableAmount, data.UseType, data.Note, data.EnableTime, data.DisableTime, data.TypeZh, data.EfficientPeriod, data.Picture, data.UsePoints)
-	}, devCouponCouponIdKey, devCouponIdKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, couponRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.CouponId, data.Type, data.Name, data.Limitation, data.Discount, data.Cut, data.MinPoint, data.AvailableAmount, data.UseType, data.Note, data.EnableTime, data.DisableTime, data.TypeZh, data.EfficientPeriod, data.Picture, data.UsePoints)
 	return ret, err
 }
 
 func (m *defaultCouponModel) Update(ctx context.Context, newData *Coupon) error {
-	data, err := m.FindOne(ctx, newData.Id)
-	if err != nil {
-		return err
-	}
-
-	devCouponCouponIdKey := fmt.Sprintf("%s%v", cacheDevCouponCouponIdPrefix, data.CouponId)
-	devCouponIdKey := fmt.Sprintf("%s%v", cacheDevCouponIdPrefix, data.Id)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, couponRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.CouponId, newData.Type, newData.Name, newData.Limitation, newData.Discount, newData.Cut, newData.MinPoint, newData.AvailableAmount, newData.UseType, newData.Note, newData.EnableTime, newData.DisableTime, newData.TypeZh, newData.EfficientPeriod, newData.Picture, newData.UsePoints, newData.Id)
-	}, devCouponCouponIdKey, devCouponIdKey)
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, couponRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.CouponId, newData.Type, newData.Name, newData.Limitation, newData.Discount, newData.Cut, newData.MinPoint, newData.AvailableAmount, newData.UseType, newData.Note, newData.EnableTime, newData.DisableTime, newData.TypeZh, newData.EfficientPeriod, newData.Picture, newData.UsePoints, newData.Id)
 	return err
-}
-
-func (m *defaultCouponModel) formatPrimary(primary interface{}) string {
-	return fmt.Sprintf("%s%v", cacheDevCouponIdPrefix, primary)
-}
-
-func (m *defaultCouponModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", couponRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultCouponModel) tableName() string {

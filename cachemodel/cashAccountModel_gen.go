@@ -5,13 +5,10 @@ package cachemodel
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
@@ -22,9 +19,6 @@ var (
 	cashAccountRows                = strings.Join(cashAccountFieldNames, ",")
 	cashAccountRowsExpectAutoSet   = strings.Join(stringx.Remove(cashAccountFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	cashAccountRowsWithPlaceHolder = strings.Join(stringx.Remove(cashAccountFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
-
-	cacheDevCashAccountIdPrefix    = "cache:dev:cashAccount:id:"
-	cacheDevCashAccountPhonePrefix = "cache:dev:cashAccount:phone:"
 )
 
 type (
@@ -34,11 +28,10 @@ type (
 		FindOneByPhone(ctx context.Context, phone string) (*CashAccount, error)
 		Update(ctx context.Context, data *CashAccount) error
 		Delete(ctx context.Context, id int64) error
-		FindOneByPhoneNoCach(ctx context.Context, phone string) (*CashAccount, error)
 	}
 
 	defaultCashAccountModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
@@ -49,48 +42,23 @@ type (
 	}
 )
 
-func newCashAccountModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultCashAccountModel {
+func newCashAccountModel(conn sqlx.SqlConn) *defaultCashAccountModel {
 	return &defaultCashAccountModel{
-		CachedConn: sqlc.NewConn(conn, c, cache.WithExpiry(time.Minute)),
-		table:      "`cash_account`",
+		conn:  conn,
+		table: "`cash_account`",
 	}
 }
-func (m *defaultCashAccountModel) FindOneByPhoneNoCach(ctx context.Context, phone string) (*CashAccount, error) {
 
-	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", cashAccountRows, m.table)
-	var resp CashAccount
-	err := m.QueryRowNoCacheCtx(ctx, &resp, query, phone)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, errors.New("notfind")
-	default:
-		return nil, err
-	}
-}
 func (m *defaultCashAccountModel) Delete(ctx context.Context, id int64) error {
-	data, err := m.FindOne(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	devCashAccountIdKey := fmt.Sprintf("%s%v", cacheDevCashAccountIdPrefix, id)
-	devCashAccountPhoneKey := fmt.Sprintf("%s%v", cacheDevCashAccountPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-		return conn.ExecCtx(ctx, query, id)
-	}, devCashAccountIdKey, devCashAccountPhoneKey)
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
 func (m *defaultCashAccountModel) FindOne(ctx context.Context, id int64) (*CashAccount, error) {
-	devCashAccountIdKey := fmt.Sprintf("%s%v", cacheDevCashAccountIdPrefix, id)
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", cashAccountRows, m.table)
 	var resp CashAccount
-	err := m.QueryRowCtx(ctx, &resp, devCashAccountIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
-		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", cashAccountRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, id)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -102,15 +70,9 @@ func (m *defaultCashAccountModel) FindOne(ctx context.Context, id int64) (*CashA
 }
 
 func (m *defaultCashAccountModel) FindOneByPhone(ctx context.Context, phone string) (*CashAccount, error) {
-	devCashAccountPhoneKey := fmt.Sprintf("%s%v", cacheDevCashAccountPhonePrefix, phone)
 	var resp CashAccount
-	err := m.QueryRowIndexCtx(ctx, &resp, devCashAccountPhoneKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
-		query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", cashAccountRows, m.table)
-		if err := conn.QueryRowCtx(ctx, &resp, query, phone); err != nil {
-			return nil, err
-		}
-		return resp.Id, nil
-	}, m.queryPrimary)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 1", cashAccountRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, phone)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -122,37 +84,15 @@ func (m *defaultCashAccountModel) FindOneByPhone(ctx context.Context, phone stri
 }
 
 func (m *defaultCashAccountModel) Insert(ctx context.Context, data *CashAccount) (sql.Result, error) {
-	devCashAccountIdKey := fmt.Sprintf("%s%v", cacheDevCashAccountIdPrefix, data.Id)
-	devCashAccountPhoneKey := fmt.Sprintf("%s%v", cacheDevCashAccountPhonePrefix, data.Phone)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?)", m.table, cashAccountRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.Phone, data.Balance)
-	}, devCashAccountIdKey, devCashAccountPhoneKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?)", m.table, cashAccountRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.Balance)
 	return ret, err
 }
 
 func (m *defaultCashAccountModel) Update(ctx context.Context, newData *CashAccount) error {
-	data, err := m.FindOne(ctx, newData.Id)
-	if err != nil {
-		return err
-	}
-
-	devCashAccountIdKey := fmt.Sprintf("%s%v", cacheDevCashAccountIdPrefix, data.Id)
-	devCashAccountPhoneKey := fmt.Sprintf("%s%v", cacheDevCashAccountPhonePrefix, data.Phone)
-	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, cashAccountRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.Phone, newData.Balance, newData.Id)
-	}, devCashAccountIdKey, devCashAccountPhoneKey)
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, cashAccountRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.Balance, newData.Id)
 	return err
-}
-
-func (m *defaultCashAccountModel) formatPrimary(primary interface{}) string {
-	return fmt.Sprintf("%s%v", cacheDevCashAccountIdPrefix, primary)
-}
-
-func (m *defaultCashAccountModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", cashAccountRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultCashAccountModel) tableName() string {

@@ -42,7 +42,7 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 	if StarMallMap[req.Pid].ExchangePoints == 0 {
 		return &types.StarMallOrderResp{Code: "10000", Msg: "此商品不可兑换", Data: orderinfo}, nil
 	}
-	cache, err := l.svcCtx.UserPoints.FindOneByPhoneNoCache(l.ctx, phone)
+	cache, err := l.svcCtx.UserPoints.FindOneByPhone(l.ctx, phone)
 	if cache != nil && cache.AvailablePoints > StarMallMap[req.Pid].ExchangePoints {
 		db := starreq2db(req, phone)
 		cache.AvailablePoints = cache.AvailablePoints - StarMallMap[req.Pid].ExchangePoints

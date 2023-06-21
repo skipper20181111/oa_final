@@ -20,6 +20,10 @@ service oa-api {
 	@handler ifovertime
 	post /ifovertime (IfOvertimeRes) returns (IfOvertimeResp)
 	
+	@doc "用于返回order的option选项（可用优惠券，可用余额，可用积分，总价等）"
+	@handler orderoption
+	post /orderoption (OrderOptionRes) returns (OrderOptionResp)
+	
 	@doc "结算接口，用来计算订单金额"
 	@handler preneworder
 	post /preneworder (NewOrderRes) returns (PreNewOrderResp)

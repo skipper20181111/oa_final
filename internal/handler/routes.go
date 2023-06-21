@@ -26,6 +26,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
+				Path:    "/orderoption",
+				Handler: userorder.OrderoptionHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/preneworder",
 				Handler: userorder.PreneworderHandler(serverCtx),
 			},

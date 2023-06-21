@@ -120,7 +120,7 @@ func bool2int(yes bool) int64 {
 	}
 }
 func (l *PayLogic) CalculatePayAmmount(totalammount int64) (wxammount, cashammount int64, needweixin, needcash, ok bool) {
-	cash, _ := l.svcCtx.CashAccount.FindOneByPhoneNoCach(l.ctx, l.ctx.Value("phone").(string))
+	cash, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, l.ctx.Value("phone").(string))
 	if cash == nil {
 		return totalammount, 0, true, false, true
 	} else {

@@ -46,7 +46,7 @@ func (l *GetqrcodetypeLogic) Getqrcodetype(req *types.ScanQRcodeRes) (resp *type
 	return &types.ScanQRcodeResp{Code: "10000", Msg: "请检查二维码", Data: msg}, nil
 }
 
-var letters = []rune("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func randStr(n int) string {
 	b := make([]rune, n)

@@ -177,3 +177,23 @@ service oa-api {
 	@handler gettitle
 	post /gettitle (GetTitleRes) returns (GetTitleResp)
 }
+
+@server(
+	group: coupon
+	prefix : coupon
+	jwt : Auth
+)
+
+service oa-api {
+	@doc "获取小额优惠券"
+	@handler getsmallcoupon
+	post /getsmallcoupon (GetSmallCouponRes) returns (GetSmallCouponResp)
+	
+	@doc "臻星商城购买优惠券"
+	@handler starmallcouponorder
+	post /starmallcouponorder (StarMallCouponOrderRes) returns (StarMallCouponOrderResp)
+	
+	@doc "获取大额优惠券"
+	@handler getvoucher
+	post /getvoucher (GetVoucherRes) returns (GetVoucherResp)
+}

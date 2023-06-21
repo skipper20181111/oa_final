@@ -85,6 +85,9 @@ func (l *RefreshUtilLogic) Coupon() bool {
 	cinfomap := make(map[int64]*types.CouponInfo)
 	if coupons != nil {
 		for _, coupon := range coupons {
+			if coupon.Discount == 0 && coupon.MinPoint == 0 && coupon.Cut == 0 {
+				continue
+			}
 			couponmap[coupon.CouponId] = coupon
 			info := coupondb2info(coupon)
 			cinfomap[info.CouponId] = info

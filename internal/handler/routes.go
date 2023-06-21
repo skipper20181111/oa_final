@@ -6,6 +6,7 @@ import (
 
 	address "oa_final/internal/handler/address"
 	associator "oa_final/internal/handler/associator"
+	coupon "oa_final/internal/handler/coupon"
 	invoice "oa_final/internal/handler/invoice"
 	payrecall "oa_final/internal/handler/payrecall"
 	refresh "oa_final/internal/handler/refresh"
@@ -207,5 +208,27 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/invoice"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/getsmallcoupon",
+				Handler: coupon.GetsmallcouponHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/starmallcouponorder",
+				Handler: coupon.StarmallcouponorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getvoucher",
+				Handler: coupon.GetvoucherHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/coupon"),
 	)
 }

@@ -26,6 +26,11 @@ func NewGetvoucherLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getvou
 }
 
 func (l *GetvoucherLogic) Getvoucher(req *types.GetVoucherRes) (resp *types.GetVoucherResp, err error) {
-	_, msg := l.vu.voucherbind(req.VoucherCode)
-	return &types.GetVoucherResp{Code: "10000", Msg: msg}, nil
+
+	ok, msg := l.vu.voucherbind(req.VoucherCode)
+	resp = &types.GetVoucherResp{Code: "10000", Msg: msg, Data: &types.SuccessMsg{Success: false}}
+	if ok {
+		resp.Data.Success = true
+	}
+	return resp, nil
 }

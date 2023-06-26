@@ -28,22 +28,24 @@ func NewScanqrcodeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Scanqr
 }
 
 func (l *ScanqrcodeLogic) Scanqrcode(req *types.ScanQRcodeRes) (resp *types.ScanQRcodeResp, err error) {
-	data := &types.ScanQRcodeRp{Type: "unknow", Msg: randStr(10)}
+	successdata := &types.SuccessMsg{Success: false}
 	//voucher券的parameter1是vid，old2new的券是老用户手机号
 	decrypt, err := coupon.Decrypt(req.QRcodeMsg, svc.Keystr)
 	if err != nil || decrypt == "" {
-		return &types.ScanQRcodeResp{Code: "10000", Msg: "请检查二维码或1分钟后再试", Data: data}, nil
+		return &types.ScanQRcodeResp{Code: "10000", Msg: "请检查二维码或1分钟后再试", Data: successdata}, nil
 	}
 	QRCodeMsg := &types.QrCode{}
 	err = json.Unmarshal([]byte(decrypt), QRCodeMsg)
 	if err != nil {
-		return &types.ScanQRcodeResp{Code: "10000", Msg: "请检查二维码或1分钟后再试", Data: data}, nil
+		return &types.ScanQRcodeResp{Code: "10000", Msg: "请检查二维码或1分钟后再试", Data: successdata}, nil
 	}
 	switch QRCodeMsg.Type {
 	case "voucher":
-		_, msg := l.vu.VoucherbindByVid(QRCodeMsg)
-		data.Type = "voucher"
-		return &types.ScanQRcodeResp{Code: "10000", Msg: msg, Data: data}, nil
+		ok, msg := l.vu.VoucherbindByVid(QRCodeMsg)
+		if ok {
+			successdata.Success = true
+		}
+		return &types.ScanQRcodeResp{Code: "10000", Msg: msg, Data: successdata}, nil
 	}
-	return &types.ScanQRcodeResp{Code: "10000", Msg: "请检查二维码", Data: data}, nil
+	return &types.ScanQRcodeResp{Code: "10000", Msg: "请检查二维码", Data: successdata}, nil
 }

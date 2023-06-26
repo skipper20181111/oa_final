@@ -585,9 +585,14 @@ type GetVoucherRes struct {
 	VoucherCode string `json:"voucherCode"`
 }
 
+type SuccessMsg struct {
+	Success bool `json:"success"`
+}
+
 type GetVoucherResp struct {
-	Code string `json:"code"`
-	Msg  string `json:"msg"`
+	Code string      `json:"code"`
+	Msg  string      `json:"msg"`
+	Data *SuccessMsg `json:"data"`
 }
 
 type ScanQRcodeRes struct {
@@ -600,6 +605,12 @@ type ScanQRcodeRp struct {
 }
 
 type ScanQRcodeResp struct {
+	Code string      `json:"code"`
+	Msg  string      `json:"msg"`
+	Data *SuccessMsg `json:"data"`
+}
+
+type GetQrCodeTypeResp struct {
 	Code string        `json:"code"`
 	Msg  string        `json:"msg"`
 	Data *ScanQRcodeRp `json:"data"`

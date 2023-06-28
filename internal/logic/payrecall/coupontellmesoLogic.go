@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/notify"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments"
+	"github.com/zeromicro/go-zero/core/logx"
 	"oa_final/cachemodel"
 	"oa_final/internal/logic/userorder"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
+	"time"
 )
 
 type CoupontellmesoLogic struct {
@@ -44,6 +44,7 @@ func (l *CoupontellmesoLogic) Coupontellmeso(notifyReq *notify.Request, transact
 					if err != nil {
 						return &types.TellMeSoResp{Code: "FAIL", Message: "失败"}, nil
 					}
+					l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "充值", OrderSn: order.OrderSn, OrderDescribe: "微信支付充值送现金", Behavior: "充值", Phone: order.Phone, Balance: order.WexinPayAmount, ChangeAmount: order.WexinPayAmount})
 					l.lu.Closelock(lockmsglist)
 				} else {
 					phone.Balance = phone.Balance + order.WexinPayAmount

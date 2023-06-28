@@ -388,14 +388,14 @@ func (l *Logic) Updatecashaccount(order *cachemodel.UserOrder, use bool) (bool, 
 	if ok {
 		l.Oplog("cash_account", order.OrderSn, "开始更新", order.LogId)
 		l.svcCtx.CashAccount.Update(l.ctx, account)
-		l.Oplog("cash_account", order.OrderSn, "结束更新", order.LogId)
 		if use {
-			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "消费", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: order.CashAccountPayAmount})
+			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "消费", OrderSn: order.OrderSn, OrderDescribe: "购买店铺商品消费", Behavior: "消费", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: order.CashAccountPayAmount})
 			l.svcCtx.TransactionInfo.UpdateCashPay(l.ctx, order.OrderSn)
 		} else {
-			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "退款", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: order.CashAccountPayAmount})
+			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "退款", OrderSn: order.OrderSn, OrderDescribe: "店铺商品退款", Behavior: "退款", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: order.CashAccountPayAmount})
 			l.svcCtx.TransactionInfo.UpdateCashReject(l.ctx, order.OrderSn)
 		}
+		l.Oplog("cash_account", order.OrderSn, "结束更新", order.LogId)
 		return ok, "yes"
 	} else {
 		return ok, "no"

@@ -35,7 +35,6 @@ func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payment
 			fmt.Println("*************** END *******************")
 			return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil
 		} else {
-			fmt.Println("(((((((((((((((((((((((((((终于结束了)))))))))))))))))))))))))))")
 			return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil
 		}
 	}

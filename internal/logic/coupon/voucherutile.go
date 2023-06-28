@@ -98,6 +98,7 @@ func (l *VoucherUtileLogic) privatizationvoucher(voucher *cachemodel.Voucher) (b
 		phone.Balance = phone.Balance + couponbyid.AvailableAmount
 		l.svcCtx.CashAccount.Update(l.ctx, phone)
 	}
+	l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "扫码", OrderSn: voucher.VoucherCode, OrderDescribe: "扫大额代金券码获取现金", Behavior: "充值", Phone: l.Phone, Balance: phone.Balance, ChangeAmount: couponbyid.AvailableAmount})
 	l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "充值", Phone: l.Phone, Balance: phone.Balance, ChangeAmount: couponbyid.AvailableAmount})
 	l.lu.Oplog("cash_account", l.Phone, "结束更新", voucherlid)
 	l.lu.Oplog("voucher and cash_account", "扫码获取大额券并更新账户", "结束更新", voucherlid)

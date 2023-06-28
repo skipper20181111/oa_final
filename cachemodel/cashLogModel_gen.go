@@ -36,12 +36,15 @@ type (
 	}
 
 	CashLog struct {
-		Id           int64     `db:"id"`
-		Phone        string    `db:"phone"`         // 手机号账号
-		ChangeAmount int64     `db:"change_amount"` // 变动金额
-		Balance      int64     `db:"balance"`       // 余额
-		Behavior     string    `db:"behavior"`      // 行为
-		Date         time.Time `db:"date"`          // 日志时间
+		Id            int64     `db:"id"`
+		Phone         string    `db:"phone"`          // 手机号账号
+		ChangeAmount  int64     `db:"change_amount"`  // 变动金额
+		Balance       int64     `db:"balance"`        // 余额
+		Behavior      string    `db:"behavior"`       // 行为
+		OrderType     string    `db:"order_type"`     // 订单类型
+		OrderSn       string    `db:"order_sn"`       // 订单号
+		OrderDescribe string    `db:"order_describe"` // 订单描述
+		Date          time.Time `db:"date"`           // 日志时间
 	}
 )
 
@@ -73,14 +76,14 @@ func (m *defaultCashLogModel) FindOne(ctx context.Context, id int64) (*CashLog, 
 }
 
 func (m *defaultCashLogModel) Insert(ctx context.Context, data *CashLog) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, cashLogRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.ChangeAmount, data.Balance, data.Behavior, data.Date)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, cashLogRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.ChangeAmount, data.Balance, data.Behavior, data.OrderType, data.OrderSn, data.OrderDescribe, data.Date)
 	return ret, err
 }
 
 func (m *defaultCashLogModel) Update(ctx context.Context, data *CashLog) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, cashLogRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.Phone, data.ChangeAmount, data.Balance, data.Behavior, data.Date, data.Id)
+	_, err := m.conn.ExecCtx(ctx, query, data.Phone, data.ChangeAmount, data.Balance, data.Behavior, data.OrderType, data.OrderSn, data.OrderDescribe, data.Date, data.Id)
 	return err
 }
 

@@ -38,6 +38,21 @@ type Logic struct {
 	couponuuid    string
 }
 
+func (l *Logic) PostLimit(key string, limit int) bool {
+	get, ok := l.svcCtx.LocalCache.Get(key)
+	count := 0
+	if ok {
+		count = get.(int)
+		if get.(int) >= limit {
+			return false
+		} else {
+			l.svcCtx.LocalCache.Set(key, count+1)
+		}
+	} else {
+		l.svcCtx.LocalCache.Set(key, 1)
+	}
+	return true
+}
 func NewLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Logic {
 	return &Logic{
 		Logger:     logx.WithContext(ctx),

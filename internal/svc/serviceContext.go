@@ -55,6 +55,7 @@ type ServiceContext struct {
 	TransactionInfo   cachemodel.TransactionInfoModel
 	UserInvoiceString cachemodel.UserInvoiceStringModel
 	Voucher           cachemodel.VoucherModel
+	PointLog          cachemodel.PointLogModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -119,5 +120,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		TransactionInfo:   cachemodel.NewTransactionInfoModel(sqlx.NewMysql(c.DB.DataSource)),
 		UserInvoiceString: cachemodel.NewUserInvoiceStringModel(sqlx.NewMysql(c.DB.DataSource)),
 		Voucher:           cachemodel.NewVoucherModel(sqlx.NewMysql(c.DB.DataSource)),
+		PointLog:          cachemodel.NewPointLogModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

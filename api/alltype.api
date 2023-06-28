@@ -633,6 +633,26 @@ type (
         Parameter3 string `json:"p3"`
     }
 )
+type (
+    PointLogInfo {
+        Phone string `json:"phone"`
+        ChangeAmount float64 `json:"changeAmount"`
+        Behavior string `json:"behavior"`
+        Balance float64 `json:"balance"`
+        OrderSn string `json:"orderSn"`
+        OrderType string `json:"orderType"`
+        OrderDescribe string `json:"orderDescribe"`
+        LogDate string `json:"logDate"`
+    }
+    GetPointLogRes {
+    }
+    GetPointLogResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data map[string][]*PointLogInfo `json:"data"`
+    }
+)
+
 
 
 

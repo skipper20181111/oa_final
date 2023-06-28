@@ -174,6 +174,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/getpoint",
 				Handler: associator.GetpointHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getpointlog",
+				Handler: associator.GetpointlogHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/associator"),

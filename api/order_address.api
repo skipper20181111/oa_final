@@ -147,6 +147,9 @@ service oa-api {
 	@doc "获取点数"
 	@handler getpoint
 	post /getpoint (GetPointRes) returns (GetPointResp)
+	@doc "获取point日志"
+	@handler getpointlog
+	post /getpointlog (GetPointLogRes) returns (GetPointLogResp)
 }
 
 @server(

@@ -39,10 +39,10 @@ type (
 	RechargeProduct struct {
 		Id         int64  `db:"id"`
 		Rpid       int64  `db:"rpid"`
-		Type       int64  `db:"type"`        // 充值类型；0->满送
 		Describe   string `db:"describe"`    // 充值券描述
 		GiftAmount int64  `db:"gift_amount"` // 赠送额度
 		Price      int64  `db:"price"`       // 价格
+		Type       string `db:"type"`        // 类型（中文）
 	}
 )
 
@@ -58,19 +58,7 @@ func (m *defaultRechargeProductModel) Delete(ctx context.Context, id int64) erro
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
-func (m *defaultRechargeProductModel) FindAll(ctx context.Context) ([]*RechargeProduct, error) {
-	query := fmt.Sprintf("select %s from %s", rechargeProductRows, m.table)
-	var resp []*RechargeProduct
-	err := m.conn.QueryRowsCtx(ctx, &resp, query)
-	switch err {
-	case nil:
-		return resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
+
 func (m *defaultRechargeProductModel) FindOne(ctx context.Context, id int64) (*RechargeProduct, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", rechargeProductRows, m.table)
 	var resp RechargeProduct
@@ -78,6 +66,19 @@ func (m *defaultRechargeProductModel) FindOne(ctx context.Context, id int64) (*R
 	switch err {
 	case nil:
 		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+func (m *defaultRechargeProductModel) FindAll(ctx context.Context) ([]*RechargeProduct, error) {
+	query := fmt.Sprintf("select %s from %s", rechargeProductRows, m.table)
+	var resp []*RechargeProduct
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
 	case sqlc.ErrNotFound:
 		return nil, ErrNotFound
 	default:
@@ -101,13 +102,13 @@ func (m *defaultRechargeProductModel) FindOneByRpid(ctx context.Context, rpid in
 
 func (m *defaultRechargeProductModel) Insert(ctx context.Context, data *RechargeProduct) (sql.Result, error) {
 	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, rechargeProductRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Rpid, data.Type, data.Describe, data.GiftAmount, data.Price)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Rpid, data.Describe, data.GiftAmount, data.Price, data.Type)
 	return ret, err
 }
 
 func (m *defaultRechargeProductModel) Update(ctx context.Context, newData *RechargeProduct) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, rechargeProductRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Rpid, newData.Type, newData.Describe, newData.GiftAmount, newData.Price, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Rpid, newData.Describe, newData.GiftAmount, newData.Price, newData.Type, newData.Id)
 	return err
 }
 

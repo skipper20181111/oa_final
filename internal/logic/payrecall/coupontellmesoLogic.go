@@ -21,11 +21,11 @@ type CoupontellmesoLogic struct {
 }
 
 func NewCoupontellmesoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CoupontellmesoLogic {
+
 	return &CoupontellmesoLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
-		lu:     userorder.NewLogic(ctx, svcCtx),
 	}
 }
 
@@ -34,14 +34,18 @@ func (l *CoupontellmesoLogic) Coupontellmeso(notifyReq *notify.Request, transact
 	if *transaction.TradeState == "SUCCESS" {
 		order, _ := l.svcCtx.RechargeOrder.FindOneByOutTradeNo(l.ctx, *transaction.OutTradeNo)
 		if order != nil {
+			l.ctx = context.WithValue(l.ctx, "phone", "17854230845")
+			l.ctx = context.WithValue(l.ctx, "openid", "17854230845")
+			l.lu = userorder.NewLogic(l.ctx, l.svcCtx)
 			lockmsglist := make([]*types.LockMsg, 0)
-			lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.ctx.Value("phone").(string), Field: "user_coupon"})
+			lockmsglist = append(lockmsglist, &types.LockMsg{Phone: order.OutTradeNo, Field: "user_coupon"})
 			if l.lu.Getlocktry(lockmsglist) {
 				l.lu.Oplog("现金账户充值", order.OrderSn, "开始更新", order.LogId)
 				phone, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, order.Phone)
 				if phone == nil {
 					_, err := l.svcCtx.CashAccount.Insert(l.ctx, &cachemodel.CashAccount{Phone: order.Phone, Balance: order.WexinPayAmount})
 					if err != nil {
+						l.lu.Closelock(lockmsglist)
 						return &types.TellMeSoResp{Code: "FAIL", Message: "失败"}, nil
 					}
 					l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "充值", OrderSn: order.OrderSn, OrderDescribe: "微信支付充值送现金", Behavior: "充值", Phone: order.Phone, Balance: order.WexinPayAmount, ChangeAmount: order.WexinPayAmount})
@@ -49,15 +53,18 @@ func (l *CoupontellmesoLogic) Coupontellmeso(notifyReq *notify.Request, transact
 				} else {
 					phone.Balance = phone.Balance + order.WexinPayAmount
 					l.svcCtx.CashAccount.Update(l.ctx, phone)
+					l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "充值", OrderSn: order.OrderSn, OrderDescribe: "微信支付充值送现金", Behavior: "充值", Phone: order.Phone, Balance: phone.Balance, ChangeAmount: order.WexinPayAmount})
+					l.lu.Closelock(lockmsglist)
 				}
-				l.svcCtx.RechargeOrder.UpdateFinished(l.ctx, order.OutTradeNo)
+				l.svcCtx.RechargeOrder.UpdateFinished(l.ctx, order.OutTradeNo, *transaction.TransactionId, time.Now())
 				l.lu.Oplog("现金账户充值", order.OrderSn, "结束更新", order.LogId)
-				l.lu.Closelock(lockmsglist)
 			} else {
 				return &types.TellMeSoResp{Code: "FAIL", Message: "未获取到锁"}, nil
 			}
+			fmt.Println("*************** END *******************")
 		}
+
 	}
-	fmt.Println("*************** END *******************")
+
 	return &types.TellMeSoResp{Code: "FAIL", Message: "失败"}, nil
 }

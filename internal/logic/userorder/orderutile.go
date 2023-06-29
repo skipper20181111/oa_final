@@ -38,22 +38,13 @@ type Logic struct {
 	couponuuid    string
 }
 
-func getphoneopenid(ctx context.Context) (string, string) {
-	defer func() {
-		if e := recover(); e != nil {
-			return
-		}
-	}()
-	return ctx.Value("phone").(string), ctx.Value("openid").(string)
-}
 func NewLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Logic {
-	phone, openid := getphoneopenid(ctx)
 	return &Logic{
 		Logger:     logx.WithContext(ctx),
 		ctx:        ctx,
 		svcCtx:     svcCtx,
-		userphone:  phone,
-		useropenid: openid,
+		userphone:  ctx.Value("phone").(string),
+		useropenid: ctx.Value("openid").(string),
 	}
 }
 func (l *Logic) PostLimit(key string, limit int) bool {
@@ -231,7 +222,7 @@ func randStr(n int) string {
 	return string(b)
 }
 func (l *Logic) Oplog(tablename, event, describe string, lid int64) error {
-	aol := &cachemodel.AccountOperateLog{Phone: l.ctx.Value("phone").(string), TableName: tablename, Event: event, Describe: describe, Timestamp: time.Now(), Lid: lid}
+	aol := &cachemodel.AccountOperateLog{Phone: l.userphone, TableName: tablename, Event: event, Describe: describe, Timestamp: time.Now(), Lid: lid}
 	_, err := l.svcCtx.AccountOperateLog.Insert(l.ctx, aol)
 	return err
 }

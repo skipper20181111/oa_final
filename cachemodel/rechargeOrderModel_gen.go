@@ -30,7 +30,7 @@ type (
 		FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*RechargeOrder, error)
 		Update(ctx context.Context, data *RechargeOrder) error
 		Delete(ctx context.Context, id int64) error
-		UpdateFinished(ctx context.Context, OutTradeNo string) error
+		UpdateFinished(ctx context.Context, OutTradeNo, TransactionId string, PaymentTime time.Time) error
 	}
 
 	defaultRechargeOrderModel struct {
@@ -122,9 +122,9 @@ func (m *defaultRechargeOrderModel) Update(ctx context.Context, newData *Recharg
 	return err
 }
 
-func (m *defaultRechargeOrderModel) UpdateFinished(ctx context.Context, OutTradeNo string) error {
-	query := fmt.Sprintf("update %s set `order_status`=? where `out_trade_no` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, int64(1), OutTradeNo)
+func (m *defaultRechargeOrderModel) UpdateFinished(ctx context.Context, OutTradeNo, TransactionId string, PaymentTime time.Time) error {
+	query := fmt.Sprintf("update %s set `order_status`=?,`payment_time`=?,`transaction_id`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, int64(1), PaymentTime, TransactionId, OutTradeNo)
 	return err
 }
 

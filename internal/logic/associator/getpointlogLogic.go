@@ -37,12 +37,12 @@ func (l *GetpointlogLogic) Getpointlog(req *types.GetPointLogRes) (resp *types.G
 	cashlogmap := make(map[string][]*types.PointLogInfo)
 	cashlogmap["兑换"] = make([]*types.PointLogInfo, 0)
 	cashlogmap["获取"] = make([]*types.PointLogInfo, 0)
-	cashlogmap["全部"] = make([]*types.PointLogInfo, 0)
+	//cashlogmap["全部"] = make([]*types.PointLogInfo, 0)
 	if limit15 == nil || len(limit15) <= 1 {
 		return &types.GetPointLogResp{Code: "10000", Msg: "success", Data: cashlogmap}, nil
 	}
 	for _, cashLog := range limit15 {
-		cashlogmap["全部"] = append(cashlogmap["全部"], db2info(cashLog))
+		//cashlogmap["全部"] = append(cashlogmap["全部"], db2info(cashLog))
 		switch cashLog.Behavior {
 		case "兑换":
 			cashlogmap["兑换"] = append(cashlogmap["兑换"], db2info(cashLog))

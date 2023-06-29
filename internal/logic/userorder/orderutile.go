@@ -38,6 +38,24 @@ type Logic struct {
 	couponuuid    string
 }
 
+func getphoneopenid(ctx context.Context) (string, string) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	return ctx.Value("phone").(string), ctx.Value("openid").(string)
+}
+func NewLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Logic {
+	phone, openid := getphoneopenid(ctx)
+	return &Logic{
+		Logger:     logx.WithContext(ctx),
+		ctx:        ctx,
+		svcCtx:     svcCtx,
+		userphone:  phone,
+		useropenid: openid,
+	}
+}
 func (l *Logic) PostLimit(key string, limit int) bool {
 	get, ok := l.svcCtx.LocalCache.Get(key)
 	count := 0
@@ -52,15 +70,6 @@ func (l *Logic) PostLimit(key string, limit int) bool {
 		l.svcCtx.LocalCache.Set(key, 1)
 	}
 	return true
-}
-func NewLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Logic {
-	return &Logic{
-		Logger:     logx.WithContext(ctx),
-		ctx:        ctx,
-		svcCtx:     svcCtx,
-		userphone:  ctx.Value("phone").(string),
-		useropenid: ctx.Value("openid").(string),
-	}
 }
 func (l *Logic) WeixinPay() {
 

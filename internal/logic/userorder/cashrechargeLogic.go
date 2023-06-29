@@ -44,11 +44,9 @@ func (l *CashrechargeLogic) Cashrecharge(req *types.CashRechargeRes) (resp *type
 	if !ok {
 		return &types.CashRechargeResp{Code: "4004", Msg: "无此rpid"}, nil
 	}
-	lu := NewLogic(l.ctx, l.svcCtx)
 	orderdb := l.order2db(rproduct)
 	l.svcCtx.RechargeOrder.Insert(l.ctx, orderdb)
 	order, _ := l.svcCtx.RechargeOrder.FindOneByOrderSn(l.ctx, orderdb.OrderSn)
-	lu.Oplog("现金账户充值", order.OrderSn, "开始更新", orderdb.LogId)
 	if order == nil {
 		return &types.CashRechargeResp{Code: "4004", Msg: "数据库失效"}, nil
 	}

@@ -625,6 +625,7 @@ type QrCode struct {
 }
 
 type PointLogInfo struct {
+	LogDate       string `json:"logDate"`
 	Phone         string `json:"phone"`
 	ChangeAmount  int64  `json:"changeAmount"`
 	Behavior      string `json:"behavior"`
@@ -632,7 +633,6 @@ type PointLogInfo struct {
 	OrderSn       string `json:"orderSn"`
 	OrderType     string `json:"orderType"`
 	OrderDescribe string `json:"orderDescribe"`
-	LogDate       string `json:"logDate"`
 }
 
 type GetPointLogRes struct {

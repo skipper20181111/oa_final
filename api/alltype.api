@@ -156,7 +156,6 @@ type (
         WeXinPayAmount float64 `json:"weXinPayAmount"`
         CashAccountPayAmount float64 `json:"cashAccountPayAmount"`
         FreightAmount float64 `json:"freightAmount"`
-
     }
     OrderInfo {
         Phone string `json:"phone"`
@@ -637,6 +636,7 @@ type (
 )
 type (
     PointLogInfo {
+        LogDate string `json:"logDate"`
         Phone string `json:"phone"`
         ChangeAmount int64 `json:"changeAmount"`
         Behavior string `json:"behavior"`
@@ -644,7 +644,6 @@ type (
         OrderSn string `json:"orderSn"`
         OrderType string `json:"orderType"`
         OrderDescribe string `json:"orderDescribe"`
-        LogDate string `json:"logDate"`
     }
     GetPointLogRes {
     }

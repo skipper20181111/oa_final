@@ -62,7 +62,7 @@ func (m *defaultPointLogModel) Delete(ctx context.Context, id int64) error {
 	return err
 }
 func (m *defaultPointLogModel) FindAllByPhone(ctx context.Context, phone string) ([]*PointLog, error) {
-	query := fmt.Sprintf("select %s from %s where `phone` = ? order by create_order_time desc limit 100", pointLogRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? order by `Date` desc limit 100", pointLogRows, m.table)
 	var resp []*PointLog
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone)
 	switch err {

@@ -152,7 +152,7 @@ type OrderInfo struct {
 	OriginalAmount       float64          `json:"originalAmount"`
 	ProductCutAmount     float64          `json:"productCutAmount"`
 	PromotionAmount      float64          `json:"promotionAmount"`
-	PointAmount          float64          `json:"pointAmount"`
+	PointAmount          int64            `json:"pointAmount"`
 	ActualAmount         float64          `json:"actualAmount"`
 	CouponAmount         float64          `json:"couponAmount"`
 	UsedCouponInfo       *CouponStoreInfo `json:"usedCouponInfo"`
@@ -176,6 +176,7 @@ type OrderInfo struct {
 	DeliveryTime         string           `json:"deliveryTime"`
 	ReceiveTime          string           `json:"receiveTime"`
 	ModifyTime           string           `json:"modifyTime"`
+	PointsOrder          bool             `json:"pointsOrder"`
 }
 
 type Billinfo struct {

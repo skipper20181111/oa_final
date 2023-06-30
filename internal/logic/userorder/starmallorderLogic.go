@@ -36,23 +36,37 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 	orderinfo := &types.OrderInfo{}
 	StarMallMap := get.(map[int64]*cachemodel.StarmallLonglist)
 	_, ok = StarMallMap[req.Pid]
-	if !ok {
-		return &types.StarMallOrderResp{Code: "10000", Msg: "无此商品", Data: orderinfo}, nil
-	}
-	if StarMallMap[req.Pid].ExchangePoints == 0 {
-		return &types.StarMallOrderResp{Code: "10000", Msg: "此商品不可兑换", Data: orderinfo}, nil
+	if !ok || StarMallMap[req.Pid].ExchangePoints == 0 {
+		return &types.StarMallOrderResp{Code: "10000", Msg: "无此商品或此商品不可兑换", Data: orderinfo}, nil
 	}
 	cache, err := l.svcCtx.UserPoints.FindOneByPhone(l.ctx, phone)
 	if cache != nil && cache.AvailablePoints > StarMallMap[req.Pid].ExchangePoints {
-		db := starreq2db(req, phone)
+		db := starreq2db(req, phone, StarMallMap[req.Pid].ExchangePoints)
 		cache.AvailablePoints = cache.AvailablePoints - StarMallMap[req.Pid].ExchangePoints
 		l.svcCtx.UserPoints.Update(l.ctx, cache)
+		l.svcCtx.UserOrder.Insert(l.ctx, db)
+		l.insertstarTransaction(db)
 		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(db, nil)}, nil
 	} else {
 		return &types.StarMallOrderResp{Code: "10000", Msg: "积分不足", Data: orderinfo}, nil
 	}
 }
-func starreq2db(req *types.StarMallOrderRes, phone string) *cachemodel.UserOrder {
+func (l *StarmallorderLogic) insertstarTransaction(order *cachemodel.UserOrder) {
+	transaction := &cachemodel.TransactionInfo{}
+	transaction.Phone = order.Phone
+	transaction.OrderSn = order.OrderSn
+	transaction.OutTradeNo = order.OutTradeNo
+	transaction.TransactionType = "积分兑换商品"
+	transaction.CreateOrderTime = order.CreateOrderTime
+	transaction.FinishWeixinpay = 1
+	transaction.FinishAccountpay = 1
+	transaction.Status = 1
+	transaction.LogId = order.LogId
+	transaction.WexinPaymentTime = order.CreateOrderTime
+	transaction.CashAccountPaymentTime = order.CreateOrderTime
+	l.svcCtx.TransactionInfo.Insert(l.ctx, transaction)
+}
+func starreq2db(req *types.StarMallOrderRes, phone string, pointamount int64) *cachemodel.UserOrder {
 
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
 	order := &cachemodel.UserOrder{}
@@ -60,6 +74,7 @@ func starreq2db(req *types.StarMallOrderRes, phone string) *cachemodel.UserOrder
 	order.PointsOrder = 1
 	order.FinishWeixinpay = 0
 	order.FinishAccountpay = 0
+	order.PointAmount = pointamount
 	order.CreateOrderTime = time.Now()
 	order.OutTradeNo = randStr(32)
 	ProductTinyList := [1]*types.ProductTiny{&types.ProductTiny{PId: req.Pid, Amount: 1}}
@@ -70,7 +85,7 @@ func starreq2db(req *types.StarMallOrderRes, phone string) *cachemodel.UserOrder
 	order.Pidlist = string(marshal)
 
 	order.FreightAmount = 4000
-	order.OrderStatus = 0
+	order.OrderStatus = 1
 	order.DeliveryCompany = "顺丰"
 	order.DeliverySn = randStr(20)
 	addr, err := json.Marshal(req.Address)
@@ -85,11 +100,12 @@ func starreq2db(req *types.StarMallOrderRes, phone string) *cachemodel.UserOrder
 	order.Growth = order.ActualAmount
 	order.ConfirmStatus = 0
 	order.ModifyTime = order.CreateOrderTime
-	order.PaymentTime = inittime
+	order.PaymentTime = order.CreateOrderTime
 	order.DeliveryTime = inittime
 	order.ReceiveTime = inittime
 	order.CloseTime = inittime
 	order.OrderSn = getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + order.Address)
+	order.LogId = time.Now().UnixMicro()
 	return order
 
 }

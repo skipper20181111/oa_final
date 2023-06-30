@@ -103,7 +103,7 @@ func (l *CheckOrderLogic) checkall(order *cachemodel.UserOrder, transactioninfo 
 		}
 		finishwechatpay := !weixin && l.CheckWeiXinPay(order.OutTradeNo)
 		if cash && finishwechatpay {
-			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, transactioninfo.OrderSn)
+			l.svcCtx.TransactionInfo.UpdateWeixinPay(l.ctx, transactioninfo.OrderSn, "")
 			return l.check01(order, transactioninfo)
 		}
 		return order

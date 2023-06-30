@@ -31,7 +31,7 @@ type (
 		Update(ctx context.Context, data *TransactionInfo) error
 		Delete(ctx context.Context, id int64) error
 		UpdateCashPay(ctx context.Context, OrderSn string) error
-		UpdateWeixinPay(ctx context.Context, OrderSn string) error
+		UpdateWeixinPay(ctx context.Context, OrderSn, transactionid string) error
 		UpdateWeixinReject(ctx context.Context, OrderSn string) error
 		UpdateCashReject(ctx context.Context, OrderSn string) error
 		UpdateAllReject(ctx context.Context, OrderSn string) error
@@ -131,9 +131,9 @@ func (m *defaultTransactionInfoModel) Update(ctx context.Context, newData *Trans
 	return err
 }
 
-func (m *defaultTransactionInfoModel) UpdateWeixinPay(ctx context.Context, OrderSn string) error {
-	query := fmt.Sprintf("update %s set `finish_weixinpay`=1,`wexin_payment_time`=? where `order_sn` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OrderSn)
+func (m *defaultTransactionInfoModel) UpdateWeixinPay(ctx context.Context, OrderSn, transactionid string) error {
+	query := fmt.Sprintf("update %s set `finish_weixinpay`=1,`wexin_payment_time`=?,`transaction_id`=? where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OrderSn, transactionid)
 	return err
 }
 

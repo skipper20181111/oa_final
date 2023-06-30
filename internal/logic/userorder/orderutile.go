@@ -65,6 +65,12 @@ func (l *Logic) PostLimit(key string, limit int) bool {
 func (l *Logic) WeixinPay() {
 
 }
+func getbool(intbool int64) bool {
+	if intbool == 0 {
+		return false
+	}
+	return true
+}
 func OrderDb2Preinfo(order *cachemodel.UserOrder) *types.PreOrderInfo {
 	orderinfo := &types.PreOrderInfo{}
 	orderinfo.Phone = order.Phone
@@ -105,10 +111,11 @@ func OrderDb2info(order *cachemodel.UserOrder, info *cachemodel.TransactionInfo)
 	}
 
 	orderinfo.Phone = order.Phone
-	orderinfo.PointAmount = float64(order.PointAmount) / 100
+	orderinfo.PointAmount = order.PointAmount
 	orderinfo.OrderSn = order.OrderSn
 	orderinfo.OutTradeNo = order.OutTradeNo
 	orderinfo.TransactionId = order.TransactionId
+	orderinfo.PointsOrder = getbool(order.PointsOrder)
 	orderinfo.CreateTime = order.CreateOrderTime.Format("2006-01-02 15:04:05")
 	pidlist := make([]*types.ProductTiny, 0)
 	json.Unmarshal([]byte(order.Pidlist), &pidlist)

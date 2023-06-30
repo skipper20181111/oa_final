@@ -35,8 +35,8 @@ func (l *GetpointlogLogic) Getpointlog(req *types.GetPointLogRes) (resp *types.G
 	}
 	limit15, err := l.svcCtx.PointLog.FindAllByPhone(context.Background(), accphone)
 	cashlogmap := make(map[string][]*types.PointLogInfo)
-	cashlogmap["兑换"] = make([]*types.PointLogInfo, 0)
-	cashlogmap["获取"] = make([]*types.PointLogInfo, 0)
+	cashlogmap["exchange"] = make([]*types.PointLogInfo, 0)
+	cashlogmap["achieve"] = make([]*types.PointLogInfo, 0)
 	//cashlogmap["全部"] = make([]*types.PointLogInfo, 0)
 	if limit15 == nil || len(limit15) <= 1 {
 		return &types.GetPointLogResp{Code: "10000", Msg: "success", Data: cashlogmap}, nil
@@ -45,9 +45,9 @@ func (l *GetpointlogLogic) Getpointlog(req *types.GetPointLogRes) (resp *types.G
 		//cashlogmap["全部"] = append(cashlogmap["全部"], db2info(cashLog))
 		switch cashLog.Behavior {
 		case "兑换":
-			cashlogmap["兑换"] = append(cashlogmap["兑换"], db2info(cashLog))
+			cashlogmap["exchange"] = append(cashlogmap["exchange"], db2info(cashLog))
 		case "获取":
-			cashlogmap["获取"] = append(cashlogmap["获取"], db2info(cashLog))
+			cashlogmap["achieve"] = append(cashlogmap["achieve"], db2info(cashLog))
 		}
 	}
 	return &types.GetPointLogResp{Code: "10000", Msg: "success", Data: cashlogmap}, nil

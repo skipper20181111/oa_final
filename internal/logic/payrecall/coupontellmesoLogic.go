@@ -42,18 +42,19 @@ func (l *CoupontellmesoLogic) Coupontellmeso(notifyReq *notify.Request, transact
 			if l.lu.Getlocktry(lockmsglist) {
 				l.lu.Oplog("现金账户充值", order.OrderSn, "开始更新", order.LogId)
 				phone, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, order.Phone)
+				totleamount := order.Amount + order.GiftAmount
 				if phone == nil {
-					_, err := l.svcCtx.CashAccount.Insert(l.ctx, &cachemodel.CashAccount{Phone: order.Phone, Balance: order.WexinPayAmount})
+					_, err := l.svcCtx.CashAccount.Insert(l.ctx, &cachemodel.CashAccount{Phone: order.Phone, Balance: totleamount})
 					if err != nil {
 						l.lu.Closelock(lockmsglist)
 						return &types.TellMeSoResp{Code: "FAIL", Message: "失败"}, nil
 					}
-					l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "充值", OrderSn: order.OrderSn, OrderDescribe: "微信支付充值送现金", Behavior: "充值", Phone: order.Phone, Balance: order.WexinPayAmount, ChangeAmount: order.WexinPayAmount})
+					l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "充值", OrderSn: order.OrderSn, OrderDescribe: "微信支付充值送现金", Behavior: "充值", Phone: order.Phone, Balance: totleamount, ChangeAmount: totleamount})
 					l.lu.Closelock(lockmsglist)
 				} else {
-					phone.Balance = phone.Balance + order.WexinPayAmount
+					phone.Balance = phone.Balance + totleamount
 					l.svcCtx.CashAccount.Update(l.ctx, phone)
-					l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "充值", OrderSn: order.OrderSn, OrderDescribe: "微信支付充值送现金", Behavior: "充值", Phone: order.Phone, Balance: phone.Balance, ChangeAmount: order.WexinPayAmount})
+					l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "充值", OrderSn: order.OrderSn, OrderDescribe: "微信支付充值送现金", Behavior: "充值", Phone: order.Phone, Balance: phone.Balance, ChangeAmount: totleamount})
 					l.lu.Closelock(lockmsglist)
 				}
 				l.svcCtx.RechargeOrder.UpdateFinished(l.ctx, order.OutTradeNo, *transaction.TransactionId, time.Now())

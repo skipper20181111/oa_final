@@ -55,12 +55,12 @@ func (l *GetpointlogLogic) Getpointlog(req *types.GetPointLogRes) (resp *types.G
 func db2info(db *cachemodel.PointLog) *types.PointLogInfo {
 	info := &types.PointLogInfo{}
 	info.Phone = db.Phone
-	info.ChangeAmount = float64(db.ChangeAmount) / 100
+	info.ChangeAmount = db.ChangeAmount
 	info.Behavior = db.OrderType
 	info.OrderType = db.Behavior
 	info.OrderSn = db.OrderSn
 	info.OrderDescribe = db.OrderDescribe
 	info.LogDate = db.Date.Format("2006-01-02 15:04:05")
-	info.Balance = float64(db.Balance) / 100
+	info.Balance = db.Balance
 	return info
 }

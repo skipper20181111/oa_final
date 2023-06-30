@@ -638,9 +638,9 @@ type (
 type (
     PointLogInfo {
         Phone string `json:"phone"`
-        ChangeAmount float64 `json:"changeAmount"`
+        ChangeAmount int64 `json:"changeAmount"`
         Behavior string `json:"behavior"`
-        Balance float64 `json:"balance"`
+        Balance int64 `json:"balance"`
         OrderSn string `json:"orderSn"`
         OrderType string `json:"orderType"`
         OrderDescribe string `json:"orderDescribe"`

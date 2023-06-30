@@ -625,14 +625,14 @@ type QrCode struct {
 }
 
 type PointLogInfo struct {
-	Phone         string  `json:"phone"`
-	ChangeAmount  float64 `json:"changeAmount"`
-	Behavior      string  `json:"behavior"`
-	Balance       float64 `json:"balance"`
-	OrderSn       string  `json:"orderSn"`
-	OrderType     string  `json:"orderType"`
-	OrderDescribe string  `json:"orderDescribe"`
-	LogDate       string  `json:"logDate"`
+	Phone         string `json:"phone"`
+	ChangeAmount  int64  `json:"changeAmount"`
+	Behavior      string `json:"behavior"`
+	Balance       int64  `json:"balance"`
+	OrderSn       string `json:"orderSn"`
+	OrderType     string `json:"orderType"`
+	OrderDescribe string `json:"orderDescribe"`
+	LogDate       string `json:"logDate"`
 }
 
 type GetPointLogRes struct {

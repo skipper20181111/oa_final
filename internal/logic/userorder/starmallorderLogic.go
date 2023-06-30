@@ -46,6 +46,8 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 		l.svcCtx.UserPoints.Update(l.ctx, cache)
 		l.svcCtx.UserOrder.Insert(l.ctx, db)
 		l.insertstarTransaction(db)
+		l.svcCtx.PointLog.Insert(l.ctx, &cachemodel.PointLog{Date: time.Now(), OrderType: "兑换商品", OrderSn: db.OrderSn, OrderDescribe: "微信支付充值送现金", Behavior: "兑换", Phone: db.Phone, Balance: cache.AvailablePoints, ChangeAmount: StarMallMap[req.Pid].ExchangePoints})
+
 		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(db, nil)}, nil
 	} else {
 		return &types.StarMallOrderResp{Code: "10000", Msg: "积分不足", Data: orderinfo}, nil

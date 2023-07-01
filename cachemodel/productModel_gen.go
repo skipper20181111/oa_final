@@ -43,8 +43,6 @@ type (
 		ProductCategoryId   int64         `db:"product_category_id"` // 商品类别id
 		ProductTitle        string        `db:"product_title"`       // 标题
 		Picture             string        `db:"picture"`             // 商品主图
-		Status              int64         `db:"status"`              // 上架状态：0->正常，1->下架，2->预约商品
-		ReserveTime         time.Time     `db:"reserve_time"`        // 预售开始时间
 		Sale                int64         `db:"sale"`                // 销量
 		Price               int64         `db:"price"`
 		PromotionPrice      int64         `db:"promotion_price"` // 促销价格
@@ -63,6 +61,10 @@ type (
 		ProductCategoryName string        `db:"product_category_name"` // 商品分类名称
 		Attribute           string        `db:"attribute"`             // 商品属性名称
 		Grade               sql.NullInt64 `db:"grade"`
+		Status              int64         `db:"status"`         // 上架状态：0->正常，1->下架，2->预约商品,3->折扣商品
+		ReserveTime         time.Time     `db:"reserve_time"`   // 预售开始时间
+		DiscountPrice       int64         `db:"discount_price"` // 折后价格
+		Discount            int64         `db:"discount"`       // 折扣
 	}
 )
 
@@ -78,11 +80,10 @@ func (m *defaultProductModel) Delete(ctx context.Context, id int64) error {
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
-
 func (m *defaultProductModel) FindAll(ctx context.Context) ([]*Product, error) {
 	query := fmt.Sprintf("select %s from %s", productRows, m.table)
 	var resp []*Product
-	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	err := m.conn.QueryRowCtx(ctx, &resp, query)
 	switch err {
 	case nil:
 		return resp, nil
@@ -121,14 +122,14 @@ func (m *defaultProductModel) FindOneByPid(ctx context.Context, pid int64) (*Pro
 }
 
 func (m *defaultProductModel) Insert(ctx context.Context, data *Product) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, productRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Pid, data.ProductCategoryId, data.ProductTitle, data.Picture, data.Status, data.ReserveTime, data.Sale, data.Price, data.PromotionPrice, data.OriginalPrice, data.CutPrice, data.Description, data.Unit, data.Weight, data.StorageEnv, data.AlbumPicsList, data.DetailTitle, data.DetailDesc, data.ProductionArea, data.DetailLongImage, data.BrandName, data.ProductCategoryName, data.Attribute, data.Grade)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, productRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Pid, data.ProductCategoryId, data.ProductTitle, data.Picture, data.Sale, data.Price, data.PromotionPrice, data.OriginalPrice, data.CutPrice, data.Description, data.Unit, data.Weight, data.StorageEnv, data.AlbumPicsList, data.DetailTitle, data.DetailDesc, data.ProductionArea, data.DetailLongImage, data.BrandName, data.ProductCategoryName, data.Attribute, data.Grade, data.Status, data.ReserveTime, data.DiscountPrice, data.Discount)
 	return ret, err
 }
 
 func (m *defaultProductModel) Update(ctx context.Context, newData *Product) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, productRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Pid, newData.ProductCategoryId, newData.ProductTitle, newData.Picture, newData.Status, newData.ReserveTime, newData.Sale, newData.Price, newData.PromotionPrice, newData.OriginalPrice, newData.CutPrice, newData.Description, newData.Unit, newData.Weight, newData.StorageEnv, newData.AlbumPicsList, newData.DetailTitle, newData.DetailDesc, newData.ProductionArea, newData.DetailLongImage, newData.BrandName, newData.ProductCategoryName, newData.Attribute, newData.Grade, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Pid, newData.ProductCategoryId, newData.ProductTitle, newData.Picture, newData.Sale, newData.Price, newData.PromotionPrice, newData.OriginalPrice, newData.CutPrice, newData.Description, newData.Unit, newData.Weight, newData.StorageEnv, newData.AlbumPicsList, newData.DetailTitle, newData.DetailDesc, newData.ProductionArea, newData.DetailLongImage, newData.BrandName, newData.ProductCategoryName, newData.Attribute, newData.Grade, newData.Status, newData.ReserveTime, newData.DiscountPrice, newData.Discount, newData.Id)
 	return err
 }
 

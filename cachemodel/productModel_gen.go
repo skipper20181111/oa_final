@@ -83,7 +83,7 @@ func (m *defaultProductModel) Delete(ctx context.Context, id int64) error {
 func (m *defaultProductModel) FindAll(ctx context.Context) ([]*Product, error) {
 	query := fmt.Sprintf("select %s from %s", productRows, m.table)
 	var resp []*Product
-	err := m.conn.QueryRowCtx(ctx, &resp, query)
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
 	switch err {
 	case nil:
 		return resp, nil

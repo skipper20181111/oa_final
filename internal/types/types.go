@@ -557,6 +557,7 @@ type CouponInfo struct {
 	DisabledTime    string   `json:"disabledTime"`
 	AvailableRange  string   `json:"availableRange"`
 	Rules           []string `json:"rules"`
+	ExchangeNotes   []string `json:"exchangeNotes"`
 }
 
 type GetSmallCouponRes struct {

@@ -129,5 +129,9 @@ func coupondb2info(coupon *cachemodel.Coupon) *types.CouponInfo {
 	cinfo.Discount = coupon.Discount
 	cinfo.TypeCode = coupon.Type
 	cinfo.EfficientPeriod = coupon.EfficientPeriod
+
+	exchangenote := make([]string, 0)
+	json.Unmarshal([]byte(coupon.ExchangeNotes), &exchangenote)
+	cinfo.ExchangeNotes = exchangenote
 	return cinfo
 }

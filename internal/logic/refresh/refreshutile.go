@@ -7,6 +7,7 @@ import (
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
+	"strings"
 	"time"
 )
 
@@ -22,6 +23,24 @@ func NewRefreshUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Refre
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
+}
+func (l *RefreshUtilLogic) MissionList() {
+	MissionList := make([]*types.Mission, 0)
+	missions, _ := l.svcCtx.Mission.FindAll(l.ctx)
+	if missions != nil && len(missions) >= 1 {
+		for _, mission := range missions {
+			MissionList = append(MissionList, missiondb2info(mission))
+		}
+		l.svcCtx.LocalCache.Set(svc.MissionListKey, MissionList)
+	}
+}
+func missiondb2info(db *cachemodel.Mission) *types.Mission {
+	minfo := &types.Mission{}
+	minfo.MissionId = db.MissionId
+	minfo.Count = db.ConsumeCount
+	describelist := strings.Split(db.Describe, "#")
+	minfo.Describe = describelist
+	return minfo
 }
 func (l *RefreshUtilLogic) InfoMapAndMap() bool {
 	defer func() {

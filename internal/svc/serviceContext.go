@@ -29,6 +29,7 @@ const (
 	CouponMapKey       = "CouponMapKey"
 	CouponInfoMapKey   = "CouponInfoMapKey"
 	Keystr             = "W3WxhhoA9E9VIteCYbnhUTxDbtk2nP1Z"
+	MissionListKey     = "MissionListKey"
 )
 
 type ServiceContext struct {
@@ -56,6 +57,8 @@ type ServiceContext struct {
 	UserInvoiceString cachemodel.UserInvoiceStringModel
 	Voucher           cachemodel.VoucherModel
 	PointLog          cachemodel.PointLogModel
+	Mission           cachemodel.MissionModel
+	UserMission       cachemodel.UserMissionModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -121,5 +124,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		UserInvoiceString: cachemodel.NewUserInvoiceStringModel(sqlx.NewMysql(c.DB.DataSource)),
 		Voucher:           cachemodel.NewVoucherModel(sqlx.NewMysql(c.DB.DataSource)),
 		PointLog:          cachemodel.NewPointLogModel(sqlx.NewMysql(c.DB.DataSource)),
+		Mission:           cachemodel.NewMissionModel(sqlx.NewMysql(c.DB.DataSource)),
+		UserMission:       cachemodel.NewUserMissionModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

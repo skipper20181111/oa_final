@@ -654,6 +654,32 @@ type (
         Data map[string][]*PointLogInfo `json:"data"`
     }
 )
+type (
+    FinishMissionRes {
+        MissionId int64 `json:"missionId"`
+    }
+    GetMissionInfoRes {
+    }
+    Mission {
+        MissionId int64 `json:"missionId"`
+        Count int64 `json:"count"`
+        Describe []string `json:"describe"`
+    }
+    MissionInfo {
+        Mission *Mission `json:"mission"`
+        Accomplished bool `json:"accomplished"`
+    }
+    GetMissionInfoRp {
+        ConsumeTime int64 `json:"consumeTime"`
+        MissionInfoList []*MissionInfo `json:"missionInfoList"`
+    }
+    GetMissionInfoResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetMissionInfoRp `json:"data"`
+    }
+)
+
 
 
 

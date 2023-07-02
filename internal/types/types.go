@@ -644,3 +644,32 @@ type GetPointLogResp struct {
 	Msg  string                     `json:"msg"`
 	Data map[string][]*PointLogInfo `json:"data"`
 }
+
+type FinishMissionRes struct {
+	MissionId int64 `json:"missionId"`
+}
+
+type GetMissionInfoRes struct {
+}
+
+type Mission struct {
+	MissionId int64    `json:"missionId"`
+	Count     int64    `json:"count"`
+	Describe  []string `json:"describe"`
+}
+
+type MissionInfo struct {
+	Mission      *Mission `json:"mission"`
+	Accomplished bool     `json:"accomplished"`
+}
+
+type GetMissionInfoRp struct {
+	ConsumeTime     int64          `json:"consumeTime"`
+	MissionInfoList []*MissionInfo `json:"missionInfoList"`
+}
+
+type GetMissionInfoResp struct {
+	Code string            `json:"code"`
+	Msg  string            `json:"msg"`
+	Data *GetMissionInfoRp `json:"data"`
+}

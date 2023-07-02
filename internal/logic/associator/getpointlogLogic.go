@@ -29,10 +29,10 @@ func NewGetpointlogLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getpo
 
 func (l *GetpointlogLogic) Getpointlog(req *types.GetPointLogRes) (resp *types.GetPointLogResp, err error) {
 	accphone := l.ctx.Value("phone").(string)
-	canpost := l.ou.PostLimit(accphone+"cashlog", 6)
-	if !canpost {
-		return &types.GetPointLogResp{Code: "10000", Msg: "success", Data: make(map[string][]*types.PointLogInfo)}, nil
-	}
+	//canpost := l.ou.PostLimit(accphone+"cashlog", 6)
+	//if !canpost {
+	//	return &types.GetPointLogResp{Code: "10000", Msg: "success", Data: make(map[string][]*types.PointLogInfo)}, nil
+	//}
 	limit15, err := l.svcCtx.PointLog.FindAllByPhone(context.Background(), accphone)
 	cashlogmap := make(map[string][]*types.PointLogInfo)
 	cashlogmap["exchange"] = make([]*types.PointLogInfo, 0)

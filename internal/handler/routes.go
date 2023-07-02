@@ -233,6 +233,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/getvoucher",
 				Handler: coupon.GetvoucherHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getmissioninfo",
+				Handler: coupon.GetmissioninfoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/finishmission",
+				Handler: coupon.FinishmissionHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/coupon"),

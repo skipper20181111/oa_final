@@ -28,5 +28,6 @@ func (l *RefreshPLLogic) RefreshPL() (resp *types.RefreshResp, err error) {
 	refreshUtil.RechargeProduct()
 	refreshUtil.StarMall()
 	refreshUtil.Coupon()
+	refreshUtil.MissionList()
 	return &types.RefreshResp{Code: "10000", Msg: "刷新成功"}, err
 }

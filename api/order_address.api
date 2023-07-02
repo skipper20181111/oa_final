@@ -199,6 +199,14 @@ service oa-api {
 	@doc "获取大额优惠券"
 	@handler getvoucher
 	post /getvoucher (GetVoucherRes) returns (GetVoucherResp)
+	
+	@doc "获取任务信息"
+	@handler getmissioninfo
+	post /getmissioninfo (GetMissionInfoRes) returns (GetMissionInfoResp)
+	
+	@doc "完成任务"
+	@handler finishmission
+	post /finishmission (FinishMissionRes) returns (GetMissionInfoResp)
 }
 
 @server(

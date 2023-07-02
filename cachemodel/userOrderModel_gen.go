@@ -33,6 +33,7 @@ type (
 		FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*UserOrder, error)
 		UpdateByOrderSn(ctx context.Context, newData *UserOrder) error
 		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
+		CountByPhone(ctx context.Context, phone string) (int64, error)
 	}
 
 	defaultUserOrderModel struct {
@@ -120,7 +121,20 @@ func (m *defaultUserOrderModel) FindOneByOrderSn(ctx context.Context, orderSn st
 		return nil, err
 	}
 }
+func (m *defaultUserOrderModel) CountByPhone(ctx context.Context, phone string) (int64, error) {
+	var resp int64
+	query := fmt.Sprintf("select count(*) from %s where `order_status` =1 and `phone`=?", m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, phone)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return 0, ErrNotFound
+	default:
+		return 0, err
+	}
 
+}
 func (m *defaultUserOrderModel) FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*UserOrder, error) {
 	var resp UserOrder
 	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? limit 1", userOrderRows, m.table)

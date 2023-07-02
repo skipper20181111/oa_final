@@ -37,9 +37,10 @@ func (l *MissionUtilLogic) Finishmission(missionid int64) (resp *types.GetMissio
 	MissionInfos := make([]*types.MissionInfo, 0)
 	phone, _ := l.svcCtx.UserMission.FindOneByPhone(l.ctx, l.phone)
 	if phone != nil {
+		count, _ := l.svcCtx.UserOrder.CountByPhone(l.ctx, l.phone)
 		json.Unmarshal([]byte(phone.MissionInfo), &MissionInfos)
 		for _, missioninfo := range MissionInfos {
-			if missioninfo.Mission.MissionId == missionid {
+			if missioninfo.Mission.MissionId == missionid && missioninfo.Mission.Count <= count {
 				missioninfo.Accomplished = true
 			}
 		}

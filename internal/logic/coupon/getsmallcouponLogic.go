@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"oa_final/cachemodel"
+	"strconv"
 	"time"
 
 	"oa_final/internal/svc"
@@ -37,38 +38,56 @@ func (l *GetsmallcouponLogic) Getsmallcoupon(req *types.GetSmallCouponRes) (resp
 	couponbyphone, err := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.phone)
 	couponmap := make(map[int64]map[string]*types.CouponStoreInfo)
 	if couponbyphone == nil {
+		couponmap = getnewcoupon(couponmap, couponinfomap)
 		couponmapstr, _ := json.Marshal(couponmap)
+		infolist := make([]*types.CouponInfo, 0)
+		infolist, couponmap = getinfolist(couponmap, couponinfomap)
 		l.svcCtx.UserCoupon.Insert(l.ctx, &cachemodel.UserCoupon{Phone: l.ctx.Value("phone").(string), CouponIdMap: string(couponmapstr)})
-		return &types.GetSmallCouponResp{Code: "10000", Msg: "列表如下", Data: &types.GetSmallCouponRp{CouponInfoList: make([]*types.CouponInfo, 0)}}, nil
+		return &types.GetSmallCouponResp{Code: "10000", Msg: "列表如下", Data: &types.GetSmallCouponRp{CouponInfoList: infolist}}, nil
 	} else {
 		json.Unmarshal([]byte(couponbyphone.CouponIdMap), &couponmap)
+
 		infolist := make([]*types.CouponInfo, 0)
-		for cid, uuidmap := range couponmap {
-			if _, ok := couponinfomap[cid]; !ok {
-				delete(couponmap, cid)
-				continue
-			}
-			if len(uuidmap) == 0 {
-				delete(couponmap, cid)
-				continue
-			}
-			chilemap := &uuidmap
-			for uuid, storeInfo := range uuidmap {
-				disabletime, _ := time.Parse("2006-01-02 15:04:05", storeInfo.DisabledTime)
-				if disabletime.Before(time.Now()) {
-					delete(*chilemap, uuid)
-				} else {
-					couponinfomap[cid].CouponUUID = uuid
-					couponinfomap[cid].DisabledTime = storeInfo.DisabledTime
-					infolist = append(infolist, couponinfomap[cid])
-				}
-			}
-			couponmap[cid] = *chilemap
-		}
+		infolist, couponmap = getinfolist(couponmap, couponinfomap)
 		couponmapstr, _ := json.Marshal(couponmap)
 		couponbyphone.CouponIdMap = string(couponmapstr)
 		l.svcCtx.UserCoupon.Update(l.ctx, couponbyphone)
 		return &types.GetSmallCouponResp{Code: "10000", Msg: "列表如下", Data: &types.GetSmallCouponRp{CouponInfoList: infolist}}, nil
 	}
 	return &types.GetSmallCouponResp{Code: "4004", Msg: "无"}, nil
+}
+func getnewcoupon(couponmap map[int64]map[string]*types.CouponStoreInfo, couponinfomap map[int64]*types.CouponInfo) map[int64]map[string]*types.CouponStoreInfo {
+	newusercouponid := int64(9999)
+	info, ok := couponinfomap[newusercouponid]
+	if ok {
+		couponmap[newusercouponid] = make(map[string]*types.CouponStoreInfo)
+		couponmap[newusercouponid][strconv.FormatInt(time.Now().UnixNano(), 10)] = &types.CouponStoreInfo{CouponId: newusercouponid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*info.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+	}
+	return couponmap
+}
+func getinfolist(couponmap map[int64]map[string]*types.CouponStoreInfo, couponinfomap map[int64]*types.CouponInfo) ([]*types.CouponInfo, map[int64]map[string]*types.CouponStoreInfo) {
+	infolist := make([]*types.CouponInfo, 0)
+	for cid, uuidmap := range couponmap {
+		if _, ok := couponinfomap[cid]; !ok {
+			delete(couponmap, cid)
+			continue
+		}
+		if len(uuidmap) == 0 {
+			delete(couponmap, cid)
+			continue
+		}
+		chilemap := &uuidmap
+		for uuid, storeInfo := range uuidmap {
+			disabletime, _ := time.Parse("2006-01-02 15:04:05", storeInfo.DisabledTime)
+			if disabletime.Before(time.Now()) {
+				delete(*chilemap, uuid)
+			} else {
+				couponinfomap[cid].CouponUUID = uuid
+				couponinfomap[cid].DisabledTime = storeInfo.DisabledTime
+				infolist = append(infolist, couponinfomap[cid])
+			}
+		}
+		couponmap[cid] = *chilemap
+	}
+	return infolist, couponmap
 }

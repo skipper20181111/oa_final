@@ -1,4 +1,4 @@
-package userorder
+package orderpay
 
 import (
 	"context"
@@ -7,9 +7,11 @@ import (
 	"github.com/wechatpay-apiv3/wechatpay-go/services/refunddomestic"
 	"github.com/zeromicro/go-zero/core/logx"
 	"log"
+	"math/rand"
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
+	"time"
 )
 
 type WeChatUtilLogic struct {
@@ -20,6 +22,8 @@ type WeChatUtilLogic struct {
 	useropenid  string
 	tellmesodir string
 }
+
+var letters = []rune("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 type WeChatPayOpt func(*WeChatUtilLogic)
 
@@ -54,19 +58,25 @@ func (l *WeChatUtilLogic) CheckWeiXinPayFinished(OutTradeNo string) bool {
 	}
 	return false
 }
-func (l *WeChatUtilLogic) CancelOrder(order *cachemodel.UserOrder) bool {
+func (l *WeChatUtilLogic) CancelOrder(order *cachemodel.Order) bool {
 	defer func() {
 		if e := recover(); e != nil {
 			return
 		}
 	}()
+	OutRefundNo := randStr(64)
+	payInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
+	if payInfo == nil {
+		return false
+	}
+
 	service := refunddomestic.RefundsApiService{Client: l.svcCtx.Client}
 	create, result, err := service.Create(l.ctx, refunddomestic.CreateRequest{
 		OutTradeNo:  core.String(order.OutTradeNo),
-		OutRefundNo: core.String(order.OutTradeNo),
+		OutRefundNo: core.String(OutRefundNo),
 		Amount: &refunddomestic.AmountReq{Currency: core.String("CNY"),
 			Refund: core.Int64(order.WexinPayAmount),
-			Total:  core.Int64(order.WexinPayAmount)},
+			Total:  core.Int64(payInfo.WexinPayAmount)},
 	})
 	defer result.Response.Body.Close()
 	if err != nil {
@@ -75,14 +85,15 @@ func (l *WeChatUtilLogic) CancelOrder(order *cachemodel.UserOrder) bool {
 	} else {
 		log.Printf("status=%d resp=%s", result.Response.StatusCode, result.Response, create.String())
 	}
-	l.svcCtx.TransactionInfo.UpdateWeixinReject(l.ctx, order.OrderSn)
+	l.svcCtx.PayInfo.UpdateWeixinReject(l.ctx, order.WexinPayAmount, order.OutTradeNo)
+	l.svcCtx.RefundInfo.Insert(l.ctx, &cachemodel.RefundInfo{Phone: l.userphone, OutTradeNo: payInfo.OutTradeNo, OutRefundNo: OutRefundNo, RefundAmount: order.WexinPayAmount, WexinRefundTime: time.Now()})
 	return true
 }
-func (l *WeChatUtilLogic) IfCancelOrderSuccess(order *cachemodel.UserOrder) bool {
+func (l *WeChatUtilLogic) IfCancelOrderSuccess(order *cachemodel.Order) bool {
 	service := refunddomestic.RefundsApiService{Client: l.svcCtx.Client}
 	no, result, err := service.QueryByOutRefundNo(l.ctx,
 		refunddomestic.QueryByOutRefundNoRequest{
-			OutRefundNo: core.String(order.OutTradeNo),
+			OutRefundNo: core.String(order.OutRefundNo),
 		})
 	defer result.Response.Body.Close()
 	if err != nil {
@@ -97,7 +108,7 @@ func (l *WeChatUtilLogic) IfCancelOrderSuccess(order *cachemodel.UserOrder) bool
 	}
 	return false
 }
-func (l *WeChatUtilLogic) Weixinpayinit(OutTradeNo string, ammount int64, options ...func(logic *WeChatUtilLogic)) *types.WeiXinPayMsg {
+func (l *WeChatUtilLogic) Weixinpayinit(OutTradeNo string, ammount int64, options ...func(logic *WeChatUtilLogic)) *types.WeChatPayMsg {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -136,5 +147,28 @@ func (l *WeChatUtilLogic) Weixinpayinit(OutTradeNo string, ammount int64, option
 	packagestr := *payment.Package
 	paySign := *payment.PaySign
 	signType := *payment.SignType
-	return &types.WeiXinPayMsg{PaySign: paySign, NonceStr: nonceStr, TimeStamp: timestampsec, Package: packagestr, SignType: signType}
+	return &types.WeChatPayMsg{PaySign: paySign, NonceStr: nonceStr, TimeStamp: timestampsec, Package: packagestr, SignType: signType}
+}
+func randStr(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+func (l *WeChatUtilLogic) CheckWeiXinPay(OutTradeNo string) bool {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	jssvc := jsapi.JsapiApiService{Client: l.svcCtx.Client}
+	no2payment, result, _ := jssvc.QueryOrderByOutTradeNo(l.ctx, jsapi.QueryOrderByOutTradeNoRequest{
+		OutTradeNo: core.String(OutTradeNo),
+		Mchid:      core.String(l.svcCtx.Config.WxConf.MchID)})
+	defer result.Response.Body.Close()
+	if *no2payment.TradeState == "SUCCESS" {
+		return true
+	}
+	return false
 }

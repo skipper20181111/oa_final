@@ -12,7 +12,8 @@ import (
 	"io"
 	"math/rand"
 	"oa_final/cachemodel"
-	"oa_final/internal/logic/userorder"
+	"oa_final/internal/logic/orderpay"
+
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 	"strconv"
@@ -23,7 +24,7 @@ type VoucherUtileLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
-	lu     *userorder.Logic
+	lu     *orderpay.UtilLogic
 	Phone  string
 }
 
@@ -32,7 +33,7 @@ func NewVoucherUtileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Vouc
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
-		lu:     userorder.NewLogic(ctx, svcCtx),
+		lu:     orderpay.NewUtilLogic(ctx, svcCtx),
 		Phone:  ctx.Value("phone").(string),
 	}
 }
@@ -41,12 +42,12 @@ func (l VoucherUtileLogic) VoucherbindByVid(QrMsg *types.QrCode) (bool, string) 
 	if vid != 0 {
 		byVid, _ := l.svcCtx.Voucher.FindOneByVid(l.ctx, vid)
 		if byVid != nil {
-			return l.voucherbind(byVid.VoucherCode)
+			return l.voucherbind(byVid.VoucherCode, "扫码")
 		}
 	}
 	return false, "请检查二维码"
 }
-func (l *VoucherUtileLogic) voucherbind(voucherCode string) (bool, string) {
+func (l *VoucherUtileLogic) voucherbind(voucherCode, path string) (bool, string) {
 	voucher, _ := l.svcCtx.Voucher.FindOneByVoucherCode(l.ctx, voucherCode)
 	if voucher == nil {
 		return false, "无此兑换码"
@@ -56,7 +57,7 @@ func (l *VoucherUtileLogic) voucherbind(voucherCode string) (bool, string) {
 	lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.Phone, Field: "voucher"})
 	lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.Phone, Field: "cash_account"})
 	if l.lu.Getlocktry(lockmsglist) {
-		if ok, msg := l.privatizationvoucher(voucher); ok {
+		if ok, msg := l.privatizationvoucher(voucher, path); ok {
 			l.lu.Closelock(lockmsglist)
 			return true, msg
 		} else {
@@ -66,7 +67,7 @@ func (l *VoucherUtileLogic) voucherbind(voucherCode string) (bool, string) {
 	}
 	return false, "未获取到锁，请1分钟后再试"
 }
-func (l *VoucherUtileLogic) privatizationvoucher(voucher *cachemodel.Voucher) (bool, string) {
+func (l *VoucherUtileLogic) privatizationvoucher(voucher *cachemodel.Voucher, path string) (bool, string) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -98,8 +99,12 @@ func (l *VoucherUtileLogic) privatizationvoucher(voucher *cachemodel.Voucher) (b
 		phone.Balance = phone.Balance + couponbyid.AvailableAmount
 		l.svcCtx.CashAccount.Update(l.ctx, phone)
 	}
-	l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "扫码", OrderSn: voucher.VoucherCode, OrderDescribe: "扫大额代金券码获取现金", Behavior: "充值", Phone: l.Phone, Balance: phone.Balance, ChangeAmount: couponbyid.AvailableAmount})
-	l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), Behavior: "充值", Phone: l.Phone, Balance: phone.Balance, ChangeAmount: couponbyid.AvailableAmount})
+	switch path {
+	case "扫码":
+		l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "扫码", OrderSn: voucher.VoucherCode, OrderDescribe: "扫大额代金券码获取现金", Behavior: "充值", Phone: l.Phone, Balance: phone.Balance, ChangeAmount: couponbyid.AvailableAmount})
+	case "兑换码":
+		l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "兑换", OrderSn: voucher.VoucherCode, OrderDescribe: "输入兑换码获取现金", Behavior: "充值", Phone: l.Phone, Balance: phone.Balance, ChangeAmount: couponbyid.AvailableAmount})
+	}
 	l.lu.Oplog("cash_account", l.Phone, "结束更新", voucherlid)
 	l.lu.Oplog("voucher and cash_account", "扫码获取大额券并更新账户", "结束更新", voucherlid)
 	return true, "绑定成功,请查看现金账户"

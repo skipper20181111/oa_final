@@ -61,10 +61,11 @@ type (
 		ProductCategoryName string        `db:"product_category_name"` // 商品分类名称
 		Attribute           string        `db:"attribute"`             // 商品属性名称
 		Grade               sql.NullInt64 `db:"grade"`
-		Status              int64         `db:"status"`         // 上架状态：0->正常，1->下架，2->预约商品,3->折扣商品
-		ReserveTime         time.Time     `db:"reserve_time"`   // 预售开始时间
-		DiscountPrice       int64         `db:"discount_price"` // 折后价格
-		Discount            int64         `db:"discount"`       // 折扣
+		Status              int64         `db:"status"`           // 上架状态：0->下架，1->正常，2->预约商品,3->折扣商品
+		ReserveTime         time.Time     `db:"reserve_time"`     // 预售开始时间
+		MinPrice            int64         `db:"min_price"`        // 满减门槛
+		Cut                 int64         `db:"cut"`              // 减免金额
+		MarketPlayerId      int64         `db:"market_player_id"` // 商户id
 	}
 )
 
@@ -80,19 +81,7 @@ func (m *defaultProductModel) Delete(ctx context.Context, id int64) error {
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
-func (m *defaultProductModel) FindAll(ctx context.Context) ([]*Product, error) {
-	query := fmt.Sprintf("select %s from %s", productRows, m.table)
-	var resp []*Product
-	err := m.conn.QueryRowsCtx(ctx, &resp, query)
-	switch err {
-	case nil:
-		return resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
+
 func (m *defaultProductModel) FindOne(ctx context.Context, id int64) (*Product, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", productRows, m.table)
 	var resp Product
@@ -106,7 +95,19 @@ func (m *defaultProductModel) FindOne(ctx context.Context, id int64) (*Product, 
 		return nil, err
 	}
 }
-
+func (m *defaultProductModel) FindAll(ctx context.Context) ([]*Product, error) {
+	query := fmt.Sprintf("select %s from %s", productRows, m.table)
+	var resp []*Product
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultProductModel) FindOneByPid(ctx context.Context, pid int64) (*Product, error) {
 	var resp Product
 	query := fmt.Sprintf("select %s from %s where `pid` = ? limit 1", productRows, m.table)
@@ -122,14 +123,14 @@ func (m *defaultProductModel) FindOneByPid(ctx context.Context, pid int64) (*Pro
 }
 
 func (m *defaultProductModel) Insert(ctx context.Context, data *Product) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, productRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Pid, data.ProductCategoryId, data.ProductTitle, data.Picture, data.Sale, data.Price, data.PromotionPrice, data.OriginalPrice, data.CutPrice, data.Description, data.Unit, data.Weight, data.StorageEnv, data.AlbumPicsList, data.DetailTitle, data.DetailDesc, data.ProductionArea, data.DetailLongImage, data.BrandName, data.ProductCategoryName, data.Attribute, data.Grade, data.Status, data.ReserveTime, data.DiscountPrice, data.Discount)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, productRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Pid, data.ProductCategoryId, data.ProductTitle, data.Picture, data.Sale, data.Price, data.PromotionPrice, data.OriginalPrice, data.CutPrice, data.Description, data.Unit, data.Weight, data.StorageEnv, data.AlbumPicsList, data.DetailTitle, data.DetailDesc, data.ProductionArea, data.DetailLongImage, data.BrandName, data.ProductCategoryName, data.Attribute, data.Grade, data.Status, data.ReserveTime, data.MinPrice, data.Cut, data.MarketPlayerId)
 	return ret, err
 }
 
 func (m *defaultProductModel) Update(ctx context.Context, newData *Product) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, productRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Pid, newData.ProductCategoryId, newData.ProductTitle, newData.Picture, newData.Sale, newData.Price, newData.PromotionPrice, newData.OriginalPrice, newData.CutPrice, newData.Description, newData.Unit, newData.Weight, newData.StorageEnv, newData.AlbumPicsList, newData.DetailTitle, newData.DetailDesc, newData.ProductionArea, newData.DetailLongImage, newData.BrandName, newData.ProductCategoryName, newData.Attribute, newData.Grade, newData.Status, newData.ReserveTime, newData.DiscountPrice, newData.Discount, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Pid, newData.ProductCategoryId, newData.ProductTitle, newData.Picture, newData.Sale, newData.Price, newData.PromotionPrice, newData.OriginalPrice, newData.CutPrice, newData.Description, newData.Unit, newData.Weight, newData.StorageEnv, newData.AlbumPicsList, newData.DetailTitle, newData.DetailDesc, newData.ProductionArea, newData.DetailLongImage, newData.BrandName, newData.ProductCategoryName, newData.Attribute, newData.Grade, newData.Status, newData.ReserveTime, newData.MinPrice, newData.Cut, newData.MarketPlayerId, newData.Id)
 	return err
 }
 

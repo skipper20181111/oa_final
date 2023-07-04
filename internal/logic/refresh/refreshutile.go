@@ -52,14 +52,11 @@ func (l *RefreshUtilLogic) InfoMapAndMap() bool {
 	if err != nil {
 		return false
 	}
-	productsInfoMap := make(map[int64]*types.ProductInfo)
+
 	productsMap := make(map[int64]*cachemodel.Product)
 	for _, product := range productList {
-		info := product2info(product)
 		productsMap[product.Pid] = product
-		productsInfoMap[product.Pid] = &info
 	}
-	l.svcCtx.LocalCache.Set(svc.ProductsInfoMap, productsInfoMap)
 	l.svcCtx.LocalCache.Set(svc.ProductsMap, productsMap)
 	return true
 }

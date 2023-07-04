@@ -1,27 +1,30 @@
-package userorder
+package orderpay
 
 import (
 	"context"
-	"github.com/zeromicro/go-zero/core/logx"
+
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type GetorderLogic struct {
 	logx.Logger
-	ctx        context.Context
-	svcCtx     *svc.ServiceContext
-	checklogic *CheckOrderLogic
+	ctx    context.Context
+	svcCtx *svc.ServiceContext
 }
 
 func NewGetorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetorderLogic {
 	return &GetorderLogic{
-		Logger:     logx.WithContext(ctx),
-		ctx:        ctx,
-		svcCtx:     svcCtx,
-		checklogic: NewCheckOrderLogic(ctx, svcCtx),
+		Logger: logx.WithContext(ctx),
+		ctx:    ctx,
+		svcCtx: svcCtx,
 	}
 }
+
 func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderResp, err error) {
-	return l.checklogic.MonitorOrderStatus(req.OrderSn)
+	// todo: add your logic here and delete this line
+
+	return
 }

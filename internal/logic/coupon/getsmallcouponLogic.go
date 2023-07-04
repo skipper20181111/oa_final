@@ -46,7 +46,6 @@ func (l *GetsmallcouponLogic) Getsmallcoupon(req *types.GetSmallCouponRes) (resp
 		return &types.GetSmallCouponResp{Code: "10000", Msg: "列表如下", Data: &types.GetSmallCouponRp{CouponInfoList: infolist}}, nil
 	} else {
 		json.Unmarshal([]byte(couponbyphone.CouponIdMap), &couponmap)
-
 		infolist := make([]*types.CouponInfo, 0)
 		infolist, couponmap = getinfolist(couponmap, couponinfomap)
 		couponmapstr, _ := json.Marshal(couponmap)

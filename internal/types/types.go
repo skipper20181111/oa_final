@@ -142,17 +142,26 @@ type PreOrderInfo struct {
 	FreightAmount        float64        `json:"freightAmount"`
 }
 
+type PayInfo struct {
+	Phone                string  `json:"phone"`
+	OutTradeNo           string  `json:"outTradeNo"`
+	TransactionId        string  `json:"transactionId"`
+	CreateTime           string  `json:"createTime"`
+	WeChatPayAmount      float64 `json:"weChatPayAmount"`
+	CashAccountPayAmount float64 `json:"cashAccountPayAmount"`
+	FinishWeChatPayTime  string  `json:"finishWeChatTime"`
+	FinishCashPayTime    string  `json:"finishCashPayTime"`
+}
+
 type OrderInfo struct {
 	Phone                string           `json:"phone"`
 	OrderSn              string           `json:"orderSn"`
 	OutTradeNo           string           `json:"outTradeNo"`
-	TransactionId        string           `json:"transactionId"`
 	CreateTime           string           `json:"createTime"`
 	PidList              []*ProductTiny   `json:"pidList"`
 	OriginalAmount       float64          `json:"originalAmount"`
 	ProductCutAmount     float64          `json:"productCutAmount"`
 	PromotionAmount      float64          `json:"promotionAmount"`
-	PointAmount          int64            `json:"pointAmount"`
 	ActualAmount         float64          `json:"actualAmount"`
 	CouponAmount         float64          `json:"couponAmount"`
 	UsedCouponInfo       *CouponStoreInfo `json:"usedCouponInfo"`
@@ -196,14 +205,14 @@ type NewOrderRes struct {
 	UsedCouponUUID  string         `json:"usedCoupUUID"`
 	UseCouponFirst  bool           `json:"useCouponFirst"`
 	UseCashFirst    bool           `json:"useCashFirst"`
-	UsePointFirst   bool           `json:"usePointFirst"`
 }
 
 type NewOrderRp struct {
-	OrderInfo    *OrderInfo    `json:"orderInfo"`
+	PayInfo      *PayInfo      `json:"payInfo"`
+	OrderInfos   []*OrderInfo  `json:"orderInfos"`
 	UseWechatPay bool          `json:"useWechatPay"`
 	UseAccount   bool          `json:"useAccount"`
-	WeiXinPayMsg *WeiXinPayMsg `json:"weiXinPayMsg"`
+	WeiXinPayMsg *WeChatPayMsg `json:"weiXinPayMsg"`
 }
 
 type NewOrderResp struct {
@@ -370,7 +379,7 @@ type RechargeOrderInfo struct {
 
 type CashRechargeRp struct {
 	RechargeOrderInfo *RechargeOrderInfo `json:"rechargeOrderInfo"`
-	WeiXinPayMsg      *WeiXinPayMsg      `json:"weiXinPayMsg"`
+	WeiXinPayMsg      *WeChatPayMsg      `json:"weiXinPayMsg"`
 }
 
 type CashRechargeResp struct {
@@ -448,6 +457,14 @@ type StarMallOrderResp struct {
 	Data *OrderInfo `json:"data"`
 }
 
+type PayInit struct {
+	Phone           string `json:"phone"`
+	OutTradeSn      string `json:"outTradeSn"`
+	NeedCashAccount bool   `json:"needCashAccount"`
+	TotleAmmount    int64  `json:"totleAmmount"`
+	TransactionType string `json:"transactionType"`
+}
+
 type TransactionInit struct {
 	Phone           string `json:"phone"`
 	OrderSn         string `json:"orderSn"`
@@ -457,7 +474,7 @@ type TransactionInit struct {
 	TransactionType string `json:"transactionType"`
 }
 
-type WeiXinPayMsg struct {
+type WeChatPayMsg struct {
 	TimeStamp string `json:"timeStamp"`
 	NonceStr  string `json:"nonceStr"`
 	Package   string `json:"package"`
@@ -466,10 +483,10 @@ type WeiXinPayMsg struct {
 }
 
 type PayMsg struct {
-	WeiXinPayMsg       *WeiXinPayMsg `json:"weiXinPayMsg"`
-	NeedWeiXinPay      bool          `json:"neadWeiXinPay"`
+	WeChatPayMsg       *WeChatPayMsg `json:"weChatPayMsg"`
+	NeedWeChatPay      bool          `json:"needWeChatPay"`
 	NeedCashAccountPay bool          `json:"neadCashAccountPay"`
-	WeiXinPayAmmount   int64         `json:"weiXinPayAmmount"`
+	WeChatPayAmmount   int64         `json:"weChatPayAmmount"`
 	CashPayAmmount     int64         `json:"cashPayAmmount"`
 }
 
@@ -490,6 +507,7 @@ type IfOvertimeResp struct {
 }
 
 type CompanyInvoiceInfo struct {
+	Hash           string `json:"hash"`
 	InvoiceTitle   string `json:"invoiceTitle"`
 	ComponyAddress string `json:"componyAddress"`
 	ComponyPhone   string `json:"componyPhone"`
@@ -500,6 +518,7 @@ type CompanyInvoiceInfo struct {
 }
 
 type PersonalInvoiceInfo struct {
+	Hash         string `json:"hash"`
 	InvoiceTitle string `json:"invoiceTitle"`
 	IsDefault    int    `json:"isDefault"`
 }
@@ -633,6 +652,7 @@ type PointLogInfo struct {
 	Balance       int64  `json:"balance"`
 	OrderSn       string `json:"orderSn"`
 	OrderType     string `json:"orderType"`
+	OrderTypeZh   string `json:"orderType"`
 	OrderDescribe string `json:"orderDescribe"`
 }
 

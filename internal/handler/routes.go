@@ -8,11 +8,11 @@ import (
 	associator "oa_final/internal/handler/associator"
 	coupon "oa_final/internal/handler/coupon"
 	invoice "oa_final/internal/handler/invoice"
+	orderpay "oa_final/internal/handler/orderpay"
 	payrecall "oa_final/internal/handler/payrecall"
 	qrcode "oa_final/internal/handler/qrcode"
 	refresh "oa_final/internal/handler/refresh"
 	shoppingcart "oa_final/internal/handler/shoppingcart"
-	userorder "oa_final/internal/handler/userorder"
 	"oa_final/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -23,77 +23,67 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodPost,
-				Path:    "/ifovertime",
-				Handler: userorder.IfovertimeHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
 				Path:    "/orderoption",
-				Handler: userorder.OrderoptionHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/preneworder",
-				Handler: userorder.PreneworderHandler(serverCtx),
+				Handler: orderpay.OrderoptionHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
 				Path:    "/neworder",
-				Handler: userorder.NeworderHandler(serverCtx),
+				Handler: orderpay.NeworderHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
 				Path:    "/starmallorder",
-				Handler: userorder.StarmallorderHandler(serverCtx),
+				Handler: orderpay.StarmallorderHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
 				Path:    "/cashrecharge",
-				Handler: userorder.CashrechargeHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/finishorder",
-				Handler: userorder.FinishorderHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/continuepay",
-				Handler: userorder.ContinuepayHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/paybill",
-				Handler: userorder.PaybillHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/getallorder",
-				Handler: userorder.GetallorderHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/getorder",
-				Handler: userorder.GetorderHandler(serverCtx),
+				Handler: orderpay.CashrechargeHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
 				Path:    "/changeorderaddress",
-				Handler: userorder.ChangeorderaddressHandler(serverCtx),
+				Handler: orderpay.ChangeorderaddressHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/ifovertime",
+				Handler: orderpay.IfovertimeHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
 				Path:    "/refundorder",
-				Handler: userorder.RefundorderHandler(serverCtx),
+				Handler: orderpay.RefundorderHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
 				Path:    "/deleteorder",
-				Handler: userorder.DeleteorderHandler(serverCtx),
+				Handler: orderpay.DeleteorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/finishorder",
+				Handler: orderpay.FinishorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/continuepay",
+				Handler: orderpay.ContinuepayHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getallorder",
+				Handler: orderpay.GetallorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getorder",
+				Handler: orderpay.GetorderHandler(serverCtx),
 			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
-		rest.WithPrefix("/userorder"),
+		rest.WithPrefix("/orderpay"),
 	)
 
 	server.AddRoutes(

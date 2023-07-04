@@ -1,13 +1,14 @@
-package userorder
+package orderpay
 
 import (
 	"context"
 	"math/rand"
 	"oa_final/cachemodel"
-	"oa_final/internal/svc"
-	"oa_final/internal/types"
 	"strconv"
 	"time"
+
+	"oa_final/internal/svc"
+	"oa_final/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -16,9 +17,9 @@ type CashrechargeLogic struct {
 	logx.Logger
 	ctx             context.Context
 	svcCtx          *svc.ServiceContext
+	lid             int64
 	userphone       string
 	useropenid      string
-	lid             int64
 	WeChatUtilLogic *WeChatUtilLogic
 }
 
@@ -54,6 +55,7 @@ func (l *CashrechargeLogic) Cashrecharge(req *types.CashRechargeRes) (resp *type
 	cashrecharge := &types.CashRechargeRp{RechargeOrderInfo: db2info(order), WeiXinPayMsg: weixinpayinit}
 	return &types.CashRechargeResp{Code: "10000", Msg: "success", Data: cashrecharge}, nil
 }
+
 func db2info(order *cachemodel.RechargeOrder) *types.RechargeOrderInfo {
 	info := &types.RechargeOrderInfo{}
 	info.Amount = order.Amount
@@ -68,7 +70,6 @@ func db2info(order *cachemodel.RechargeOrder) *types.RechargeOrderInfo {
 	info.CreateOrderTime = order.CreateOrderTime.Format("2006-01-02 15:04:05")
 	return info
 }
-
 func (l *CashrechargeLogic) order2db(rproduct *cachemodel.RechargeProduct) *cachemodel.RechargeOrder {
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	db := &cachemodel.RechargeOrder{}

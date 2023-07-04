@@ -59,6 +59,9 @@ type ServiceContext struct {
 	PointLog          cachemodel.PointLogModel
 	Mission           cachemodel.MissionModel
 	UserMission       cachemodel.UserMissionModel
+	PayInfo           cachemodel.PayInfoModel
+	Order             cachemodel.OrderModel
+	RefundInfo        cachemodel.RefundInfoModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -126,5 +129,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		PointLog:          cachemodel.NewPointLogModel(sqlx.NewMysql(c.DB.DataSource)),
 		Mission:           cachemodel.NewMissionModel(sqlx.NewMysql(c.DB.DataSource)),
 		UserMission:       cachemodel.NewUserMissionModel(sqlx.NewMysql(c.DB.DataSource)),
+		PayInfo:           cachemodel.NewPayInfoModel(sqlx.NewMysql(c.DB.DataSource)),
+		Order:             cachemodel.NewOrderModel(sqlx.NewMysql(c.DB.DataSource)),
+		RefundInfo:        cachemodel.NewRefundInfoModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

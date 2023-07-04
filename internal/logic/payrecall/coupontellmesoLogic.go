@@ -7,7 +7,7 @@ import (
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments"
 	"github.com/zeromicro/go-zero/core/logx"
 	"oa_final/cachemodel"
-	"oa_final/internal/logic/userorder"
+	"oa_final/internal/logic/orderpay"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 	"time"
@@ -17,7 +17,7 @@ type CoupontellmesoLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
-	lu     *userorder.Logic
+	lu     *orderpay.UtilLogic
 }
 
 func NewCoupontellmesoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CoupontellmesoLogic {
@@ -26,6 +26,7 @@ func NewCoupontellmesoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Co
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
+		lu:     orderpay.NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -36,7 +37,6 @@ func (l *CoupontellmesoLogic) Coupontellmeso(notifyReq *notify.Request, transact
 		if order != nil {
 			l.ctx = context.WithValue(l.ctx, "phone", "17854230845")
 			l.ctx = context.WithValue(l.ctx, "openid", "17854230845")
-			l.lu = userorder.NewLogic(l.ctx, l.svcCtx)
 			lockmsglist := make([]*types.LockMsg, 0)
 			lockmsglist = append(lockmsglist, &types.LockMsg{Phone: order.OutTradeNo, Field: "user_coupon"})
 			if l.lu.Getlocktry(lockmsglist) {

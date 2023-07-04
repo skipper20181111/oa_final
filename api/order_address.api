@@ -10,23 +10,16 @@ info(
 import "alltype.api"
 
 @server(
-	group: userorder
-	prefix : userorder
+	group: orderpay
+	prefix : orderpay
 	jwt : Auth
 	//    middleware : Limit_count
 )
 service oa-api {
-	@doc "查看订单是否超时"
-	@handler ifovertime
-	post /ifovertime (IfOvertimeRes) returns (IfOvertimeResp)
 	
 	@doc "用于返回order的option选项（可用优惠券，可用余额，可用积分，总价等）"
 	@handler orderoption
 	post /orderoption (OrderOptionRes) returns (OrderOptionResp)
-	
-	@doc "结算接口，用来计算订单金额"
-	@handler preneworder
-	post /preneworder (NewOrderRes) returns (PreNewOrderResp)
 	
 	@doc "新订单，真正发起支付的接口"
 	@handler neworder
@@ -40,29 +33,13 @@ service oa-api {
 	@handler cashrecharge
 	post /cashrecharge (CashRechargeRes) returns (CashRechargeResp)
 	
-	@doc "完成订单"
-	@handler finishorder
-	post /finishorder (FinishOrderRes) returns (FinishOrderResp)
-	
-	@doc "继续支付"
-	@handler continuepay
-	post /continuepay (FinishOrderRes) returns (NewOrderResp)
-	
-	@doc "自定义支付"
-	@handler paybill
-	post /paybill (BillPayRes) returns (BillPayResp)
-	
-	@doc "获取所有订单"
-	@handler getallorder
-	post /getallorder (GetAllOrderRes) returns (GetAllOrderResp)
-	
-	@doc "获取单个订单"
-	@handler getorder
-	post /getorder (GetOrderRes) returns (GetOrderResp)
-	
 	@doc "更改收货地址"
 	@handler changeorderaddress
 	post /changeorderaddress (ChangeOrdeRaddressRes) returns (ChangeOrdeRaddressResp)
+	
+	@doc "查看订单是否超时"
+	@handler ifovertime
+	post /ifovertime (IfOvertimeRes) returns (IfOvertimeResp)
 	
 	@doc "取消订单"
 	@handler refundorder
@@ -71,6 +48,22 @@ service oa-api {
 	@doc "删除订单"
 	@handler deleteorder
 	post /deleteorder (DeletOrderRes) returns (DeletOrderResp)
+	
+	@doc "完成订单"
+	@handler finishorder
+	post /finishorder (FinishOrderRes) returns (FinishOrderResp)
+	
+	@doc "继续支付"
+	@handler continuepay
+	post /continuepay (FinishOrderRes) returns (NewOrderResp)
+	
+	@doc "获取所有订单"
+	@handler getallorder
+	post /getallorder (GetAllOrderRes) returns (GetAllOrderResp)
+	
+	@doc "获取单个订单"
+	@handler getorder
+	post /getorder (GetOrderRes) returns (GetOrderResp)
 }
 
 @server(

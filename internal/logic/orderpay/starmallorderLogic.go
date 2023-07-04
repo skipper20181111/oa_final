@@ -1,4 +1,4 @@
-package userorder
+package orderpay
 
 import (
 	"context"
@@ -44,16 +44,16 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 		db := starreq2db(req, phone, StarMallMap[req.Pid].ExchangePoints)
 		cache.AvailablePoints = cache.AvailablePoints - StarMallMap[req.Pid].ExchangePoints
 		l.svcCtx.UserPoints.Update(l.ctx, cache)
-		l.svcCtx.UserOrder.Insert(l.ctx, db)
+		l.svcCtx.Order.Insert(l.ctx, db)
 		l.insertstarTransaction(db)
-		l.svcCtx.PointLog.Insert(l.ctx, &cachemodel.PointLog{Date: time.Now(), OrderType: "兑换商品", OrderSn: db.OrderSn, OrderDescribe: "微信支付充值送现金", Behavior: "兑换", Phone: db.Phone, Balance: cache.AvailablePoints, ChangeAmount: StarMallMap[req.Pid].ExchangePoints})
+		l.svcCtx.PointLog.Insert(l.ctx, &cachemodel.PointLog{Date: time.Now(), OrderType: "兑换商品", OrderSn: db.OrderSn, OrderDescribe: "臻星商城兑换商品", Behavior: "兑换", Phone: db.Phone, Balance: cache.AvailablePoints, ChangeAmount: StarMallMap[req.Pid].ExchangePoints})
 
-		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(db, nil)}, nil
+		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(db)}, nil
 	} else {
 		return &types.StarMallOrderResp{Code: "10000", Msg: "积分不足", Data: orderinfo}, nil
 	}
 }
-func (l *StarmallorderLogic) insertstarTransaction(order *cachemodel.UserOrder) {
+func (l *StarmallorderLogic) insertstarTransaction(order *cachemodel.Order) {
 	transaction := &cachemodel.TransactionInfo{}
 	transaction.Phone = order.Phone
 	transaction.OrderSn = order.OrderSn
@@ -68,15 +68,15 @@ func (l *StarmallorderLogic) insertstarTransaction(order *cachemodel.UserOrder) 
 	transaction.CashAccountPaymentTime = order.CreateOrderTime
 	l.svcCtx.TransactionInfo.Insert(l.ctx, transaction)
 }
-func starreq2db(req *types.StarMallOrderRes, phone string, pointamount int64) *cachemodel.UserOrder {
+func starreq2db(req *types.StarMallOrderRes, phone string, pointamount int64) *cachemodel.Order {
 
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
-	order := &cachemodel.UserOrder{}
+	order := &cachemodel.Order{}
 	order.Phone = phone
 	order.PointsOrder = 1
 	order.FinishWeixinpay = 0
 	order.FinishAccountpay = 0
-	order.PointAmount = pointamount
+	//order.PointAmount = pointamount
 	order.CreateOrderTime = time.Now()
 	order.OutTradeNo = randStr(32)
 	ProductTinyList := [1]*types.ProductTiny{&types.ProductTiny{PId: req.Pid, Amount: 1}}

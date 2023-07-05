@@ -103,6 +103,7 @@ func (l *PayUtilLogic) payinfoinit() {
 	PayInfo.CreateOrderTime = time.Now()
 	PayInfo.CashAccountPaymentTime = inittime
 	PayInfo.WexinPaymentTime = inittime
+	PayInfo.LogId = time.Now().UnixNano()
 	l.PayInfo = PayInfo
 }
 func (l *PayUtilLogic) payinfofinish() {

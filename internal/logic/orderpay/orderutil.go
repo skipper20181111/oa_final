@@ -22,25 +22,22 @@ type OrderUtilLogic struct {
 	coupon             *cachemodel.Coupon
 	usercoupon         *cachemodel.UserCoupon
 	UsedCouponStorInfo map[int64]map[string]*types.CouponStoreInfo
-	orderlist          []*cachemodel.Order
+	OrdersList         []*cachemodel.Order
 	PayInit            *types.PayInit
 	ul                 *UtilLogic
 	MarketPlayerMap    map[int64]map[int64][]*types.ProductTiny
 }
 
 func NewOrderUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *OrderUtilLogic {
-	PMcache, ok := svcCtx.LocalCache.Get(svc.ProductsMap)
-	ProductsMap := make(map[int64]*cachemodel.Product)
-	if ok {
-		ProductsMap = PMcache.(map[int64]*cachemodel.Product)
-	}
 	return &OrderUtilLogic{
-		Logger:      logx.WithContext(ctx),
-		ctx:         ctx,
-		svcCtx:      svcCtx,
-		userphone:   ctx.Value("phone").(string),
-		ProductsMap: ProductsMap,
-		ul:          NewUtilLogic(ctx, svcCtx),
+		Logger:             logx.WithContext(ctx),
+		ctx:                ctx,
+		svcCtx:             svcCtx,
+		userphone:          ctx.Value("phone").(string),
+		ul:                 NewUtilLogic(ctx, svcCtx),
+		MarketPlayerMap:    make(map[int64]map[int64][]*types.ProductTiny),
+		OrdersList:         make([]*cachemodel.Order, 0),
+		UsedCouponStorInfo: make(map[int64]map[string]*types.CouponStoreInfo),
 	}
 }
 func order2req(order *cachemodel.Order) *types.NewOrderRes {
@@ -70,10 +67,16 @@ func order2req(order *cachemodel.Order) *types.NewOrderRes {
 	return req
 }
 func (l OrderUtilLogic) GetAmount(ProductTinyList []*types.ProductTiny) (OriginalAmount int64, PromotionAmount int64) {
+	PMcache, ok := l.svcCtx.LocalCache.Get(svc.ProductsMap)
+	if ok {
+		l.ProductsMap = PMcache.(map[int64]*cachemodel.Product)
+	}
+
 	OriginalAmount = int64(0)
 	PromotionAmount = int64(0)
 	l.ProductTinyList = ProductTinyList
-	if !l.ProductTinyListChina() {
+	ok = l.ProductTinyListChina()
+	if !ok {
 		return 0, 0
 	}
 	for _, m1 := range l.MarketPlayerMap {
@@ -87,85 +90,92 @@ func (l OrderUtilLogic) GetAmount(ProductTinyList []*types.ProductTiny) (Origina
 }
 
 func (l OrderUtilLogic) req2op(req *types.NewOrderRes) ([]*cachemodel.Order, *types.PayInit, bool) {
-	defer func() {
-		if e := recover(); e != nil {
-			return
-		}
-	}()
+	//defer func() {
+	//	if e := recover(); e != nil {
+	//		return
+	//	}
+	//}()
 	l.req = req
+	PMcache, ok := l.svcCtx.LocalCache.Get(svc.ProductsMap)
+	if ok {
+		l.ProductsMap = PMcache.(map[int64]*cachemodel.Product)
+	}
+	if l.req.UseCouponFirst {
+		get, ok := l.svcCtx.LocalCache.Get(svc.CouponMapKey)
+		if ok {
+			l.coupon, ok = get.(map[int64]*cachemodel.Coupon)[l.req.UsedCouponId]
+		}
+		l.usercoupon, _ = l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.userphone)
+	}
 	l.ProductTinyList = req.ProductTinyList
 	l.PayInit = &types.PayInit{}
 	l.PayInit.Phone = l.userphone
 	l.PayInit.OutTradeSn = randStr(32)
 	l.PayInit.NeedCashAccount = l.req.UseCashFirst
-	if l.OrderChina() {
-		l.EndPayInit()
-		return l.orderlist, l.PayInit, true
-	}
-	return nil, nil, false
+	return l.EndPayInit(l.OrderChina()), l.PayInit, true
 }
 func (l OrderUtilLogic) ConsumeInfo(ProductTinyList []*types.ProductTiny) {
 
 }
-func (l OrderUtilLogic) EndPayInit() {
+func (l OrderUtilLogic) EndPayInit(OrdersList []*cachemodel.Order) []*cachemodel.Order {
 	BiggestOrderIndex := 0
 	BiggestAmount := int64(0)
-	for i, order := range l.orderlist {
+	for i, order := range OrdersList {
 		if order.PromotionAmount > BiggestAmount {
 			BiggestAmount = order.PromotionAmount
 			BiggestOrderIndex = i
 		}
 	}
-	l.orderlist[BiggestOrderIndex].ActualAmount = l.CountCouponPrice(BiggestAmount)
-	UsedCouponStorInfoStr, _ := json.Marshal(l.UsedCouponStorInfo)
-	l.orderlist[BiggestOrderIndex].UsedCouponinfo = string(UsedCouponStorInfoStr)
-	l.orderlist[BiggestOrderIndex].CouponAmount = l.coupon.Cut
-	for _, order := range l.orderlist {
+	OrdersList[BiggestOrderIndex].ActualAmount = l.CountCouponPrice(BiggestAmount)
+	if len(l.UsedCouponStorInfo) > 0 {
+		UsedCouponStorInfoStr, _ := json.Marshal(l.UsedCouponStorInfo)
+		OrdersList[BiggestOrderIndex].UsedCouponinfo = string(UsedCouponStorInfoStr)
+		OrdersList[BiggestOrderIndex].CouponAmount = OrdersList[BiggestOrderIndex].PromotionAmount - OrdersList[BiggestOrderIndex].ActualAmount
+	}
+	for _, order := range OrdersList {
 		l.PayInit.TotleAmmount = l.PayInit.TotleAmmount + order.ActualAmount
 	}
-
+	return OrdersList
 }
 func (l OrderUtilLogic) ProductTinyListChina() bool {
-	defer func() {
-		if e := recover(); e != nil {
-			return
-		}
-	}()
-	l.MarketPlayerMap = make(map[int64]map[int64][]*types.ProductTiny)
+	//defer func() {
+	//	if e := recover(); e != nil {
+	//		return
+	//	}
+	//}()
+
 	for _, tiny := range l.ProductTinyList {
-		if _, ok := l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId]; ok {
-			l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId] = l.PidListMapChina(l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId], tiny)
+		ProductTinyMap, ok := l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId]
+		if ok {
+			ProductTinyMap = l.PidListMapChina(ProductTinyMap, tiny)
 		} else {
-			l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId] = make(map[int64][]*types.ProductTiny)
-			l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId] = l.PidListMapChina(l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId], tiny)
+			ProductTinyMap = make(map[int64][]*types.ProductTiny)
+			ProductTinyMap = l.PidListMapChina(ProductTinyMap, tiny)
 		}
+		l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId] = ProductTinyMap
 	}
+
 	return true
 }
-func (l OrderUtilLogic) OrderChina() bool {
-	defer func() {
-		if e := recover(); e != nil {
-			return
-		}
-	}()
+func (l OrderUtilLogic) OrderChina() []*cachemodel.Order {
+	//defer func() {
+	//	if e := recover(); e != nil {
+	//		return
+	//	}
+	//}()
 	if !l.ProductTinyListChina() {
-		return false
+		return make([]*cachemodel.Order, 0)
 	}
-	OrderList := l.PidListMap2OrderMap(l.MarketPlayerMap)
-	if len(OrderList) >= 1 {
-		l.orderlist = OrderList
-		return true
-	}
-	return false
+	return l.PidListMap2OrderMap()
 }
-func (l OrderUtilLogic) PidListMap2OrderMap(MarketPlayerMap map[int64]map[int64][]*types.ProductTiny) []*cachemodel.Order {
-	OrdersList := make([]*cachemodel.Order, 0)
-	for _, PidListMap := range MarketPlayerMap {
+func (l OrderUtilLogic) PidListMap2OrderMap() []*cachemodel.Order {
+	orderlist := make([]*cachemodel.Order, 0)
+	for _, PidListMap := range l.MarketPlayerMap {
 		for _, PidList := range PidListMap {
-			OrdersList = append(OrdersList, l.PidList2Order(PidList))
+			orderlist = append(orderlist, l.PidList2Order(PidList))
 		}
 	}
-	return OrdersList
+	return orderlist
 }
 func (l OrderUtilLogic) GetPromotionPrice(Tiny *types.ProductTiny) int64 {
 	switch l.ProductsMap[Tiny.PId].Status {
@@ -180,8 +190,8 @@ func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (Origi
 	OriginalAmount = int64(0)
 	PromotionAmount = int64(0)
 	for _, tiny := range ProductTinyList {
-		OriginalAmount = OriginalAmount + l.ProductsMap[tiny.PId].OriginalPrice
-		PromotionAmount = PromotionAmount + l.GetPromotionPrice(tiny)
+		OriginalAmount = OriginalAmount + l.ProductsMap[tiny.PId].OriginalPrice*tiny.Amount
+		PromotionAmount = PromotionAmount + l.GetPromotionPrice(tiny)*tiny.Amount
 	}
 	return OriginalAmount, PromotionAmount
 }
@@ -190,6 +200,8 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	order.OrderType = status2key(l.ProductsMap[ProductTinyList[0].PId].Status)
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	order.Phone = l.userphone
+	order.OutTradeNo = l.PayInit.OutTradeSn
+	order.OutRefundNo = randStr(64)
 	order.CreateOrderTime = time.Now()
 	marshal, _ := json.Marshal(ProductTinyList)
 	order.Pidlist = string(marshal)
@@ -211,18 +223,12 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	return order
 }
 func (l OrderUtilLogic) CountCouponPrice(PromotionPrice int64) (ActualAmount int64) {
-	if l.req.UseCouponFirst {
-		get, ok := l.svcCtx.LocalCache.Get(svc.CouponMapKey)
-		l.usercoupon, _ = l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.userphone)
-		if ok && l.usercoupon != nil {
-			l.coupon, ok = get.(map[int64]*cachemodel.Coupon)[l.req.UsedCouponId]
-			if ok && l.CouponEffective() {
-				if PromotionPrice >= l.coupon.MinPoint {
-					return PromotionPrice - l.coupon.Cut
-				}
-			}
+	if l.coupon != nil && l.CouponEffective() {
+		if PromotionPrice >= l.coupon.MinPoint {
+			return PromotionPrice - l.coupon.Cut
 		}
 	}
+
 	return PromotionPrice
 }
 func (l *OrderUtilLogic) CouponEffective() bool {
@@ -231,7 +237,7 @@ func (l *OrderUtilLogic) CouponEffective() bool {
 			return
 		}
 	}()
-	l.UsedCouponStorInfo = make(map[int64]map[string]*types.CouponStoreInfo)
+
 	if l.coupon != nil && l.usercoupon != nil && (l.coupon.MinPoint != 0 && l.coupon.Cut != 0) {
 		usercouponmap := make(map[int64]map[string]*types.CouponStoreInfo)
 		json.Unmarshal([]byte(l.usercoupon.CouponIdMap), &usercouponmap)
@@ -288,11 +294,11 @@ func (l *OrderUtilLogic) Updatecashaccount(order *cachemodel.Order, use bool) (b
 
 }
 func (l *OrderUtilLogic) UpdateCoupon(order *cachemodel.Order, use bool) (bool, string) {
-	defer func() {
-		if e := recover(); e != nil {
-			return
-		}
-	}()
+	//defer func() {
+	//	if e := recover(); e != nil {
+	//		return
+	//	}
+	//}()
 	accphone := l.ctx.Value("phone").(string)
 	usercoupon, _ := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, accphone)
 	//l.oplog("usercounpon", order.OrderSn, "开始更新", order.LogId)

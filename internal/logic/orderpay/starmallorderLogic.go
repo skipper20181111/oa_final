@@ -45,7 +45,7 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 		cache.AvailablePoints = cache.AvailablePoints - StarMallMap[req.Pid].ExchangePoints
 		l.svcCtx.UserPoints.Update(l.ctx, cache)
 		l.svcCtx.Order.Insert(l.ctx, db)
-		l.insertstarTransaction(db)
+		//l.insertstarTransaction(db)
 		l.svcCtx.PointLog.Insert(l.ctx, &cachemodel.PointLog{Date: time.Now(), OrderType: "兑换商品", OrderSn: db.OrderSn, OrderDescribe: "臻星商城兑换商品", Behavior: "兑换", Phone: db.Phone, Balance: cache.AvailablePoints, ChangeAmount: StarMallMap[req.Pid].ExchangePoints})
 
 		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(db)}, nil
@@ -79,6 +79,8 @@ func starreq2db(req *types.StarMallOrderRes, phone string, pointamount int64) *c
 	//order.PointAmount = pointamount
 	order.CreateOrderTime = time.Now()
 	order.OutTradeNo = randStr(32)
+	order.OutRefundNo = randStr(64)
+	order.PointsAmount = pointamount
 	ProductTinyList := [1]*types.ProductTiny{&types.ProductTiny{PId: req.Pid, Amount: 1}}
 	marshal, err := json.Marshal(ProductTinyList)
 	if err != nil {

@@ -39,7 +39,7 @@ func main() {
 func refresscache() {
 	for true {
 		fmt.Println("开始刷新")
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 1)
 		urlPath := "http://localhost:8888/refresh/refreshPL"
 		resp, _ := httpc.Do(context.Background(), http.MethodGet, urlPath, nil)
 		if resp == nil {

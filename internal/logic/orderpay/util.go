@@ -220,6 +220,7 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.OrderSn = order.OrderSn
 	orderinfo.OutTradeNo = order.OutTradeNo
 	orderinfo.PointsOrder = getbool(order.PointsOrder)
+	orderinfo.UsedPoints = order.PointsAmount
 	orderinfo.CreateTime = order.CreateOrderTime.Format("2006-01-02 15:04:05")
 	pidlist := make([]*types.ProductTiny, 0)
 	json.Unmarshal([]byte(order.Pidlist), &pidlist)
@@ -275,7 +276,7 @@ func status2key(status int64) int64 {
 	switch status {
 	case 1, 3:
 		return 1
-	case 2:
+	case 2, 4:
 		return 2
 	}
 	return 0

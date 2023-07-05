@@ -101,7 +101,7 @@ type ShoppingCart struct {
 
 type ProductTiny struct {
 	PId    int64 `json:"pId"`
-	Amount int   `json:"amount"`
+	Amount int64 `json:"amount"`
 }
 
 type UpdateShoppingCartRes struct {
@@ -185,6 +185,7 @@ type OrderInfo struct {
 	DeliveryTime         string           `json:"deliveryTime"`
 	ReceiveTime          string           `json:"receiveTime"`
 	ModifyTime           string           `json:"modifyTime"`
+	UsedPoints           int64            `json:"usedPoints"`
 	PointsOrder          bool             `json:"pointsOrder"`
 }
 

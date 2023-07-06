@@ -33,9 +33,10 @@ func NewPayUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PayUtilLo
 		openid:       ctx.Value("openid").(string),
 		WeChatPayMsg: &types.WeChatPayMsg{},
 		wcu:          NewWeChatUtilLogic(ctx, svcCtx),
+		PayInfo:      &cachemodel.PayInfo{},
 	}
 }
-func (l *PayUtilLogic) Payorder(PayInit *types.PayInit, OrderList []*cachemodel.Order) (resp *types.PayMsg, ol []*cachemodel.Order, success bool) {
+func (l *PayUtilLogic) Payorder(PayInit *types.PayInit, OrderList []*cachemodel.Order) (resp *types.PayMsg, ol []*cachemodel.Order, payinfo *types.PayInfo, success bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -47,7 +48,7 @@ func (l *PayUtilLogic) Payorder(PayInit *types.PayInit, OrderList []*cachemodel.
 	l.payinfofinish()
 	resp = l.db2resp()
 	if !l.OrdersEnd() {
-		return nil, nil, false
+		return nil, nil, l.payinfodb2info(), false
 	}
 	sn, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, PayInit.OutTradeSn)
 	if sn != nil {
@@ -56,8 +57,20 @@ func (l *PayUtilLogic) Payorder(PayInit *types.PayInit, OrderList []*cachemodel.
 	} else {
 		l.svcCtx.PayInfo.Insert(l.ctx, l.PayInfo)
 	}
-	return resp, OrderList, true
+	return resp, OrderList, l.payinfodb2info(), true
 
+}
+func (l *PayUtilLogic) payinfodb2info() *types.PayInfo {
+	payinfo := &types.PayInfo{}
+	payinfo.CashAccountPayAmount = float64(l.PayInfo.CashAccountPayAmount) / 100
+	payinfo.WeChatPayAmount = float64(l.PayInfo.WexinPayAmount) / 100
+	payinfo.Phone = l.PayInfo.Phone
+	payinfo.CreateTime = l.PayInfo.CreateOrderTime.Format("2006-01-02 15:04:05")
+	payinfo.FinishCashPayTime = l.PayInfo.CashAccountPaymentTime.Format("2006-01-02 15:04:05")
+	payinfo.FinishWeChatPayTime = l.PayInfo.WexinPaymentTime.Format("2006-01-02 15:04:05")
+	//payinfo.OutTradeNo=l.PayInfo.OutTradeNo
+	//payinfo.TransactionId=l.PayInfo.TransactionId
+	return payinfo
 }
 func (l *PayUtilLogic) OrdersEnd() bool {
 	l.Wexin = l.PayInfo.WexinPayAmount
@@ -94,17 +107,15 @@ func (l *PayUtilLogic) OrderEnd(order *cachemodel.Order) (*cachemodel.Order, boo
 
 func (l *PayUtilLogic) payinfoinit() {
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
-	PayInfo := &cachemodel.PayInfo{}
-	PayInfo.OutTradeNo = l.PayInit.OutTradeSn
-	PayInfo.Phone = l.PayInit.Phone
-	PayInfo.TotleAmount = l.PayInit.TotleAmmount
-	PayInfo.TransactionType = l.PayInit.TransactionType
-	PayInfo.Status = 0
-	PayInfo.CreateOrderTime = time.Now()
-	PayInfo.CashAccountPaymentTime = inittime
-	PayInfo.WexinPaymentTime = inittime
-	PayInfo.LogId = time.Now().UnixNano()
-	l.PayInfo = PayInfo
+	l.PayInfo.OutTradeNo = l.PayInit.OutTradeSn
+	l.PayInfo.Phone = l.PayInit.Phone
+	l.PayInfo.TotleAmount = l.PayInit.TotleAmmount
+	l.PayInfo.TransactionType = l.PayInit.TransactionType
+	l.PayInfo.Status = 0
+	l.PayInfo.CreateOrderTime = time.Now()
+	l.PayInfo.CashAccountPaymentTime = inittime
+	l.PayInfo.WexinPaymentTime = inittime
+	l.PayInfo.LogId = time.Now().UnixNano()
 }
 func (l *PayUtilLogic) payinfofinish() {
 	if l.PayInit.NeedCashAccount {

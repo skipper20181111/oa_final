@@ -38,7 +38,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 		return &types.NewOrderResp{Code: "10000", Msg: "error", Data: &types.NewOrderRp{}}, nil
 	}
 	payInit.TransactionType = "普通商品"
-	payMsg, orders, success := l.pu.Payorder(payInit, OrderList)
+	payMsg, orders, payinfo, success := l.pu.Payorder(payInit, OrderList)
 	if !success {
 		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}
@@ -52,6 +52,6 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	if payMsg.CashPayAmmount > 0 || UseCoupon {
 		UseAccount = true
 	}
-	neworderrp := types.NewOrderRp{OrderInfos: OrderInfos, UseAccount: UseAccount, UseWechatPay: payMsg.NeedWeChatPay, WeiXinPayMsg: payMsg.WeChatPayMsg}
+	neworderrp := types.NewOrderRp{PayInfo: payinfo, OrderInfos: OrderInfos, UseAccount: UseAccount, UseWechatPay: payMsg.NeedWeChatPay, WeiXinPayMsg: payMsg.WeChatPayMsg}
 	return &types.NewOrderResp{Code: "10000", Msg: "success", Data: &neworderrp}, nil
 }

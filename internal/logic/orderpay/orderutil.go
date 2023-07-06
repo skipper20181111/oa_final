@@ -88,7 +88,6 @@ func (l OrderUtilLogic) GetAmount(ProductTinyList []*types.ProductTiny) (Origina
 	}
 	return OriginalAmount, PromotionAmount
 }
-
 func (l OrderUtilLogic) req2op(req *types.NewOrderRes) ([]*cachemodel.Order, *types.PayInit, bool) {
 	//defer func() {
 	//	if e := recover(); e != nil {

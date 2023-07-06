@@ -59,7 +59,7 @@ func (l *CashrechargeLogic) Cashrecharge(req *types.CashRechargeRes) (resp *type
 func db2info(order *cachemodel.RechargeOrder) *types.RechargeOrderInfo {
 	info := &types.RechargeOrderInfo{}
 	info.Amount = order.Amount
-	info.GiftAmount = order.Amount
+	info.GiftAmount = order.GiftAmount
 	info.WexinPayAmount = order.Amount
 	info.Rpid = order.Rpid
 	info.Phone = order.Phone

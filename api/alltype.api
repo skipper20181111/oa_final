@@ -232,6 +232,15 @@ type (
         Msg string `json:"msg"`
         Data *NewOrderRp `json:"data"`
     }
+    FinishOrdersRes{
+        OutTradeNo string `json:"outTradeNo"`
+    }
+    FinishOrdersResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data []*OrderInfo `json:"data"`
+    }
+
     FinishOrderRes {
         OrderSn string `json:"orderSn"`
     }

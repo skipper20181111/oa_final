@@ -32,8 +32,12 @@ type (
 		Delete(ctx context.Context, id int64) error
 		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
 		UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error
-		RefundUpdate(ctx context.Context, orderSn, OutRefundNo string) error
+		RefundCash(ctx context.Context, orderSn string) error
+		RefundWeChat(ctx context.Context, orderSn string) error
 		FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*Order, error)
+		FindAllByOutTradeNo(ctx context.Context, OutTradeNo string) ([]*Order, error)
+		UpdateWeChatPay(ctx context.Context, status int64, OutTradeNo string) error
+		UpdateCashPay(ctx context.Context, status int64, OutTradeNo string) error
 	}
 
 	defaultOrderModel struct {
@@ -125,7 +129,19 @@ func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, erro
 		return nil, err
 	}
 }
-
+func (m *defaultOrderModel) FindAllByOutTradeNo(ctx context.Context, OutTradeNo string) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? ", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, OutTradeNo)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) FindOneByOrderSn(ctx context.Context, orderSn string) (*Order, error) {
 	var resp Order
 	query := fmt.Sprintf("select %s from %s where `order_sn` = ? limit 1", orderRows, m.table)
@@ -166,9 +182,14 @@ func (m *defaultOrderModel) Update(ctx context.Context, newData *Order) error {
 	return err
 }
 
-func (m *defaultOrderModel) RefundUpdate(ctx context.Context, orderSn, OutRefundNo string) error {
-	query := fmt.Sprintf("update %s set `out_refund_no` = ? where `order_sn` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, OutRefundNo, orderSn)
+func (m *defaultOrderModel) RefundWeChat(ctx context.Context, orderSn string) error {
+	query := fmt.Sprintf("update %s set `finish_weixinpay` = -1 where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, orderSn)
+	return err
+}
+func (m *defaultOrderModel) RefundCash(ctx context.Context, orderSn string) error {
+	query := fmt.Sprintf("update %s set `finish_accountpay` = -1 where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, orderSn)
 	return err
 }
 
@@ -180,6 +201,17 @@ func (m *defaultOrderModel) UpdateStatusByOrderSn(ctx context.Context, status in
 
 func (m *defaultOrderModel) UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error {
 	query := fmt.Sprintf("update %s set `order_status`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)
+	return err
+}
+
+func (m *defaultOrderModel) UpdateWeChatPay(ctx context.Context, status int64, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `finish_weixinpay`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)
+	return err
+}
+func (m *defaultOrderModel) UpdateCashPay(ctx context.Context, status int64, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `finish_accountpay`=? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)
 	return err
 }

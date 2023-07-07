@@ -258,16 +258,16 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.ReceiveTime = order.ReceiveTime.Format("2006-01-02 15:04:05")
 	return orderinfo
 }
-func cashfinish(order *cachemodel.Order, cashaccount *cachemodel.CashAccount, use bool) (*cachemodel.CashAccount, bool) {
+func cashfinish(CashAccountPayAmount int64, cashaccount *cachemodel.CashAccount, use bool) (*cachemodel.CashAccount, bool) {
 	if use {
-		if (cashaccount.Balance - order.CashAccountPayAmount) < 0 {
+		if (cashaccount.Balance - CashAccountPayAmount) < 0 {
 			return cashaccount, false
 		} else {
-			cashaccount.Balance = cashaccount.Balance - order.CashAccountPayAmount
+			cashaccount.Balance = cashaccount.Balance - CashAccountPayAmount
 			return cashaccount, true
 		}
 	} else {
-		cashaccount.Balance = cashaccount.Balance + order.CashAccountPayAmount
+		cashaccount.Balance = cashaccount.Balance + CashAccountPayAmount
 		return cashaccount, true
 	}
 }

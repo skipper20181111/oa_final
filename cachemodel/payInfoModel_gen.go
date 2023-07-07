@@ -30,8 +30,10 @@ type (
 		Update(ctx context.Context, data *PayInfo) error
 		Delete(ctx context.Context, id int64) error
 		UpdateWeixinReject(ctx context.Context, RefundAmount int64, OutTradeNo string) error
+		UpdateCashReject(ctx context.Context, RefundAmount int64, OutTradeNo string) error
 		UpdateWeixinPay(ctx context.Context, OutTradeNo, TransactionId string) error
 		UpdateAllPay(ctx context.Context, OutTradeNo string) error
+		UpdateCashPay(ctx context.Context, OutTradeNo string) error
 	}
 
 	defaultPayInfoModel struct {
@@ -113,13 +115,25 @@ func (m *defaultPayInfoModel) Update(ctx context.Context, newData *PayInfo) erro
 	return err
 }
 func (m *defaultPayInfoModel) UpdateWeixinReject(ctx context.Context, RefundAmount int64, OutTradeNo string) error {
-	query := fmt.Sprintf("update %s set `wexin_refund_amount`=? where `out_trade_no` = ?", m.table)
+	query := fmt.Sprintf("update %s set `wexin_refund_amount`=`wexin_refund_amount`+? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, RefundAmount, OutTradeNo)
 	return err
 }
+func (m *defaultPayInfoModel) UpdateCashReject(ctx context.Context, RefundAmount int64, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `cash_account_refund_amount`=`cash_account_refund_amount`+? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, RefundAmount, OutTradeNo)
+	return err
+}
+
 func (m *defaultPayInfoModel) UpdateWeixinPay(ctx context.Context, OutTradeNo, TransactionId string) error {
 	query := fmt.Sprintf("update %s set `finish_weixinpay`=1,`transaction_id`=?,`wexin_payment_time`=? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, TransactionId, time.Now(), OutTradeNo)
+	return err
+}
+
+func (m *defaultPayInfoModel) UpdateCashPay(ctx context.Context, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `finish_accountpay`=1,`cash_account_payment_time`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OutTradeNo)
 	return err
 }
 

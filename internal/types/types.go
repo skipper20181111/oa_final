@@ -222,6 +222,16 @@ type NewOrderResp struct {
 	Data *NewOrderRp `json:"data"`
 }
 
+type FinishOrdersRes struct {
+	OutTradeNo string `json:"outTradeNo"`
+}
+
+type FinishOrdersResp struct {
+	Code string       `json:"code"`
+	Msg  string       `json:"msg"`
+	Data []*OrderInfo `json:"data"`
+}
+
 type FinishOrderRes struct {
 	OrderSn string `json:"orderSn"`
 }

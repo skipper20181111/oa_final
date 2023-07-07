@@ -31,10 +31,8 @@ func (l *TellmesoLogic) Tellmeso(notifyReq *notify.Request, transaction *payment
 		l.svcCtx.PayInfo.UpdateWeixinPay(l.ctx, *transaction.OutTradeNo, *transaction.TransactionId)
 		PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, *transaction.OutTradeNo)
 		if PayInfo != nil && PayInfo.FinishWeixinpay == 1 {
-			if total, _, _ := orderpay.IfFinished(PayInfo); total {
-				l.svcCtx.PayInfo.UpdateAllPay(l.ctx, *transaction.OutTradeNo)
-				l.svcCtx.Order.UpdateStatusByOutTradeSn(l.ctx, 1, *transaction.OutTradeNo)
-			}
+			orderpay.UpdatePayInfoIfFinished(l.svcCtx, PayInfo, PayInfo.OutTradeNo)
+			l.svcCtx.Order.UpdateWeChatPay(l.ctx, 1, *transaction.OutTradeNo)
 			fmt.Println("*************** END *******************")
 			return &types.TellMeSoResp{Code: "SUCCESS", Message: "成功"}, nil
 		}

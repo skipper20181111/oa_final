@@ -63,8 +63,8 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
-				Path:    "/finishorder",
-				Handler: orderpay.FinishorderHandler(serverCtx),
+				Path:    "/finishorders",
+				Handler: orderpay.FinishordersHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,

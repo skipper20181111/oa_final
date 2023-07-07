@@ -40,6 +40,22 @@ func NewOrderUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *OrderUt
 		UsedCouponStorInfo: make(map[int64]map[string]*types.CouponStoreInfo),
 	}
 }
+func UpdatePayInfoIfFinished(svcCtx *svc.ServiceContext, PayInfo *cachemodel.PayInfo, OutTradeNo string) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	if PayInfo == nil {
+		PayInfo, _ = svcCtx.PayInfo.FindOneByOutTradeNo(context.Background(), OutTradeNo)
+		if total, _, _ := IfFinished(PayInfo); total {
+			svcCtx.PayInfo.UpdateAllPay(context.Background(), PayInfo.OutTradeNo)
+		}
+	}
+	if total, _, _ := IfFinished(PayInfo); total {
+		svcCtx.PayInfo.UpdateAllPay(context.Background(), PayInfo.OutTradeNo)
+	}
+}
 func order2req(order *cachemodel.Order) *types.NewOrderRes {
 	req := &types.NewOrderRes{}
 	pidlist := make([]*types.ProductTiny, 0)
@@ -266,26 +282,30 @@ func (l OrderUtilLogic) PidListMapChina(ProductTinyListMap map[int64][]*types.Pr
 	}
 	return ProductTinyListMap
 }
-func (l *OrderUtilLogic) Updatecashaccount(order *cachemodel.Order, use bool) (bool, string) {
+func (l *OrderUtilLogic) Updatecashaccount(phone, OrderSn, OutTradeNo string, CashAccountPayAmount, LogId int64, use bool) (bool, string) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
 		}
 	}()
-	accphone := order.Phone
+	accphone := phone
 	cashaccount, _ := l.svcCtx.CashAccount.FindOneByPhone(l.ctx, accphone)
-	account, ok := cashfinish(order, cashaccount, use)
+	account, ok := cashfinish(CashAccountPayAmount, cashaccount, use)
 	if ok {
-		l.ul.Oplog("cash_account", order.OrderSn, "开始更新", order.LogId)
+		l.ul.Oplog("cash_account", OutTradeNo, "开始更新", LogId)
 		l.svcCtx.CashAccount.Update(l.ctx, account)
 		if use {
-			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "消费", OrderSn: order.OrderSn, OrderDescribe: "购买店铺商品消费", Behavior: "消费", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: order.CashAccountPayAmount})
-			l.svcCtx.TransactionInfo.UpdateCashPay(l.ctx, order.OrderSn)
+			l.svcCtx.PayInfo.UpdateCashPay(l.ctx, OutTradeNo)
+			UpdatePayInfoIfFinished(l.svcCtx, nil, OutTradeNo)
+			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "消费", OrderSn: OutTradeNo, OrderDescribe: "购买店铺商品消费", Behavior: "消费", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: CashAccountPayAmount})
+
 		} else {
-			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "退款", OrderSn: order.OrderSn, OrderDescribe: "店铺商品退款", Behavior: "退款", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: order.CashAccountPayAmount})
-			l.svcCtx.TransactionInfo.UpdateCashReject(l.ctx, order.OrderSn)
+			l.svcCtx.Order.RefundCash(l.ctx, OrderSn)
+			l.svcCtx.PayInfo.UpdateCashReject(l.ctx, CashAccountPayAmount, OutTradeNo)
+			l.svcCtx.CashLog.Insert(l.ctx, &cachemodel.CashLog{Date: time.Now(), OrderType: "退款", OrderSn: OutTradeNo, OrderDescribe: "店铺商品退款", Behavior: "退款", Phone: accphone, Balance: cashaccount.Balance, ChangeAmount: CashAccountPayAmount})
 		}
-		l.ul.Oplog("cash_account", order.OrderSn, "结束更新", order.LogId)
+		l.ul.Oplog("cash_account", OutTradeNo, "结束更新", LogId)
+
 		return ok, "yes"
 	} else {
 		return ok, "no"
@@ -298,8 +318,7 @@ func (l *OrderUtilLogic) UpdateCoupon(order *cachemodel.Order, use bool) (bool, 
 	//		return
 	//	}
 	//}()
-	accphone := l.ctx.Value("phone").(string)
-	usercoupon, _ := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, accphone)
+	usercoupon, _ := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.userphone)
 	//l.oplog("usercounpon", order.OrderSn, "开始更新", order.LogId)
 	ok, coupon := couponfinish(order, usercoupon, use)
 	if ok {

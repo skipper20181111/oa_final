@@ -9,16 +9,16 @@ import (
 	"oa_final/internal/types"
 )
 
-func FinishorderHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func FinishordersHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.FinishOrderRes
+		var req types.FinishOrdersRes
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.Error(w, err)
 			return
 		}
 
-		l := orderpay.NewFinishorderLogic(r.Context(), svcCtx)
-		resp, err := l.Finishorder(&req)
+		l := orderpay.NewFinishordersLogic(r.Context(), svcCtx)
+		resp, err := l.Finishorders(&req)
 		if err != nil {
 			httpx.Error(w, err)
 		} else {

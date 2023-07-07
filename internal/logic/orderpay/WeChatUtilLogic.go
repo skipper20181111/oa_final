@@ -11,7 +11,6 @@ import (
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
-	"time"
 )
 
 type WeChatUtilLogic struct {
@@ -64,16 +63,15 @@ func (l *WeChatUtilLogic) CancelOrder(order *cachemodel.Order) bool {
 			return
 		}
 	}()
-	OutRefundNo := randStr(64)
+
 	payInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
-	if payInfo == nil {
+	if payInfo.WexinRefundAmount+order.WexinPayAmount > (payInfo.WexinPayAmount + 5) {
 		return false
 	}
-
 	service := refunddomestic.RefundsApiService{Client: l.svcCtx.Client}
 	create, result, err := service.Create(l.ctx, refunddomestic.CreateRequest{
 		OutTradeNo:  core.String(order.OutTradeNo),
-		OutRefundNo: core.String(OutRefundNo),
+		OutRefundNo: core.String(order.OutRefundNo),
 		Amount: &refunddomestic.AmountReq{Currency: core.String("CNY"),
 			Refund: core.Int64(order.WexinPayAmount),
 			Total:  core.Int64(payInfo.WexinPayAmount)},
@@ -85,8 +83,10 @@ func (l *WeChatUtilLogic) CancelOrder(order *cachemodel.Order) bool {
 	} else {
 		log.Printf("status=%d resp=%s", result.Response.StatusCode, result.Response, create.String())
 	}
+	l.svcCtx.Order.RefundWeChat(l.ctx, order.OrderSn)
 	l.svcCtx.PayInfo.UpdateWeixinReject(l.ctx, order.WexinPayAmount, order.OutTradeNo)
-	l.svcCtx.RefundInfo.Insert(l.ctx, &cachemodel.RefundInfo{Phone: l.userphone, OutTradeNo: payInfo.OutTradeNo, OutRefundNo: OutRefundNo, RefundAmount: order.WexinPayAmount, WexinRefundTime: time.Now()})
+
+	//l.svcCtx.RefundInfo.Insert(l.ctx, &cachemodel.RefundInfo{Phone: l.userphone, OutTradeNo: payInfo.OutTradeNo, OutRefundNo: OutRefundNo, RefundAmount: order.WexinPayAmount, WexinRefundTime: time.Now()})
 	return true
 }
 func (l *WeChatUtilLogic) IfCancelOrderSuccess(order *cachemodel.Order) bool {
@@ -104,6 +104,8 @@ func (l *WeChatUtilLogic) IfCancelOrderSuccess(order *cachemodel.Order) bool {
 		log.Printf("status=%d resp=%s", result.Response.StatusCode, result.Response)
 	}
 	if *no.Status == "SUCCESS" {
+		l.svcCtx.Order.RefundWeChat(l.ctx, order.OrderSn)
+		l.svcCtx.PayInfo.UpdateWeixinReject(l.ctx, order.WexinPayAmount, order.OutTradeNo)
 		return true
 	}
 	return false
@@ -168,6 +170,7 @@ func (l *WeChatUtilLogic) CheckWeiXinPay(OutTradeNo string) bool {
 		Mchid:      core.String(l.svcCtx.Config.WxConf.MchID)})
 	defer result.Response.Body.Close()
 	if *no2payment.TradeState == "SUCCESS" {
+		l.svcCtx.PayInfo.UpdateWeixinPay(context.Background(), OutTradeNo, *no2payment.TransactionId)
 		return true
 	}
 	return false

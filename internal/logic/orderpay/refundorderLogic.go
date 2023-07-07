@@ -56,13 +56,13 @@ func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.C
 		l.wcu.CancelOrder(order)
 	}
 	// 然后开始退现金账户的钱和优惠券
-	if order.CashAccountPayAmount > 0 || order.UsedCouponinfo != "" {
+	if order.CashAccountPayAmount > 0 || len(order.UsedCouponinfo) > 3 {
 		lockmsglist := make([]*types.LockMsg, 0)
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.userphone, Field: "user_coupon"})
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.userphone, Field: "cash_account"})
 		if l.ul.Getlocktry(lockmsglist) {
 			if order.CashAccountPayAmount > 0 {
-				ok, _ := l.oul.Updatecashaccount(order, false)
+				ok, _ := l.oul.Updatecashaccount(order.Phone, order.OrderSn, order.OutTradeNo, order.CashAccountPayAmount, order.LogId, false)
 				if !ok {
 					l.ul.Oplog("更新现金账户失败", order.OrderSn, "开始更新", order.LogId)
 				}
@@ -73,9 +73,9 @@ func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.C
 					l.ul.Oplog("更新优惠券失败", order.OrderSn, "开始更新", order.LogId)
 				}
 			}
+			l.ul.Closelock(lockmsglist)
 		}
 
-		l.ul.Closelock(lockmsglist)
 	}
 	//结束更新现金账户与优惠券账户
 	return &types.CancelOrderResp{Code: "10000", Msg: "yes", Data: &types.CancelOrderRp{OrderInfo: OrderDb2info(order)}}, nil

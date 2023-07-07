@@ -55,7 +55,6 @@ func (l *CheckOrderLogic) checkall(order *cachemodel.Order, PayInfo *cachemodel.
 		}
 		finishwechatpay := !weixin && l.wul.CheckWeiXinPay(order.OutTradeNo)
 		if cash && finishwechatpay {
-			l.svcCtx.PayInfo.UpdateWeixinPay(l.ctx, PayInfo.OutTradeNo, "")
 			return l.check01(order, PayInfo)
 		}
 		return order
@@ -64,10 +63,8 @@ func (l *CheckOrderLogic) checkall(order *cachemodel.Order, PayInfo *cachemodel.
 		total, cash, weixin := IfRejected(order)
 		if total {
 			return l.check67(order, PayInfo)
-
 		}
 		if cash && !weixin && l.wul.IfCancelOrderSuccess(order) {
-			order = l.check67(order, PayInfo)
 			return l.check67(order, PayInfo)
 		}
 		return order
@@ -95,7 +92,6 @@ func IfFinished(PayInfo *cachemodel.PayInfo) (total bool, cash bool, weixin bool
 func (l *CheckOrderLogic) check01(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) *cachemodel.Order {
 	order.OrderStatus = 1
 	order.FinishWeixinpay = PayInfo.FinishWeixinpay
-	order.FinishAccountpay = PayInfo.FinishAccountpay
 	order.PaymentTime = time.Now()
 	order.ModifyTime = time.Now()
 	l.svcCtx.PayInfo.UpdateAllPay(l.ctx, order.OrderSn)

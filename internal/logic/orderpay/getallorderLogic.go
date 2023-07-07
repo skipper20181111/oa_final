@@ -37,10 +37,7 @@ func (l *GetallorderLogic) Getallorder(req *types.GetAllOrderRes) (resp *types.G
 			sn, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
 			order = l.col.checkall(order, sn)
 		}
-		orderinfo := OrderDb2info(order)
-		infos = append(infos, orderinfo)
+		infos = append(infos, OrderDb2info(order))
 	}
-
 	return &types.GetAllOrderResp{Code: "10000", Msg: "success", Data: &types.GetAllOrderRp{OrderInfos: infos}}, nil
-
 }

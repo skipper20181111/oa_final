@@ -49,9 +49,13 @@ service oa-api {
 	@handler deleteorder
 	post /deleteorder (DeletOrderRes) returns (DeletOrderResp)
 	
+	//	@doc "完成订单"
+	//	@handler finishorder
+	//	post /finishorder (FinishOrderRes) returns (FinishOrderResp)
+	
 	@doc "完成订单"
-	@handler finishorder
-	post /finishorder (FinishOrderRes) returns (FinishOrderResp)
+	@handler finishorders
+	post /finishorders (FinishOrdersRes) returns (FinishOrdersResp)
 	
 	@doc "继续支付"
 	@handler continuepay

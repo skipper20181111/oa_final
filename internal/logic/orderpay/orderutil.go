@@ -311,3 +311,10 @@ func (l *OrderUtilLogic) UpdateCoupon(order *cachemodel.Order, use bool) (bool, 
 	//l.oplog("usercounpon", order.OrderSn, "结束更新", order.LogId)
 
 }
+func OrderNeedChange(order *cachemodel.Order) bool {
+	if order.OrderStatus == 0 || order.OrderStatus == 6 {
+		return true
+	} else {
+		return false
+	}
+}

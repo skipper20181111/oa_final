@@ -13,6 +13,7 @@ type GetallorderLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
+	col    *CheckOrderLogic
 }
 
 func NewGetallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetallorderLogic {
@@ -20,11 +21,26 @@ func NewGetallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getal
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
+		col:    NewCheckOrderLogic(ctx, svcCtx),
 	}
 }
 
 func (l *GetallorderLogic) Getallorder(req *types.GetAllOrderRes) (resp *types.GetAllOrderResp, err error) {
-	// todo: add your logic here and delete this line
+	infos := make([]*types.OrderInfo, 0)
+	userphone := l.ctx.Value("phone").(string)
+	allorder, err := l.svcCtx.Order.FindAllByPhone(l.ctx, userphone, req.PageNumber)
+	if allorder == nil || len(allorder) == 0 {
+		return &types.GetAllOrderResp{Code: "10000", Msg: "success", Data: &types.GetAllOrderRp{OrderInfos: infos}}, nil
+	}
+	for _, order := range allorder {
+		if OrderNeedChange(order) {
+			sn, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
+			order = l.col.checkall(order, sn)
+		}
+		orderinfo := OrderDb2info(order)
+		infos = append(infos, orderinfo)
+	}
 
-	return
+	return &types.GetAllOrderResp{Code: "10000", Msg: "success", Data: &types.GetAllOrderRp{OrderInfos: infos}}, nil
+
 }

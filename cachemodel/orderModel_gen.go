@@ -31,7 +31,9 @@ type (
 		Update(ctx context.Context, data *Order) error
 		Delete(ctx context.Context, id int64) error
 		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
+		UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error
 		RefundUpdate(ctx context.Context, orderSn, OutRefundNo string) error
+		FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*Order, error)
 	}
 
 	defaultOrderModel struct {
@@ -92,7 +94,24 @@ func (m *defaultOrderModel) Delete(ctx context.Context, id int64) error {
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
-
+func (m *defaultOrderModel) FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*Order, error) {
+	if pagenumber <= 0 || pagenumber > 10 {
+		pagenumber = 1
+	}
+	sheetlen := 20
+	offset := sheetlen * (pagenumber - 1)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? and `order_status`<99 and `order_status`<>8 and `order_status`<>9 order by create_order_time desc  limit ? OFFSET ?", userOrderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone, sheetlen, offset)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", orderRows, m.table)
 	var resp Order
@@ -156,6 +175,12 @@ func (m *defaultOrderModel) RefundUpdate(ctx context.Context, orderSn, OutRefund
 func (m *defaultOrderModel) UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error {
 	query := fmt.Sprintf("update %s set `order_status`=? where `order_sn` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, status, orderSn)
+	return err
+}
+
+func (m *defaultOrderModel) UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `order_status`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)
 	return err
 }
 

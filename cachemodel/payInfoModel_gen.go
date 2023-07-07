@@ -30,7 +30,7 @@ type (
 		Update(ctx context.Context, data *PayInfo) error
 		Delete(ctx context.Context, id int64) error
 		UpdateWeixinReject(ctx context.Context, RefundAmount int64, OutTradeNo string) error
-		UpdateWeixinPay(ctx context.Context, OutTradeNo string) error
+		UpdateWeixinPay(ctx context.Context, OutTradeNo, TransactionId string) error
 		UpdateAllPay(ctx context.Context, OutTradeNo string) error
 	}
 
@@ -117,9 +117,9 @@ func (m *defaultPayInfoModel) UpdateWeixinReject(ctx context.Context, RefundAmou
 	_, err := m.conn.ExecCtx(ctx, query, RefundAmount, OutTradeNo)
 	return err
 }
-func (m *defaultPayInfoModel) UpdateWeixinPay(ctx context.Context, OutTradeNo string) error {
-	query := fmt.Sprintf("update %s set `finish_weixinpay`=1,`wexin_payment_time`=? where `out_trade_no` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, OutTradeNo)
+func (m *defaultPayInfoModel) UpdateWeixinPay(ctx context.Context, OutTradeNo, TransactionId string) error {
+	query := fmt.Sprintf("update %s set `finish_weixinpay`=1,`transaction_id`=?,`wexin_payment_time`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, TransactionId, time.Now(), OutTradeNo)
 	return err
 }
 

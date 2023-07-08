@@ -529,9 +529,10 @@ type CompanyInvoiceInfo struct {
 }
 
 type PersonalInvoiceInfo struct {
-	Hash         string `json:"hash"`
-	InvoiceTitle string `json:"invoiceTitle"`
-	IsDefault    int    `json:"isDefault"`
+	Hash          string `json:"hash"`
+	InvoiceTitle  string `json:"invoiceTitle"`
+	PersonalPhone string `json:"personalPhone"`
+	IsDefault     int    `json:"isDefault"`
 }
 
 type GetTitleRes struct {

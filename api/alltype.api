@@ -562,7 +562,7 @@ type (
     GetTitleResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
-        TitleInfoList *GetTitleRp `json:"titleInfoList"`
+        Data *GetTitleRp `json:"data"`
     }
     UpdateTitleRes {
         TitleInfoList *GetTitleRp `json:"titleInfoList"`

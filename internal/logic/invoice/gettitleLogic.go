@@ -34,5 +34,5 @@ func (l *GettitleLogic) Gettitle(req *types.GetTitleRes) (resp *types.GetTitleRe
 	if byPhone != nil {
 		json.Unmarshal([]byte(byPhone.InvoiceString), titleinfo)
 	}
-	return &types.GetTitleResp{Code: "10000", Msg: "success", TitleInfoList: titleinfo}, nil
+	return &types.GetTitleResp{Code: "10000", Msg: "success", Data: titleinfo}, nil
 }

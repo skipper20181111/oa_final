@@ -42,7 +42,7 @@ func (l *UpdatetitleLogic) Updatetitle(req *types.UpdateTitleRes) (resp *types.G
 	if byPhone != nil {
 		json.Unmarshal([]byte(byPhone.InvoiceString), titleinfo)
 	}
-	return &types.GetTitleResp{Code: "10000", Msg: "success", TitleInfoList: titleinfo}, nil
+	return &types.GetTitleResp{Code: "10000", Msg: "success", Data: titleinfo}, nil
 }
 func (l *UpdatetitleLogic) getdefault(req *types.UpdateTitleRes) *types.UpdateTitleRes {
 	if len(req.TitleInfoList.Company) != 0 {

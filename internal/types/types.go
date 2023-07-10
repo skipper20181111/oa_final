@@ -544,9 +544,9 @@ type GetTitleRp struct {
 }
 
 type GetTitleResp struct {
-	Code          string      `json:"code"`
-	Msg           string      `json:"msg"`
-	TitleInfoList *GetTitleRp `json:"titleInfoList"`
+	Code string      `json:"code"`
+	Msg  string      `json:"msg"`
+	Data *GetTitleRp `json:"data"`
 }
 
 type UpdateTitleRes struct {

@@ -188,6 +188,7 @@ type OrderInfo struct {
 	ModifyTime           string           `json:"modifyTime"`
 	UsedPoints           int64            `json:"usedPoints"`
 	PointsOrder          bool             `json:"pointsOrder"`
+	InvoiceStatus        int64            `json:"invoiceStatus"`
 }
 
 type Billinfo struct {

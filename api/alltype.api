@@ -202,6 +202,7 @@ type (
         ModifyTime string `json:"modifyTime"`
         UsedPoints int64 `json:"usedPoints"`
         PointsOrder bool `json:"pointsOrder"`
+        InvoiceStatus int64 `json:"invoiceStatus"`
     }
     Billinfo {
         CompanyName string `json:"companyName"`
@@ -233,7 +234,7 @@ type (
         Msg string `json:"msg"`
         Data *NewOrderRp `json:"data"`
     }
-    FinishOrdersRes{
+    FinishOrdersRes {
         OutTradeNo string `json:"outTradeNo"`
     }
     FinishOrdersResp {

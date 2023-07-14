@@ -73,8 +73,7 @@ type (
 		DeliverySn           string    `db:"delivery_sn"`             // 物流单号
 		AutoConfirmDay       int64     `db:"auto_confirm_day"`        // 自动确认时间（天）
 		Growth               int64     `db:"growth"`                  // 可以活动的成长值，等于消费额
-		BillType             int64     `db:"bill_type"`               // 发票类型：0->不开发票；1->电子发票；2->纸质发票
-		BillInfo             string    `db:"bill_info"`               // 发票信息 {单位名称，单位地址，电话，税号，开户银行，银行账户}
+		InvoiceStatus        int64     `db:"invoice_status"`          // 发票类型：0->未开票；1->开票中；2->已开发票；3->开票失败
 		ConfirmStatus        int64     `db:"confirm_status"`          // 确认收货状态：0->未确认；1->已确认
 		DeleteStatus         int64     `db:"delete_status"`           // 删除状态：0->未删除；1->已删除
 		PaymentTime          time.Time `db:"payment_time"`            // 支付时间
@@ -98,6 +97,7 @@ func (m *defaultOrderModel) Delete(ctx context.Context, id int64) error {
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
+
 func (m *defaultOrderModel) FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*Order, error) {
 	if pagenumber <= 0 || pagenumber > 10 {
 		pagenumber = 1
@@ -116,19 +116,7 @@ func (m *defaultOrderModel) FindAllByPhone(ctx context.Context, phone string, pa
 		return nil, err
 	}
 }
-func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, error) {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", orderRows, m.table)
-	var resp Order
-	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
+
 func (m *defaultOrderModel) FindAllByOutTradeNo(ctx context.Context, OutTradeNo string) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? ", orderRows, m.table)
 	var resp []*Order
@@ -141,45 +129,6 @@ func (m *defaultOrderModel) FindAllByOutTradeNo(ctx context.Context, OutTradeNo 
 	default:
 		return nil, err
 	}
-}
-func (m *defaultOrderModel) FindOneByOrderSn(ctx context.Context, orderSn string) (*Order, error) {
-	var resp Order
-	query := fmt.Sprintf("select %s from %s where `order_sn` = ? limit 1", orderRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, orderSn)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
-
-func (m *defaultOrderModel) FindOneByOutRefundNo(ctx context.Context, outRefundNo string) (*Order, error) {
-	var resp Order
-	query := fmt.Sprintf("select %s from %s where `out_refund_no` = ? limit 1", orderRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, outRefundNo)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
-
-func (m *defaultOrderModel) Insert(ctx context.Context, data *Order) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, orderRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.OutRefundNo, data.CreateOrderTime, data.Pidlist, data.OrderType, data.OriginalAmount, data.PromotionAmount, data.CouponAmount, data.UsedCouponinfo, data.ActualAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.FinishWeixinpay, data.FinishAccountpay, data.PointsOrder, data.PointsAmount, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.BillType, data.BillInfo, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.LogId)
-	return ret, err
-}
-
-func (m *defaultOrderModel) Update(ctx context.Context, newData *Order) error {
-	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, orderRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.OutRefundNo, newData.CreateOrderTime, newData.Pidlist, newData.OrderType, newData.OriginalAmount, newData.PromotionAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.ActualAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.PointsAmount, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.BillType, newData.BillInfo, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.Id)
-	return err
 }
 
 func (m *defaultOrderModel) RefundWeChat(ctx context.Context, orderSn string) error {
@@ -213,6 +162,60 @@ func (m *defaultOrderModel) UpdateWeChatPay(ctx context.Context, status int64, O
 func (m *defaultOrderModel) UpdateCashPay(ctx context.Context, status int64, OutTradeNo string) error {
 	query := fmt.Sprintf("update %s set `finish_accountpay`=? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)
+	return err
+}
+
+func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", orderRows, m.table)
+	var resp Order
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultOrderModel) FindOneByOrderSn(ctx context.Context, orderSn string) (*Order, error) {
+	var resp Order
+	query := fmt.Sprintf("select %s from %s where `order_sn` = ? limit 1", orderRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, orderSn)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultOrderModel) FindOneByOutRefundNo(ctx context.Context, outRefundNo string) (*Order, error) {
+	var resp Order
+	query := fmt.Sprintf("select %s from %s where `out_refund_no` = ? limit 1", orderRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, outRefundNo)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultOrderModel) Insert(ctx context.Context, data *Order) (sql.Result, error) {
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, orderRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.OutRefundNo, data.CreateOrderTime, data.Pidlist, data.OrderType, data.OriginalAmount, data.PromotionAmount, data.CouponAmount, data.UsedCouponinfo, data.ActualAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.FinishWeixinpay, data.FinishAccountpay, data.PointsOrder, data.PointsAmount, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.InvoiceStatus, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.LogId)
+	return ret, err
+}
+
+func (m *defaultOrderModel) Update(ctx context.Context, newData *Order) error {
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, orderRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.OutRefundNo, newData.CreateOrderTime, newData.Pidlist, newData.OrderType, newData.OriginalAmount, newData.PromotionAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.ActualAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.PointsAmount, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.InvoiceStatus, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.Id)
 	return err
 }
 

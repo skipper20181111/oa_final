@@ -664,7 +664,7 @@ type PointLogInfo struct {
 	Balance       int64  `json:"balance"`
 	OrderSn       string `json:"orderSn"`
 	OrderType     string `json:"orderType"`
-	OrderTypeZh   string `json:"orderType"`
+	OrderTypeZh   string `json:"orderTypeZh"`
 	OrderDescribe string `json:"orderDescribe"`
 }
 

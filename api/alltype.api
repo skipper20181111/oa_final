@@ -406,12 +406,13 @@ type (
         OrderType int64 `json:"orderType"`
         // 订单类型 0代表order 1代表充值
         OrderSn string `json:"orderSn"`
-        IfDetail int64 `json:"ifDetail"`
-        // 开票类型，0代表商品大类，1代表详细列表
         PostAddress *AddressInfo `json:"postAddress"`
         InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
     }
+
     InvoiceInfo {
+        IfDetail int64 `json:"ifDetail"`
+        // 开票类型，0代表商品大类，1代表详细列表
         InvoiceType int64 `json:"invoiceType"`
         // 0代表专票，1代表普票
         TargetType int64 `json:"targetType"`
@@ -434,8 +435,6 @@ type (
         InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
         Amount int64 `json:"amount"`
         // 发票总金额
-        IfDetail int64 `json:"ifDetail"`
-        // 开票方式：0代表商品大类，1代表详细信息
         ApplyTime string `json:"applyTime"`
         // 申请开票的时间
         Status int64 `json:"status"`

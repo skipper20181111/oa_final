@@ -17,7 +17,7 @@ type ApplyinvoiceLogic struct {
 	ctx       context.Context
 	svcCtx    *svc.ServiceContext
 	userphone string
-	order     *cachemodel.UserOrder
+	order     *cachemodel.Order
 }
 
 func NewApplyinvoiceLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ApplyinvoiceLogic {
@@ -31,7 +31,7 @@ func NewApplyinvoiceLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Appl
 func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *types.ApplyInvoiceResp, err error) {
 	l.userphone = l.ctx.Value("phone").(string)
 	sn, _ := l.svcCtx.Invoice.FindOneByOrderSn(l.ctx, req.OrderSn)
-	l.order, _ = l.svcCtx.UserOrder.FindOneByOrderSn(l.ctx, req.OrderSn)
+	l.order, _ = l.svcCtx.Order.FindOneByOrderSn(l.ctx, req.OrderSn)
 	if l.order == nil || l.order.OrderStatus != 3 {
 		return &types.ApplyInvoiceResp{Code: "10000", Msg: "此订单号不可开发票（无此订单或订单未完成）"}, nil
 	}
@@ -59,7 +59,7 @@ func db2info(db *cachemodel.Invoice) *types.InvoiceRp {
 	info.InvoinceInfo.TargetType = db.Target
 	info.InvoinceInfo.TaxId = db.TaxId
 	info.Amount = db.Money
-	info.IfDetail = db.Ifdetail
+	info.InvoinceInfo.IfDetail = db.Ifdetail
 	info.InvoinceInfo.InvoiceTitle = db.InvoiceTitle
 	info.InvoinceInfo.OpeningBank = db.OpeningBank
 	info.InvoinceInfo.BankAccount = db.BankAccount
@@ -86,7 +86,7 @@ func (l *ApplyinvoiceLogic) req2db(req *types.ApplyInvoiceRes) *cachemodel.Invoi
 	db.OrderSn = req.OrderSn
 	db.Phone = l.userphone
 	db.OrderType = req.OrderType
-	db.Ifdetail = req.IfDetail
+	db.Ifdetail = req.InvoinceInfo.IfDetail
 	db.Status = 0
 	db.ApplyTime = time.Now()
 	db.FinishTime = inittime

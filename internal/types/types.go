@@ -402,12 +402,12 @@ type CashRechargeResp struct {
 type ApplyInvoiceRes struct {
 	OrderType    int64        `json:"orderType"`
 	OrderSn      string       `json:"orderSn"`
-	IfDetail     int64        `json:"ifDetail"`
 	PostAddress  *AddressInfo `json:"postAddress"`
 	InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
 }
 
 type InvoiceInfo struct {
+	IfDetail       int64  `json:"ifDetail"`
 	InvoiceType    int64  `json:"invoiceType"`
 	TargetType     int64  `json:"targetType"`
 	InvoiceTitle   string `json:"invoiceTitle"`
@@ -425,7 +425,6 @@ type InvoiceRp struct {
 	PostAddress  *AddressInfo `json:"postAddress"`
 	InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
 	Amount       int64        `json:"amount"`
-	IfDetail     int64        `json:"ifDetail"`
 	ApplyTime    string       `json:"applyTime"`
 	Status       int64        `json:"status"`
 	FinishTime   string       `json:"finishTime"`

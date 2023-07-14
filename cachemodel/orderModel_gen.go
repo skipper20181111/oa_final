@@ -104,7 +104,7 @@ func (m *defaultOrderModel) FindAllByPhone(ctx context.Context, phone string, pa
 	}
 	sheetlen := 20
 	offset := sheetlen * (pagenumber - 1)
-	query := fmt.Sprintf("select %s from %s where `phone` = ? and `order_status`<99 and `order_status`<>8 and `order_status`<>9 order by create_order_time desc  limit ? OFFSET ?", userOrderRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? and `order_status`<99 and `order_status`<>8 and `order_status`<>9 order by create_order_time desc  limit ? OFFSET ?", orderRows, m.table)
 	var resp []*Order
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone, sheetlen, offset)
 	switch err {

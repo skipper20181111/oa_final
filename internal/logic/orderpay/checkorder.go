@@ -11,24 +11,22 @@ import (
 
 type CheckOrderLogic struct {
 	logx.Logger
-	ctx        context.Context
-	svcCtx     *svc.ServiceContext
-	userphone  string
-	useropenid string
-	wul        *WeChatUtilLogic
+	ctx       context.Context
+	svcCtx    *svc.ServiceContext
+	userphone string
+	wul       *WeChatUtilLogic
 }
 
 func NewCheckOrderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CheckOrderLogic {
 	return &CheckOrderLogic{
-		Logger:     logx.WithContext(ctx),
-		ctx:        ctx,
-		svcCtx:     svcCtx,
-		userphone:  ctx.Value("phone").(string),
-		useropenid: ctx.Value("openid").(string),
-		wul:        NewWeChatUtilLogic(ctx, svcCtx),
+		Logger: logx.WithContext(ctx),
+		ctx:    ctx,
+		svcCtx: svcCtx,
+		wul:    NewWeChatUtilLogic(ctx, svcCtx),
 	}
 }
 func (l *CheckOrderLogic) MonitorOrderStatus(OrderSn string) (*types.GetOrderResp, error) {
+	l.userphone = l.ctx.Value("phone").(string)
 	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
 	if order == nil {
 		return &types.GetOrderResp{Code: "4004", Msg: "数据库失效，请重新下单"}, nil
@@ -40,11 +38,11 @@ func (l *CheckOrderLogic) MonitorOrderStatus(OrderSn string) (*types.GetOrderRes
 	if order.Phone != l.userphone {
 		return &types.GetOrderResp{Code: "4004", Msg: "不要使用别人的token"}, nil
 	}
-	order = l.checkall(order, PayInfo)
+	order = l.Checkall(order, PayInfo)
 	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(order)}}, nil
 }
 
-func (l *CheckOrderLogic) checkall(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) *cachemodel.Order {
+func (l *CheckOrderLogic) Checkall(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) *cachemodel.Order {
 	if PayInfo == nil {
 		return order
 	}
@@ -94,7 +92,7 @@ func (l *CheckOrderLogic) check01(order *cachemodel.Order, PayInfo *cachemodel.P
 	order.FinishWeixinpay = PayInfo.FinishWeixinpay
 	order.PaymentTime = time.Now()
 	order.ModifyTime = time.Now()
-	l.svcCtx.PayInfo.UpdateAllPay(l.ctx, order.OrderSn)
+	l.svcCtx.PayInfo.UpdateAllPay(l.ctx, order.OutTradeNo)
 	l.svcCtx.Order.Update(l.ctx, order)
 	return order
 }

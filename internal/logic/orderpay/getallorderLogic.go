@@ -35,7 +35,7 @@ func (l *GetallorderLogic) Getallorder(req *types.GetAllOrderRes) (resp *types.G
 	for _, order := range allorder {
 		if OrderNeedChange(order) {
 			sn, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
-			order = l.col.checkall(order, sn)
+			order = l.col.Checkall(order, sn)
 		}
 		infos = append(infos, OrderDb2info(order))
 	}

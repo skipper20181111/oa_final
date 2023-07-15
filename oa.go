@@ -7,6 +7,7 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpc"
 	"math/rand"
 	"net/http"
+	"oa_final/internal/logic/orderpay"
 	"time"
 
 	"oa_final/internal/config"
@@ -34,7 +35,31 @@ func main() {
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	go refresscache()
+	go monitorOrder(ctx)
 	server.Start()
+}
+func monitorOrder(ctx *svc.ServiceContext) {
+	for true {
+		time.Sleep(time.Second * 10)
+		backcontext := context.Background()
+		backcontext = context.WithValue(backcontext, "phone", "17854230845")
+		backcontext = context.WithValue(backcontext, "openid", "17854230845")
+		changed, _ := ctx.Order.FindCanChanged(backcontext)
+		if changed != nil && len(changed) > 0 {
+			l := orderpay.NewCheckOrderLogic(backcontext, ctx)
+			for _, order := range changed {
+				if order.OrderStatus == 0 || order.OrderStatus == 6 {
+					payinfo, _ := ctx.PayInfo.FindOneByOutTradeNo(backcontext, order.OutTradeNo)
+					if !orderpay.PartPay(payinfo) {
+						ctx.Order.UpdateStatusByOrderSn(backcontext, 8, order.OrderSn)
+					} else {
+						l.Checkall(order, payinfo)
+					}
+				}
+			}
+		}
+	}
+
 }
 func refresscache() {
 	for true {

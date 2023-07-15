@@ -142,7 +142,7 @@ func OrderCanBeDeleted(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) boo
 		return true
 	}
 	if order.OrderStatus == 0 {
-		if !PartPay(PayInfo) {
+		if !PartPay(PayInfo) && order.CreateOrderTime.Add(time.Minute*15).Before(time.Now()) {
 			return true
 		} else {
 			return false

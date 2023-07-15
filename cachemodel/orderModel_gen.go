@@ -38,6 +38,7 @@ type (
 		FindAllByOutTradeNo(ctx context.Context, OutTradeNo string) ([]*Order, error)
 		UpdateWeChatPay(ctx context.Context, status int64, OutTradeNo string) error
 		UpdateCashPay(ctx context.Context, status int64, OutTradeNo string) error
+		FindCanChanged(ctx context.Context) ([]*Order, error)
 	}
 
 	defaultOrderModel struct {
@@ -164,6 +165,21 @@ func (m *defaultOrderModel) UpdateCashPay(ctx context.Context, status int64, Out
 	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)
 	return err
 }
+
+func (m *defaultOrderModel) FindCanChanged(ctx context.Context) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `order_status` in(0,6) limit 100", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
 func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", orderRows, m.table)
 	var resp Order

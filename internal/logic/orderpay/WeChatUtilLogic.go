@@ -2,6 +2,7 @@ package orderpay
 
 import (
 	"context"
+	"fmt"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/refunddomestic"
@@ -169,6 +170,7 @@ func (l *WeChatUtilLogic) CheckWeiXinPay(OutTradeNo string) bool {
 		OutTradeNo: core.String(OutTradeNo),
 		Mchid:      core.String(l.svcCtx.Config.WxConf.MchID)})
 	defer result.Response.Body.Close()
+	fmt.Println(*no2payment.TradeState, "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 	if *no2payment.TradeState == "SUCCESS" {
 		l.svcCtx.PayInfo.UpdateWeixinPay(context.Background(), OutTradeNo, *no2payment.TransactionId)
 		return true

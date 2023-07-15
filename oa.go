@@ -40,7 +40,7 @@ func main() {
 }
 func monitorOrder(ctx *svc.ServiceContext) {
 	for true {
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 100)
 		backcontext := context.Background()
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")
@@ -50,7 +50,7 @@ func monitorOrder(ctx *svc.ServiceContext) {
 			for _, order := range changed {
 				if order.OrderStatus == 0 || order.OrderStatus == 6 {
 					payinfo, _ := ctx.PayInfo.FindOneByOutTradeNo(backcontext, order.OutTradeNo)
-					if !orderpay.PartPay(payinfo) {
+					if !orderpay.PartPay(payinfo) && order.CreateOrderTime.Add(time.Minute*15).Before(time.Now()) {
 						ctx.Order.UpdateStatusByOrderSn(backcontext, 8, order.OrderSn)
 					} else {
 						l.Checkall(order, payinfo)

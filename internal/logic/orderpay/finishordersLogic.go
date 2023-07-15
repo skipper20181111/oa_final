@@ -62,12 +62,16 @@ func (l *FinishordersLogic) Finishorders(req *types.FinishOrdersRes) (resp *type
 				if !cashok || okstr != "yes" {
 					l.ul.Oplog("支付模块更新现金账户失败", PayInfo.OutTradeNo, "开始更新", PayInfo.LogId)
 				}
+			} else {
+				cashok = true
 			}
 			if l.usecoupon {
 				couponok, okstr = l.FinishCoupon(orders, true)
 				if !couponok || okstr != "yes" {
 					l.ul.Oplog("支付模块更新优惠券失败", PayInfo.OutTradeNo, "开始更新", PayInfo.LogId)
 				}
+			} else {
+				couponok = true
 			}
 			l.ul.Closelock(lockmsglist)
 			if cashok && couponok {

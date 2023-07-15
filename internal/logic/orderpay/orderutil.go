@@ -25,7 +25,6 @@ type OrderUtilLogic struct {
 	OrdersList         []*cachemodel.Order
 	PayInit            *types.PayInit
 	ul                 *UtilLogic
-	MarketPlayerMap    map[int64]map[int64][]*types.ProductTiny
 }
 
 func NewOrderUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *OrderUtilLogic {
@@ -35,7 +34,6 @@ func NewOrderUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *OrderUt
 		svcCtx:             svcCtx,
 		userphone:          ctx.Value("phone").(string),
 		ul:                 NewUtilLogic(ctx, svcCtx),
-		MarketPlayerMap:    make(map[int64]map[int64][]*types.ProductTiny),
 		OrdersList:         make([]*cachemodel.Order, 0),
 		UsedCouponStorInfo: make(map[int64]map[string]*types.CouponStoreInfo),
 	}
@@ -91,16 +89,14 @@ func (l OrderUtilLogic) GetAmount(ProductTinyList []*types.ProductTiny) (Origina
 	OriginalAmount = int64(0)
 	PromotionAmount = int64(0)
 	l.ProductTinyList = ProductTinyList
-	ok = l.ProductTinyListChina()
+	ok, ptlists := l.ProductTinyListChina()
 	if !ok {
 		return 0, 0
 	}
-	for _, m1 := range l.MarketPlayerMap {
-		for _, producttinylist := range m1 {
-			originalAmount, promotionAmount := l.OriProPrice(producttinylist)
-			OriginalAmount = OriginalAmount + originalAmount
-			PromotionAmount = PromotionAmount + promotionAmount
-		}
+	for _, ptlist := range ptlists {
+		originalAmount, promotionAmount := l.OriProPrice(ptlist)
+		OriginalAmount = OriginalAmount + originalAmount
+		PromotionAmount = PromotionAmount + promotionAmount
 	}
 	return OriginalAmount, PromotionAmount
 }
@@ -152,25 +148,29 @@ func (l OrderUtilLogic) EndPayInit(OrdersList []*cachemodel.Order) []*cachemodel
 	}
 	return OrdersList
 }
-func (l OrderUtilLogic) ProductTinyListChina() bool {
+func (l OrderUtilLogic) ProductTinyListChina() (bool, [][]*types.ProductTiny) {
 	//defer func() {
 	//	if e := recover(); e != nil {
 	//		return
 	//	}
 	//}()
-
+	//for _, tiny := range l.ProductTinyList {
+	//	ProductTinyMap, ok := l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId]
+	//	if ok {
+	//		ProductTinyMap = l.PidListMapChina(ProductTinyMap, tiny)
+	//	} else {
+	//		ProductTinyMap = make(map[int64][][]*types.ProductTiny)
+	//		ProductTinyMap = l.PidListMapChina(ProductTinyMap, tiny)
+	//	}
+	//	l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId] = ProductTinyMap
+	//}
+	ProductTinyListForOrder := make([][]*types.ProductTiny, 0)
 	for _, tiny := range l.ProductTinyList {
-		ProductTinyMap, ok := l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId]
-		if ok {
-			ProductTinyMap = l.PidListMapChina(ProductTinyMap, tiny)
-		} else {
-			ProductTinyMap = make(map[int64][]*types.ProductTiny)
-			ProductTinyMap = l.PidListMapChina(ProductTinyMap, tiny)
+		for i := 0; i < int(tiny.Amount); i++ {
+			ProductTinyListForOrder = append(ProductTinyListForOrder, []*types.ProductTiny{{tiny.PId, 1}})
 		}
-		l.MarketPlayerMap[l.ProductsMap[tiny.PId].MarketPlayerId] = ProductTinyMap
 	}
-
-	return true
+	return true, ProductTinyListForOrder
 }
 func (l OrderUtilLogic) OrderChina() []*cachemodel.Order {
 	//defer func() {
@@ -178,18 +178,22 @@ func (l OrderUtilLogic) OrderChina() []*cachemodel.Order {
 	//		return
 	//	}
 	//}()
-	if !l.ProductTinyListChina() {
+	ok, ptlist := l.ProductTinyListChina()
+	if !ok {
 		return make([]*cachemodel.Order, 0)
 	}
-	return l.PidListMap2OrderMap()
+	return l.PidListMap2OrderMap(ptlist)
 }
-func (l OrderUtilLogic) PidListMap2OrderMap() []*cachemodel.Order {
+func (l OrderUtilLogic) PidListMap2OrderMap(ptlists [][]*types.ProductTiny) []*cachemodel.Order {
 	orderlist := make([]*cachemodel.Order, 0)
-	for MarketPlayerId, PidListMap := range l.MarketPlayerMap {
-		for _, PidList := range PidListMap {
-			orderlist = append(orderlist, l.PidList2Order(PidList, MarketPlayerId))
-		}
+	for _, ptlist := range ptlists {
+		orderlist = append(orderlist, l.PidList2Order(ptlist))
 	}
+	//for MarketPlayerId, PidListMap := range l.MarketPlayerMap {
+	//	for _, PidList := range PidListMap {
+	//		orderlist = append(orderlist, l.PidList2Order(PidList, MarketPlayerId))
+	//	}
+	//}
 	return orderlist
 }
 func (l OrderUtilLogic) GetPromotionPrice(Tiny *types.ProductTiny) int64 {
@@ -210,10 +214,10 @@ func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (Origi
 	}
 	return OriginalAmount, PromotionAmount
 }
-func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny, MarketPlayerId int64) *cachemodel.Order {
+func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cachemodel.Order {
 	order := &cachemodel.Order{}
 	order.OrderType = status2key(l.ProductsMap[ProductTinyList[0].PId].Status)
-	order.MarketPlayerId = MarketPlayerId
+	order.MarketPlayerId = l.ProductsMap[ProductTinyList[0].PId].MarketPlayerId
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	order.Phone = l.userphone
 	order.OutTradeNo = l.PayInit.OutTradeSn
@@ -273,13 +277,18 @@ func (l *OrderUtilLogic) CouponEffective() bool {
 	return false
 }
 
-func (l OrderUtilLogic) PidListMapChina(ProductTinyListMap map[int64][]*types.ProductTiny, Tiny *types.ProductTiny) map[int64][]*types.ProductTiny {
+func (l OrderUtilLogic) PidListMapChina(ProductTinyListMap map[int64][][]*types.ProductTiny, Tiny *types.ProductTiny) map[int64][][]*types.ProductTiny {
 	key := status2key(l.ProductsMap[Tiny.PId].Status)
 	if _, ok := ProductTinyListMap[key]; ok {
-		ProductTinyListMap[key] = append(ProductTinyListMap[key], Tiny)
+		for i := 0; i < int(Tiny.Amount); i++ {
+			ProductTinyListMap[key] = append(ProductTinyListMap[key], []*types.ProductTiny{Tiny})
+		}
+
 	} else {
-		ProductTinyListMap[key] = make([]*types.ProductTiny, 0)
-		ProductTinyListMap[key] = append(ProductTinyListMap[key], Tiny)
+		ProductTinyListMap[key] = make([][]*types.ProductTiny, 0)
+		for i := 0; i < int(Tiny.Amount); i++ {
+			ProductTinyListMap[key] = append(ProductTinyListMap[key], []*types.ProductTiny{Tiny})
+		}
 	}
 	return ProductTinyListMap
 }

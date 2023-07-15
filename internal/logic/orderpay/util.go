@@ -233,7 +233,7 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.ActualAmount = float64(order.ActualAmount) / 100
 	orderinfo.CouponAmount = float64(order.CouponAmount) / 100
 	orderinfo.WeXinPayAmount = float64(order.WexinPayAmount) / 100
-	orderinfo.InvoinceAmount = orderinfo.WeXinPayAmount
+	orderinfo.InvoiceAmount = orderinfo.WeXinPayAmount
 	orderinfo.CashAccountPayAmount = float64(order.CashAccountPayAmount) / 100
 	orderinfo.FreightAmount = float64(order.FreightAmount) / 100
 	orderinfo.CutFreightAmount = 10
@@ -246,6 +246,7 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.OrderStatus = order.OrderStatus
 	orderinfo.DeliveryCompany = order.DeliveryCompany
 	orderinfo.DeliverySn = order.DeliverySn
+	orderinfo.MarketPlayerId = order.MarketPlayerId
 
 	address := types.AddressInfo{}
 	json.Unmarshal([]byte(order.Address), &address)

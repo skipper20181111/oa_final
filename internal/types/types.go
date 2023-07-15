@@ -166,7 +166,7 @@ type OrderInfo struct {
 	CouponAmount         float64          `json:"couponAmount"`
 	UsedCouponInfo       *CouponStoreInfo `json:"usedCouponInfo"`
 	WeXinPayAmount       float64          `json:"weXinPayAmount"`
-	InvoinceAmount       float64          `json:"invoinceAmount"`
+	InvoiceAmount        float64          `json:"invoiceAmount"`
 	CashAccountPayAmount float64          `json:"cashAccountPayAmount"`
 	CutPrice             float64          `json:"cutPrice"`
 	FreightAmount        float64          `json:"freightAmount"`
@@ -189,6 +189,7 @@ type OrderInfo struct {
 	UsedPoints           int64            `json:"usedPoints"`
 	PointsOrder          bool             `json:"pointsOrder"`
 	InvoiceStatus        int64            `json:"invoiceStatus"`
+	MarketPlayerId       int64            `json:"marketPlayerId"`
 }
 
 type Billinfo struct {

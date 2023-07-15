@@ -25,6 +25,7 @@ type OrderUtilLogic struct {
 	OrdersList         []*cachemodel.Order
 	PayInit            *types.PayInit
 	ul                 *UtilLogic
+	ReallyUseCoupon    bool
 }
 
 func NewOrderUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *OrderUtilLogic {
@@ -117,6 +118,7 @@ func (l OrderUtilLogic) req2op(req *types.NewOrderRes) ([]*cachemodel.Order, *ty
 			l.coupon, ok = get.(map[int64]*cachemodel.Coupon)[l.req.UsedCouponId]
 		}
 		l.usercoupon, _ = l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.userphone)
+		l.ReallyUseCoupon = l.CouponEffective()
 	}
 	l.ProductTinyList = req.ProductTinyList
 	l.PayInit = &types.PayInit{}
@@ -197,10 +199,12 @@ func (l OrderUtilLogic) PidListMap2OrderMap(ptlists [][]*types.ProductTiny) []*c
 	return orderlist
 }
 func (l OrderUtilLogic) GetPromotionPrice(Tiny *types.ProductTiny) int64 {
-	switch l.ProductsMap[Tiny.PId].Status {
-	case 3, 4:
-		if l.ProductsMap[Tiny.PId].PromotionPrice >= l.ProductsMap[Tiny.PId].MinPrice {
-			return l.ProductsMap[Tiny.PId].PromotionPrice - l.ProductsMap[Tiny.PId].Cut
+	if !l.ReallyUseCoupon {
+		switch l.ProductsMap[Tiny.PId].Status {
+		case 3, 4:
+			if l.ProductsMap[Tiny.PId].PromotionPrice >= l.ProductsMap[Tiny.PId].MinPrice {
+				return l.ProductsMap[Tiny.PId].PromotionPrice - l.ProductsMap[Tiny.PId].Cut
+			}
 		}
 	}
 	return l.ProductsMap[Tiny.PId].PromotionPrice
@@ -243,7 +247,7 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	return order
 }
 func (l OrderUtilLogic) CountCouponPrice(PromotionPrice int64) (ActualAmount int64) {
-	if l.coupon != nil && l.CouponEffective() {
+	if l.coupon != nil && l.ReallyUseCoupon {
 		if PromotionPrice >= l.coupon.MinPoint {
 			return PromotionPrice - l.coupon.Cut
 		}

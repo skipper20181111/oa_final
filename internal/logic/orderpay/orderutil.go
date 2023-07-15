@@ -185,9 +185,9 @@ func (l OrderUtilLogic) OrderChina() []*cachemodel.Order {
 }
 func (l OrderUtilLogic) PidListMap2OrderMap() []*cachemodel.Order {
 	orderlist := make([]*cachemodel.Order, 0)
-	for _, PidListMap := range l.MarketPlayerMap {
+	for MarketPlayerId, PidListMap := range l.MarketPlayerMap {
 		for _, PidList := range PidListMap {
-			orderlist = append(orderlist, l.PidList2Order(PidList))
+			orderlist = append(orderlist, l.PidList2Order(PidList, MarketPlayerId))
 		}
 	}
 	return orderlist
@@ -210,9 +210,10 @@ func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (Origi
 	}
 	return OriginalAmount, PromotionAmount
 }
-func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cachemodel.Order {
+func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny, MarketPlayerId int64) *cachemodel.Order {
 	order := &cachemodel.Order{}
 	order.OrderType = status2key(l.ProductsMap[ProductTinyList[0].PId].Status)
+	order.MarketPlayerId = MarketPlayerId
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	order.Phone = l.userphone
 	order.OutTradeNo = l.PayInit.OutTradeSn

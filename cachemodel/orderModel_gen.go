@@ -81,6 +81,7 @@ type (
 		ReceiveTime          time.Time `db:"receive_time"`            // 确认收货时间
 		CloseTime            time.Time `db:"close_time"`              // 订单关闭时间
 		ModifyTime           time.Time `db:"modify_time"`             // 修改时间
+		MarketPlayerId       int64     `db:"market_player_id"`        // 商户id
 		LogId                int64     `db:"log_id"`
 	}
 )
@@ -97,7 +98,6 @@ func (m *defaultOrderModel) Delete(ctx context.Context, id int64) error {
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
-
 func (m *defaultOrderModel) FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*Order, error) {
 	if pagenumber <= 0 || pagenumber > 10 {
 		pagenumber = 1
@@ -164,7 +164,6 @@ func (m *defaultOrderModel) UpdateCashPay(ctx context.Context, status int64, Out
 	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)
 	return err
 }
-
 func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", orderRows, m.table)
 	var resp Order
@@ -208,14 +207,14 @@ func (m *defaultOrderModel) FindOneByOutRefundNo(ctx context.Context, outRefundN
 }
 
 func (m *defaultOrderModel) Insert(ctx context.Context, data *Order) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, orderRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.OutRefundNo, data.CreateOrderTime, data.Pidlist, data.OrderType, data.OriginalAmount, data.PromotionAmount, data.CouponAmount, data.UsedCouponinfo, data.ActualAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.FinishWeixinpay, data.FinishAccountpay, data.PointsOrder, data.PointsAmount, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.InvoiceStatus, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.LogId)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, orderRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.OutRefundNo, data.CreateOrderTime, data.Pidlist, data.OrderType, data.OriginalAmount, data.PromotionAmount, data.CouponAmount, data.UsedCouponinfo, data.ActualAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.FinishWeixinpay, data.FinishAccountpay, data.PointsOrder, data.PointsAmount, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.InvoiceStatus, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.MarketPlayerId, data.LogId)
 	return ret, err
 }
 
 func (m *defaultOrderModel) Update(ctx context.Context, newData *Order) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, orderRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.OutRefundNo, newData.CreateOrderTime, newData.Pidlist, newData.OrderType, newData.OriginalAmount, newData.PromotionAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.ActualAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.PointsAmount, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.InvoiceStatus, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.LogId, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.OutRefundNo, newData.CreateOrderTime, newData.Pidlist, newData.OrderType, newData.OriginalAmount, newData.PromotionAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.ActualAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.PointsAmount, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.InvoiceStatus, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.MarketPlayerId, newData.LogId, newData.Id)
 	return err
 }
 

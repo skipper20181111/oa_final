@@ -39,6 +39,7 @@ type (
 		UpdateWeChatPay(ctx context.Context, status int64, OutTradeNo string) error
 		UpdateCashPay(ctx context.Context, status int64, OutTradeNo string) error
 		FindCanChanged(ctx context.Context) ([]*Order, error)
+		UpdateDeliver(ctx context.Context, DeliverSn, DeliverCompany, OrderSn string) error
 	}
 
 	defaultOrderModel struct {
@@ -166,8 +167,14 @@ func (m *defaultOrderModel) UpdateCashPay(ctx context.Context, status int64, Out
 	return err
 }
 
+func (m *defaultOrderModel) UpdateDeliver(ctx context.Context, DeliverSn, DeliverCompany, OrderSn string) error {
+	query := fmt.Sprintf("update %s set `delivery_sn`=?,`delivery_company`=?,`order_status`=2 where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, DeliverSn, DeliverCompany, OrderSn)
+	return err
+}
+
 func (m *defaultOrderModel) FindCanChanged(ctx context.Context) ([]*Order, error) {
-	query := fmt.Sprintf("select %s from %s where `order_status` in(0,6) limit 100", orderRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `order_status` in(0,1,6) limit 100", orderRows, m.table)
 	var resp []*Order
 	err := m.conn.QueryRowsCtx(ctx, &resp, query)
 	switch err {

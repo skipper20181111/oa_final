@@ -7,6 +7,7 @@ info(
     email: "17854230834@163.com"
     version: "1.0"
 )
+import "sf.api"
 type (
     ResourceInfo {
         Algorithm string `json:"algorithm"`
@@ -168,7 +169,6 @@ type (
         FinishCashPayTime string `json:"finishCashPayTime"`
     }
     OrderInfo {
-
         Phone string `json:"phone"`
         OrderSn string `json:"orderSn"`
         OutTradeNo string `json:"outTradeNo"`
@@ -205,6 +205,7 @@ type (
         PointsOrder bool `json:"pointsOrder"`
         InvoiceStatus int64 `json:"invoiceStatus"`
         MarketPlayerId int64 `json:"marketPlayerId"`
+        RouteList *RouteList `json:"routeList"`
     }
     Billinfo {
         CompanyName string `json:"companyName"`

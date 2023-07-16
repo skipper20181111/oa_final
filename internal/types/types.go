@@ -190,6 +190,7 @@ type OrderInfo struct {
 	PointsOrder          bool             `json:"pointsOrder"`
 	InvoiceStatus        int64            `json:"invoiceStatus"`
 	MarketPlayerId       int64            `json:"marketPlayerId"`
+	RouteList            *RouteList       `json:"routeList"`
 }
 
 type Billinfo struct {
@@ -706,4 +707,131 @@ type GetMissionInfoResp struct {
 	Code string            `json:"code"`
 	Msg  string            `json:"msg"`
 	Data *GetMissionInfoRp `json:"data"`
+}
+
+type CreateOrderMsgData struct {
+	Language           string         `json:"language"`        // 必填
+	OrderId            string         `json:"orderId"`         // 必填
+	ContactInfoList    []*ContactInfo `json:"contactInfoList"` // 必填
+	CargoDetails       []*CargoDetail `json:"cargoDetails"`    // 必填
+	CargoDesc          string         `json:"cargoDesc"`
+	MonthlyCard        string         `json:"monthlyCard"`
+	PayMethod          int            `json:"payMethod"`
+	ExpressTypeId      int            `json:"expressTypeId"` // 必填
+	TotalWeight        float64        `json:"totalWeight"`
+	TemperatureRange   int            `json:"temperatureRange"`
+	IsOneselfPickup    int            `json:"isOneselfPickup"`
+	IsReturnRoutelabel int            `json:"isReturnRoutelabel"` // 必填
+}
+
+type MotherResponse struct {
+	ApiResultCode string `json:"apiResultCode"`
+	ApiErrorMsg   string `json:"apiErrorMsg"`
+	ApiResponseID string `json:"apiResponseID"`
+	ApiResultData string `json:"apiResultData"`
+}
+
+type ApiResultData struct {
+	Success   bool         `json:"success"`
+	ErrorCode string       `json:"errorCode"`
+	ErrorMsg  string       `json:"errorMsg"`
+	MsgData   *MsgDataResp `json:"msgData"`
+}
+
+type MsgDataResp struct {
+	OrderId                   string            `json:"orderId"`
+	OriginCode                string            `json:"originCode"`
+	DestCode                  string            `json:"destCode"`
+	FilterResult              int               `json:"filterResult"`
+	Remark                    string            `json:"remark"`
+	Url                       string            `json:"url"`
+	PaymentLink               string            `json:"paymentLink"`
+	IsUpstairs                string            `json:"isUpstairs"`
+	IsSpecialWarehouseService bool              `json:"isSpecialWarehouseService"`
+	RouteLabelInfo            []*RouteLabelInfo `json:"routeLabelInfo"`
+}
+
+type RouteLabelInfo struct {
+	Code           string          `json:"code"`
+	Message        string          `json:"message"`
+	RouteLabelData *RouteLabelData `json:"routeLabelData"`
+}
+
+type RouteLabelData struct {
+	WaybillNo           string `json:"waybillNo"`
+	SourceTransferCode  string `json:"sourceTransferCode"`
+	SourceCityCode      string `json:"sourceCityCode"`
+	SourceDeptCode      string `json:"sourceDeptCode"`
+	SourceTeamCode      string `json:"sourceTeamCode"`
+	DestCityCode        string `json:"destCityCode"`
+	DestDeptCode        string `json:"destDeptCode"`
+	DestDeptCodeMapping string `json:"destDeptCodeMapping"`
+	DestTeamCode        string `json:"destTeamCode"`
+	DestTeamCodeMapping string `json:"destTeamCodeMapping"`
+	DestTransferCode    string `json:"destTransferCode"`
+	DestRouteLabel      string `json:"destRouteLabel"`
+	ProName             string `json:"proName"`
+	CargoTypeCode       string `json:"cargoTypeCode"`
+	LimitTypeCode       string `json:"limitTypeCode"`
+	ExpressTypeCode     string `json:"expressTypeCode"`
+	CodingMapping       string `json:"codingMapping"`
+	CodingMappingOut    string `json:"codingMappingOut"`
+	XbFlag              string `json:"xbFlag"`
+	PrintFlag           string `json:"printFlag"`
+	TwoDimensionCode    string `json:"twoDimensionCode"`
+	ProCode             string `json:"proCode"`
+	PrintIcon           string `json:"printIcon"`
+	AbFlag              string `json:"abFlag"`
+	ErrMsg              string `json:"errMsg"`
+	DestPortCode        string `json:"destPortCode"`
+	DestCountry         string `json:"destCountry"`
+	DestPostCode        string `json:"destPostCode"`
+	GoodsValueTotal     string `json:"goodsValueTotal"`
+	CurrencySymbol      string `json:"currencySymbol"`
+	GoodsNumber         string `json:"goodsNumber"`
+	DestAddrKeyWord     string `json:"destAddrKeyWord"`
+	NoToDoorPayment     string `json:"noToDoorPayment"`
+}
+
+type ContactInfo struct {
+	Address     string `json:"address"`
+	Province    string `json:"province"`
+	City        string `json:"city"`
+	Mobile      string `json:"mobile"`
+	Contact     string `json:"contact"`
+	ContactType int    `json:"contactType"`
+	Country     string `json:"country"`
+	PostCode    string `json:"postCode"`
+}
+
+type CargoDetail struct {
+	Name string `json:"name"`
+}
+
+type RouteMsgData struct {
+	TrackingType   int    `json:"trackingType"`
+	TrackingNumber string `json:"trackingNumber"`
+}
+
+type RouteResponse struct {
+	Success   bool           `json:"success"`
+	ErrorMsg  string         `json:"errorMsg"`
+	ErrorCode string         `json:"errorCode"`
+	MsgData   *SfSnRouteList `json:"msgData"`
+}
+
+type SfSnRouteList struct {
+	RouteResps []*RouteList `json:"routeResps"`
+}
+
+type RouteList struct {
+	MailNo string       `json:"mailNo"`
+	Routes []*RouteInfo `json:"routes"`
+}
+
+type RouteInfo struct {
+	AcceptTime    string `json:"acceptTime"`
+	AcceptAddress string `json:"acceptAddress"`
+	Remark        string `json:"remark"`
+	OpCode        string `json:"opcode"`
 }

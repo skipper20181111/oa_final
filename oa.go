@@ -47,6 +47,7 @@ func monitorOrder(ctx *svc.ServiceContext) {
 		changed, _ := ctx.Order.FindCanChanged(backcontext)
 		if changed != nil && len(changed) > 0 {
 			l := orderpay.NewCheckOrderLogic(backcontext, ctx)
+			sf := orderpay.NewSfUtilLogic(backcontext, ctx)
 			for _, order := range changed {
 				if order.OrderStatus == 0 || order.OrderStatus == 6 {
 					payinfo, _ := ctx.PayInfo.FindOneByOutTradeNo(backcontext, order.OutTradeNo)
@@ -55,6 +56,8 @@ func monitorOrder(ctx *svc.ServiceContext) {
 					} else {
 						l.Checkall(order, payinfo)
 					}
+				} else if order.OrderStatus == 1 {
+					sf.GetSfSn(order)
 				}
 			}
 		}

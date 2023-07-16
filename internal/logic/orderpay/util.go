@@ -2,8 +2,10 @@ package orderpay
 
 import (
 	"context"
+	"crypto/md5"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -31,6 +33,12 @@ func NewUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UtilLogic {
 		svcCtx: svcCtx,
 		phone:  ctx.Value("phone").(string),
 	}
+}
+func md5V(str string) string {
+	h := md5.New()
+	h.Write([]byte(str))
+	//return hex.EncodeToString(h.Sum(nil))
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 func (l *UtilLogic) Oplog(tablename, event, describe string, lid int64) error {
 	aol := &cachemodel.AccountOperateLog{Phone: l.phone, TableName: tablename, Event: event, Describe: describe, Timestamp: time.Now(), Lid: lid}
@@ -258,6 +266,9 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.ModifyTime = order.ModifyTime.Format("2006-01-02 15:04:05")
 	orderinfo.DeliveryTime = order.DeliveryTime.Format("2006-01-02 15:04:05")
 	orderinfo.ReceiveTime = order.ReceiveTime.Format("2006-01-02 15:04:05")
+	if order.OrderStatus == 2 {
+		orderinfo.RouteList = GetRoutesList(order.DeliverySn)
+	}
 	return orderinfo
 }
 func cashfinish(CashAccountPayAmount int64, cashaccount *cachemodel.CashAccount, use bool) (*cachemodel.CashAccount, bool) {

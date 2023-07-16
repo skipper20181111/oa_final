@@ -8,7 +8,6 @@ info(
 	version: "1.0"
 )
 import "alltype.api"
-
 @server(
 	group: orderpay
 	prefix : orderpay

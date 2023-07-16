@@ -1,0 +1,141 @@
+syntax = "v1"
+
+info(
+    title: "type title here"
+    desc: "type desc here"
+    author: "type author here"
+    email: "type email here"
+    version: "type version here"
+)
+type (
+    CreateOrderMsgData {
+        Language string `json:"language"`                       // 必填
+        OrderId string `json:"orderId"`                         // 必填
+        ContactInfoList []*ContactInfo `json:"contactInfoList"` // 必填
+        CargoDetails []*CargoDetail `json:"cargoDetails"`       // 必填
+        cargoDesc string `json:"cargoDesc"`
+        MonthlyCard string `json:"monthlyCard"`
+        PayMethod int `json:"payMethod"`
+                                                                // 1:寄方付 2:收方付 3:第三方付
+        ExpressTypeId int `json:"expressTypeId"`                // 必填
+                                                                // 默认是1 详情见 https://open.sf-express.com/developSupport/734349?activeIndex=324604
+        TotalWeight float64 `json:"totalWeight"`
+                                                                // 必须大于0
+        TemperatureRange int `json:"temperatureRange"`
+                                                                // 温控种类
+        isOneselfPickup int `json:"isOneselfPickup"`
+                                                                // 客户是否同意快件自取 1 同意，0 不同意，默认不同意
+        IsReturnRoutelabel int `json:"isReturnRoutelabel"`      // 必填
+                                                                // 默认是1 返回路由标签
+    }
+    MotherResponse {
+        ApiResultCode string `json:"apiResultCode"`
+        ApiErrorMsg string `json:"apiErrorMsg"`
+        ApiResponseID string `json:"apiResponseID"`
+        ApiResultData string `json:"apiResultData"`
+    }
+    ApiResultData {
+        Success bool `json:"success"`
+        ErrorCode string `json:"errorCode"`
+        ErrorMsg string `json:"errorMsg"`
+        MsgData *MsgDataResp `json:"msgData"`
+    }
+    MsgDataResp {
+        OrderId string `json:"orderId"`
+        OriginCode string `json:"originCode"`
+        DestCode string `json:"destCode"`
+        FilterResult int `json:"filterResult"`
+        Remark string `json:"remark"`
+        Url string `json:"url"`
+        PaymentLink string `json:"paymentLink"`
+        IsUpstairs string `json:"isUpstairs"`
+        IsSpecialWarehouseService bool `json:"isSpecialWarehouseService"`
+        RouteLabelInfo []*RouteLabelInfo `json:"routeLabelInfo"`
+    }
+    RouteLabelInfo {
+        Code string `json:"code"`
+        Message string `json:"message"`
+        RouteLabelData *RouteLabelData `json:"routeLabelData"`
+    }
+    RouteLabelData {
+        WaybillNo string `json:"waybillNo"`
+        SourceTransferCode string `json:"sourceTransferCode"`
+        SourceCityCode string `json:"sourceCityCode"`
+        SourceDeptCode string `json:"sourceDeptCode"`
+        SourceTeamCode string `json:"sourceTeamCode"`
+        DestCityCode string `json:"destCityCode"`
+        DestDeptCode string `json:"destDeptCode"`
+        DestDeptCodeMapping string `json:"destDeptCodeMapping"`
+        DestTeamCode string `json:"destTeamCode"`
+        DestTeamCodeMapping string `json:"destTeamCodeMapping"`
+        DestTransferCode string `json:"destTransferCode"`
+        DestRouteLabel string `json:"destRouteLabel"`
+        ProName string `json:"proName"`
+        CargoTypeCode string `json:"cargoTypeCode"`
+        LimitTypeCode string `json:"limitTypeCode"`
+        ExpressTypeCode string `json:"expressTypeCode"`
+        CodingMapping string `json:"codingMapping"`
+        CodingMappingOut string `json:"codingMappingOut"`
+        XbFlag string `json:"xbFlag"`
+        PrintFlag string `json:"printFlag"`
+        TwoDimensionCode string `json:"twoDimensionCode"`
+        ProCode string `json:"proCode"`
+        PrintIcon string `json:"printIcon"`
+        AbFlag string `json:"abFlag"`
+        ErrMsg string `json:"errMsg"`
+        DestPortCode string `json:"destPortCode"`
+        DestCountry string `json:"destCountry"`
+        DestPostCode string `json:"destPostCode"`
+        GoodsValueTotal string `json:"goodsValueTotal"`
+        CurrencySymbol string `json:"currencySymbol"`
+        GoodsNumber string `json:"goodsNumber"`
+        DestAddrKeyWord string `json:"destAddrKeyWord"`
+        NoToDoorPayment string `json:"noToDoorPayment"`
+    }
+    ContactInfo {
+        Address string `json:"address"`
+        Province string `json:"province"`
+        City string `json:"city"`
+        //    province与city建议填写，如果不填写，那么address必须包含省市信息
+        Mobile string `json:"mobile"`
+
+
+
+        Contact string `json:"contact"`
+        //    联系人
+        ContactType int `json:"contactType"`
+        //    必填
+        Country string `json:"country"`
+
+        PostCode string `json:"postCode"`
+    }
+    CargoDetail {
+        Name string `json:"name"`
+    }
+)
+type (
+    RouteMsgData {
+        TrackingType int `json:"trackingType"`
+        //  1 顺丰单号，2 订单号
+        TrackingNumber string `json:"trackingNumber"`
+    }
+    RouteResponse {
+        Success bool `json:"success"`
+        ErrorMsg string `json:"errorMsg"`
+        ErrorCode string `json:"errorCode"`
+        MsgData *SfSnRouteList `json:"msgData"`
+    }
+    SfSnRouteList {
+        RouteResps []*RouteList `json:"routeResps"`
+    }
+    RouteList {
+        MailNo string `json:"mailNo"`
+        Routes []*RouteInfo `json:"routes"`
+    }
+    RouteInfo {
+        AcceptTime string `json:"acceptTime"`
+        AcceptAddress string `json:"acceptAddress"`
+        Remark string `json:"remark"`
+        OpCode string `json:"opcode"`
+    }
+)

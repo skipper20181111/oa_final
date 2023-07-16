@@ -119,7 +119,6 @@ func (l OrderUtilLogic) req2op(req *types.NewOrderRes) ([]*cachemodel.Order, *ty
 		}
 		l.usercoupon, _ = l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.userphone)
 		l.ReallyUseCoupon = l.CouponEffective()
-		fmt.Println(l.coupon.CouponId, "###############################", l.ReallyUseCoupon)
 	}
 	l.ProductTinyList = req.ProductTinyList
 	l.PayInit = &types.PayInit{}

@@ -269,8 +269,8 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	if order.OrderStatus == 2 {
 		orderinfo.RouteList = GetRoutesList(order.DeliverySn)
 	}
-	if order.OrderStatus == 3 {
-		order.ReceiveTime.Add(time.Hour * 24 * 2).After(time.Now())
+	if order.OrderStatus == 3 && order.ReceiveTime.Before(time.Now().Add(time.Hour*24*2)) && order.ReceiveTime.Add(time.Hour*24*2).After(time.Now()) {
+
 		orderinfo.RouteList = GetRoutesList(order.DeliverySn)
 	}
 	return orderinfo

@@ -83,14 +83,14 @@ func db2info(db *cachemodel.Invoice) *types.InvoiceRp {
 
 }
 func (l *ApplyinvoiceLogic) req2db(req *types.ApplyInvoiceRes) *cachemodel.Invoice {
-	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
+	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	db := &cachemodel.Invoice{}
 	db.OrderSn = req.OrderSn
 	db.InvoiceSn = req.OrderSn
 	db.Phone = l.userphone
 	db.OrderType = req.OrderType
 	db.Ifdetail = req.InvoinceInfo.IfDetail
-	db.Status = 0
+	db.Status = 1
 	db.ApplyTime = time.Now()
 	db.FinishTime = inittime
 	postaddress, _ := json.Marshal(req.PostAddress)

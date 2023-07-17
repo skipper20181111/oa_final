@@ -58,6 +58,8 @@ func monitorOrder(ctx *svc.ServiceContext) {
 					}
 				} else if order.OrderStatus == 1 {
 					sf.GetSfSn(order)
+				} else if order.OrderStatus == 2 {
+					sf.IfReceived(order)
 				}
 			}
 		}

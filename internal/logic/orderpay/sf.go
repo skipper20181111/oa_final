@@ -73,6 +73,15 @@ func (l SfUtilLogic) GetSfSn(order *cachemodel.Order) {
 		l.svcCtx.Order.UpdateDeliver(l.ctx, sfsn, "顺丰", order.OrderSn)
 	}
 }
+func (l SfUtilLogic) IfReceived(order *cachemodel.Order) {
+	routelist := GetRoutesList(order.DeliverySn)
+	for _, route := range routelist.Routes {
+		if route.OpCode == "80" || strings.Contains(route.Remark, "已签收") {
+			l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 3, order.OrderSn)
+		}
+	}
+}
+
 func CreateOrder(order *cachemodel.Order) (status int, SfSn string) {
 	defer func() {
 		if e := recover(); e != nil {

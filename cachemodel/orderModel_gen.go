@@ -181,7 +181,7 @@ func (m *defaultOrderModel) UpdateInvoice(ctx context.Context, OrderSn string, I
 }
 
 func (m *defaultOrderModel) FindCanChanged(ctx context.Context) ([]*Order, error) {
-	query := fmt.Sprintf("select %s from %s where `order_status` in(0,1,6) limit 100", orderRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `order_status` in(0,1,2,6) limit 100", orderRows, m.table)
 	var resp []*Order
 	err := m.conn.QueryRowsCtx(ctx, &resp, query)
 	switch err {

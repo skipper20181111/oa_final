@@ -75,7 +75,7 @@ func (m *defaultInvoiceModel) Delete(ctx context.Context, id int64) error {
 	return err
 }
 func (m *defaultInvoiceModel) FindAllByPhone(ctx context.Context, phone string) ([]*Invoice, error) {
-	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 15", invoiceRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 20", invoiceRows, m.table)
 	var resp []*Invoice
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone)
 	switch err {

@@ -40,7 +40,9 @@ func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *type
 		if sn.Status != 0 {
 			return &types.ApplyInvoiceResp{Code: "10000", Msg: "此订单已经开过发票或开票失败"}, nil
 		} else {
-			l.svcCtx.Invoice.Update(l.ctx, l.req2db(req))
+			newsn := l.req2db(req)
+			newsn.Id = sn.Id
+			l.svcCtx.Invoice.Update(l.ctx, newsn)
 			orderSn, _ = l.svcCtx.Invoice.FindOneByOrderSn(l.ctx, req.OrderSn)
 		}
 	} else {
@@ -54,7 +56,7 @@ func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *type
 	}
 }
 func db2info(db *cachemodel.Invoice) *types.InvoiceRp {
-	info := &types.InvoiceRp{}
+	info := &types.InvoiceRp{PostAddress: &types.AddressInfo{}, InvoinceInfo: &types.InvoiceInfo{}}
 	info.InvoinceInfo.InvoiceType = db.InvoiceType
 	info.InvoinceInfo.TargetType = db.Target
 	info.InvoinceInfo.TaxId = db.TaxId
@@ -84,6 +86,7 @@ func (l *ApplyinvoiceLogic) req2db(req *types.ApplyInvoiceRes) *cachemodel.Invoi
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
 	db := &cachemodel.Invoice{}
 	db.OrderSn = req.OrderSn
+	db.InvoiceSn = req.OrderSn
 	db.Phone = l.userphone
 	db.OrderType = req.OrderType
 	db.Ifdetail = req.InvoinceInfo.IfDetail

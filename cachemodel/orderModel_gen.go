@@ -39,6 +39,7 @@ type (
 		UpdateWeChatPay(ctx context.Context, status int64, OutTradeNo string) error
 		UpdateCashPay(ctx context.Context, status int64, OutTradeNo string) error
 		FindCanChanged(ctx context.Context) ([]*Order, error)
+		FindStatus2(ctx context.Context) ([]*Order, error)
 		UpdateDeliver(ctx context.Context, DeliverSn, DeliverCompany, OrderSn string) error
 		UpdateInvoice(ctx context.Context, OrderSn string, InvoiceStatus int64) error
 	}
@@ -179,9 +180,21 @@ func (m *defaultOrderModel) UpdateInvoice(ctx context.Context, OrderSn string, I
 	_, err := m.conn.ExecCtx(ctx, query, InvoiceStatus, OrderSn)
 	return err
 }
-
+func (m *defaultOrderModel) FindStatus2(ctx context.Context) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `order_status` =2 limit 100", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) FindCanChanged(ctx context.Context) ([]*Order, error) {
-	query := fmt.Sprintf("select %s from %s where `order_status` in(0,1,2,6) limit 100", orderRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `order_status` in(0,1,6) limit 100", orderRows, m.table)
 	var resp []*Order
 	err := m.conn.QueryRowsCtx(ctx, &resp, query)
 	switch err {

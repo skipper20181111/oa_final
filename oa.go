@@ -36,7 +36,23 @@ func main() {
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	go refresscache()
 	go monitorOrder(ctx)
+	go IfReceived(ctx)
 	server.Start()
+}
+func IfReceived(ctx *svc.ServiceContext) {
+	for true {
+		time.Sleep(time.Hour)
+		backcontext := context.Background()
+		backcontext = context.WithValue(backcontext, "phone", "17854230845")
+		backcontext = context.WithValue(backcontext, "openid", "17854230845")
+		orderlist, _ := ctx.Order.FindStatus2(backcontext)
+		if orderlist != nil && len(orderlist) > 0 {
+			sf := orderpay.NewSfUtilLogic(backcontext, ctx)
+			for _, order := range orderlist {
+				sf.IfReceived(order)
+			}
+		}
+	}
 }
 func monitorOrder(ctx *svc.ServiceContext) {
 	for true {
@@ -58,13 +74,10 @@ func monitorOrder(ctx *svc.ServiceContext) {
 					}
 				} else if order.OrderStatus == 1 {
 					sf.GetSfSn(order)
-				} else if order.OrderStatus == 2 {
-					sf.IfReceived(order)
 				}
 			}
 		}
 	}
-
 }
 func refresscache() {
 	for true {

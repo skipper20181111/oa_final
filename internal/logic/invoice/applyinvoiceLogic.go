@@ -37,7 +37,7 @@ func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *type
 	}
 	orderSn := &cachemodel.Invoice{}
 	if sn != nil {
-		if sn.Status != 0 {
+		if sn.Status > 1 {
 			return &types.ApplyInvoiceResp{Code: "10000", Msg: "此订单已经开过发票或开票失败"}, nil
 		} else {
 			newsn := l.req2db(req)
@@ -47,6 +47,7 @@ func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *type
 		}
 	} else {
 		l.svcCtx.Invoice.Insert(l.ctx, l.req2db(req))
+		l.svcCtx.Order.UpdateInvoice(l.ctx, req.OrderSn, 1)
 		orderSn, _ = l.svcCtx.Invoice.FindOneByOrderSn(l.ctx, req.OrderSn)
 	}
 	if orderSn.OrderSn == req.OrderSn {

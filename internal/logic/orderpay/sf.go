@@ -71,6 +71,7 @@ func (l SfUtilLogic) GetSfSn(order *cachemodel.Order) {
 	status, sfsn := CreateOrder(order)
 	if status == 1 {
 		l.svcCtx.Order.UpdateDeliver(l.ctx, sfsn, "顺丰", order.OrderSn)
+		l.svcCtx.SfInfo.Insert(l.ctx, orderdb2sfinfodb(order, sfsn))
 	}
 }
 func (l SfUtilLogic) IfReceived(order *cachemodel.Order) {
@@ -79,6 +80,16 @@ func (l SfUtilLogic) IfReceived(order *cachemodel.Order) {
 		if route.OpCode == "80" || strings.Contains(route.Remark, "已签收") {
 			l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 3, order.OrderSn)
 		}
+	}
+}
+func orderdb2sfinfodb(order *cachemodel.Order, SfSn string) *cachemodel.SfInfo {
+	return &cachemodel.SfInfo{
+		OutTradeNo:  order.OutTradeNo,
+		OrderSn:     order.OrderSn,
+		DeliverySn:  SfSn,
+		Phone:       order.Phone,
+		OrderNote:   order.OrderNote,
+		ProductInfo: order.ProductInfo,
 	}
 }
 

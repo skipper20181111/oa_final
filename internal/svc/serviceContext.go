@@ -68,6 +68,7 @@ type ServiceContext struct {
 	PayInfo           cachemodel.PayInfoModel
 	Order             cachemodel.OrderModel
 	RefundInfo        cachemodel.RefundInfoModel
+	SfInfo            cachemodel.SfInfoModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -138,5 +139,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		PayInfo:           cachemodel.NewPayInfoModel(sqlx.NewMysql(c.DB.DataSource)),
 		Order:             cachemodel.NewOrderModel(sqlx.NewMysql(c.DB.DataSource)),
 		RefundInfo:        cachemodel.NewRefundInfoModel(sqlx.NewMysql(c.DB.DataSource)),
+		SfInfo:            cachemodel.NewSfInfoModel(sqlx.NewMysql(c.DB.DataSource)),
 	}
 }

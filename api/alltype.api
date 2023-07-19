@@ -537,9 +537,9 @@ type (
         Hash string `json:"hash"`
         InvoiceTitle string `json:"invoiceTitle"`
         // 发票抬头
-        ComponyAddress string `json:"componyAddress"`
+        CompanyAddress string `json:"companyAddress"`
         // 单位地址
-        ComponyPhone string `json:"componyPhone"`
+        CompanyPhone string `json:"companyPhone"`
         // 电话
         TaxId string `json:"taxId"`
         // 税号

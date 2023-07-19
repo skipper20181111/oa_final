@@ -523,8 +523,8 @@ type IfOvertimeResp struct {
 type CompanyInvoiceInfo struct {
 	Hash           string `json:"hash"`
 	InvoiceTitle   string `json:"invoiceTitle"`
-	ComponyAddress string `json:"componyAddress"`
-	ComponyPhone   string `json:"componyPhone"`
+	CompanyAddress string `json:"companyAddress"`
+	CompanyPhone   string `json:"companyPhone"`
 	TaxId          string `json:"taxId"`
 	OpeningBank    string `json:"openingBank"`
 	BankAccount    string `json:"bankAccount"`

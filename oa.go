@@ -41,7 +41,8 @@ func main() {
 }
 func IfReceived(ctx *svc.ServiceContext) {
 	for true {
-		time.Sleep(time.Hour)
+		RefreshGap := time.Minute * time.Duration(rand.Intn(120)+1)
+		time.Sleep(RefreshGap)
 		backcontext := context.Background()
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")
@@ -56,7 +57,8 @@ func IfReceived(ctx *svc.ServiceContext) {
 }
 func monitorOrder(ctx *svc.ServiceContext) {
 	for true {
-		time.Sleep(time.Second * 100)
+		RefreshGap := time.Second * time.Duration(rand.Intn(5)+1)
+		time.Sleep(RefreshGap)
 		backcontext := context.Background()
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")

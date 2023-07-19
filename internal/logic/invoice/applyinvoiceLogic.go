@@ -66,8 +66,8 @@ func db2info(db *cachemodel.Invoice) *types.InvoiceRp {
 	info.InvoinceInfo.InvoiceTitle = db.InvoiceTitle
 	info.InvoinceInfo.OpeningBank = db.OpeningBank
 	info.InvoinceInfo.BankAccount = db.BankAccount
-	info.InvoinceInfo.ComponyAddress = db.ComponyAddress
-	info.InvoinceInfo.ComponyPhone = db.ComponyPhone
+	info.InvoinceInfo.CompanyAddress = db.ComponyAddress
+	info.InvoinceInfo.CompanyPhone = db.ComponyPhone
 
 	addressinfo := &types.AddressInfo{}
 	json.Unmarshal([]byte(db.PostAddress), addressinfo)
@@ -100,8 +100,8 @@ func (l *ApplyinvoiceLogic) req2db(req *types.ApplyInvoiceRes) *cachemodel.Invoi
 	db.Target = req.InvoinceInfo.TargetType
 	db.Money = l.order.WexinPayAmount
 	db.InvoiceTitle = req.InvoinceInfo.InvoiceTitle
-	db.ComponyAddress = req.InvoinceInfo.ComponyAddress
-	db.ComponyPhone = req.InvoinceInfo.ComponyPhone
+	db.ComponyAddress = req.InvoinceInfo.CompanyAddress
+	db.ComponyPhone = req.InvoinceInfo.CompanyPhone
 	db.TaxId = req.InvoinceInfo.TaxId
 	db.BankAccount = req.InvoinceInfo.BankAccount
 	db.OpeningBank = req.InvoinceInfo.OpeningBank

@@ -424,8 +424,8 @@ type (
         // 0代表对公，1代表对私
         InvoiceTitle string `json:"invoiceTitle"`
         // 发票抬头
-        ComponyAddress string `json:"componyAddress"`
-        ComponyPhone string `json:"componyPhone"`
+        CompanyAddress string `json:"companyAddress"`
+        CompanyPhone string `json:"companyPhone"`
         TaxId string `json:"taxId"`
         OpeningBank string `json:"openingBank"`
         BankAccount string `json:"bankAccount"`

@@ -59,6 +59,7 @@ func monitorOrder(ctx *svc.ServiceContext) {
 	for true {
 		RefreshGap := time.Second * time.Duration(rand.Intn(200)+1)
 		time.Sleep(RefreshGap)
+		//time.Sleep(time.Second * 10)
 		backcontext := context.Background()
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")

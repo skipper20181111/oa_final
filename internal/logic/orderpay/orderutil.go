@@ -95,7 +95,7 @@ func (l OrderUtilLogic) GetAmount(ProductTinyList []*types.ProductTiny) (Origina
 		return 0, 0
 	}
 	for _, ptlist := range ptlists {
-		originalAmount, promotionAmount := l.OriProPrice(ptlist)
+		originalAmount, promotionAmount, _ := l.OriProPrice(ptlist)
 		OriginalAmount = OriginalAmount + originalAmount
 		PromotionAmount = PromotionAmount + promotionAmount
 	}
@@ -209,15 +209,17 @@ func (l OrderUtilLogic) GetPromotionPrice(Tiny *types.ProductTiny) int64 {
 	}
 	return l.ProductsMap[Tiny.PId].PromotionPrice
 }
-func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (OriginalAmount int64, PromotionAmount int64) {
+func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (OriginalAmount int64, PromotionAmount int64, ProductInfoForSf string) {
 	OriginalAmount = int64(0)
 	PromotionAmount = int64(0)
 	for _, tiny := range ProductTinyList {
+		ProductInfoForSf = ProductInfoForSf + l.ProductsMap[tiny.PId].ProductCategoryName + "\n"
 		OriginalAmount = OriginalAmount + l.ProductsMap[tiny.PId].OriginalPrice*tiny.Amount
 		PromotionAmount = PromotionAmount + l.GetPromotionPrice(tiny)*tiny.Amount
 	}
-	return OriginalAmount, PromotionAmount
+	return OriginalAmount, PromotionAmount, ProductInfoForSf
 }
+
 func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cachemodel.Order {
 	order := &cachemodel.Order{}
 	order.OrderType = status2key(l.ProductsMap[ProductTinyList[0].PId].Status)
@@ -229,7 +231,7 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	order.CreateOrderTime = time.Now()
 	marshal, _ := json.Marshal(ProductTinyList)
 	order.Pidlist = string(marshal)
-	order.OriginalAmount, order.PromotionAmount = l.OriProPrice(ProductTinyList)
+	order.OriginalAmount, order.PromotionAmount, order.ProductInfo = l.OriProPrice(ProductTinyList)
 	order.ActualAmount = order.PromotionAmount
 	addr, err := json.Marshal(l.req.Address)
 	if err != nil {

@@ -243,8 +243,9 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.WeXinPayAmount = float64(order.WexinPayAmount) / 100
 	orderinfo.InvoiceAmount = orderinfo.WeXinPayAmount
 	orderinfo.CashAccountPayAmount = float64(order.CashAccountPayAmount) / 100
-	orderinfo.FreightAmount = float64(order.FreightAmount) / 100
-	orderinfo.CutFreightAmount = 10
+	//orderinfo.FreightAmount = float64(order.FreightAmount) / 100
+	orderinfo.FreightAmount = 30
+	orderinfo.CutFreightAmount = 30
 	orderinfo.RealFreightAmount = orderinfo.FreightAmount - orderinfo.CutFreightAmount
 	orderinfo.IfCutFreight = true
 	orderinfo.CutPrice = float64(order.OriginalAmount-order.WexinPayAmount) / 100

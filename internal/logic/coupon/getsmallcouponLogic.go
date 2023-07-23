@@ -3,6 +3,7 @@ package coupon
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
 	"oa_final/cachemodel"
 	"strconv"
 	"time"
@@ -37,16 +38,15 @@ func (l *GetsmallcouponLogic) Getsmallcoupon(req *types.GetSmallCouponRes) (resp
 	couponinfomap := get.(map[int64]*types.CouponInfo)
 	couponbyphone, err := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.phone)
 	couponmap := make(map[int64]map[string]*types.CouponStoreInfo)
+	infolist := make([]*types.CouponInfo, 0)
 	if couponbyphone == nil {
 		couponmap = getnewcoupon(couponmap, couponinfomap)
 		couponmapstr, _ := json.Marshal(couponmap)
-		infolist := make([]*types.CouponInfo, 0)
 		infolist, couponmap = getinfolist(couponmap, couponinfomap)
 		l.svcCtx.UserCoupon.Insert(l.ctx, &cachemodel.UserCoupon{Phone: l.ctx.Value("phone").(string), CouponIdMap: string(couponmapstr)})
 		return &types.GetSmallCouponResp{Code: "10000", Msg: "列表如下", Data: &types.GetSmallCouponRp{CouponInfoList: infolist}}, nil
 	} else {
 		json.Unmarshal([]byte(couponbyphone.CouponIdMap), &couponmap)
-		infolist := make([]*types.CouponInfo, 0)
 		infolist, couponmap = getinfolist(couponmap, couponinfomap)
 		couponmapstr, _ := json.Marshal(couponmap)
 		couponbyphone.CouponIdMap = string(couponmapstr)
@@ -56,11 +56,13 @@ func (l *GetsmallcouponLogic) Getsmallcoupon(req *types.GetSmallCouponRes) (resp
 	return &types.GetSmallCouponResp{Code: "4004", Msg: "无"}, nil
 }
 func getnewcoupon(couponmap map[int64]map[string]*types.CouponStoreInfo, couponinfomap map[int64]*types.CouponInfo) map[int64]map[string]*types.CouponStoreInfo {
-	newusercouponid := int64(9999)
-	info, ok := couponinfomap[newusercouponid]
-	if ok {
-		couponmap[newusercouponid] = make(map[string]*types.CouponStoreInfo)
-		couponmap[newusercouponid][strconv.FormatInt(time.Now().UnixNano(), 10)] = &types.CouponStoreInfo{CouponId: newusercouponid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*info.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+	newusercouponid := []int64{10000}
+	for _, cid := range newusercouponid {
+		info, ok := couponinfomap[cid]
+		if ok {
+			couponmap[cid] = make(map[string]*types.CouponStoreInfo)
+			couponmap[cid][strconv.FormatInt(time.Now().UnixNano()+rand.Int63n(10000), 10)] = &types.CouponStoreInfo{CouponId: cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*info.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+		}
 	}
 	return couponmap
 }
@@ -88,5 +90,18 @@ func getinfolist(couponmap map[int64]map[string]*types.CouponStoreInfo, couponin
 		}
 		couponmap[cid] = *chilemap
 	}
+	for i := 0; i < len(infolist); i++ {
+		for j := 1; j < len(infolist)-i; j++ {
+			if timesmaller(infolist[j].DisabledTime, infolist[j-1].DisabledTime) {
+				//交换
+				infolist[j], infolist[j-1] = infolist[j-1], infolist[j]
+			}
+		}
+	}
 	return infolist, couponmap
+}
+func timesmaller(a, b string) bool {
+	atime, _ := time.Parse("2006-01-02 15:04:05", a)
+	btime, _ := time.Parse("2006-01-02 15:04:05", b)
+	return atime.Before(btime)
 }

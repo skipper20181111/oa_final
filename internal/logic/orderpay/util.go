@@ -222,7 +222,14 @@ func ordercoupondetail(order *cachemodel.Order) (int64, string, *types.CouponSto
 	return 0, "", nil
 }
 func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
-
+	FreightAmount := int64(3000)
+	CutFreightAmount := int64(3000)
+	if FreightAmount-order.FreightAmount > 0 {
+		CutFreightAmount = FreightAmount - order.FreightAmount
+	} else {
+		FreightAmount = order.FreightAmount
+		CutFreightAmount = 0
+	}
 	orderinfo := &types.OrderInfo{}
 	orderinfo.Phone = order.Phone
 	orderinfo.OrderSn = order.OrderSn
@@ -244,11 +251,11 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.InvoiceAmount = orderinfo.WeXinPayAmount
 	orderinfo.CashAccountPayAmount = float64(order.CashAccountPayAmount) / 100
 	//orderinfo.FreightAmount = float64(order.FreightAmount) / 100
-	orderinfo.FreightAmount = 30
-	orderinfo.CutFreightAmount = 30
-	orderinfo.RealFreightAmount = orderinfo.FreightAmount - orderinfo.CutFreightAmount
+	orderinfo.FreightAmount = float64(FreightAmount) / 100
+	orderinfo.CutFreightAmount = float64(CutFreightAmount) / 100
+	orderinfo.RealFreightAmount = float64(order.FreightAmount) / 100
 	orderinfo.IfCutFreight = true
-	orderinfo.CutPrice = float64(order.OriginalAmount-order.WexinPayAmount) / 100
+	orderinfo.CutPrice = float64(order.OriginalAmount-order.WexinPayAmount+order.FreightAmount) / 100
 	orderinfo.CutPriceWithFreight = orderinfo.CutPrice + orderinfo.CutFreightAmount
 	orderinfo.Growth = order.Growth
 	orderinfo.InvoiceStatus = order.InvoiceStatus

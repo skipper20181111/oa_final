@@ -709,6 +709,61 @@ type GetMissionInfoResp struct {
 	Data *GetMissionInfoRp `json:"data"`
 }
 
+type CompleteProductInfo struct {
+	ProductId        int64    `json:"productId"`
+	ProductTitle     string   `json:"productTitle"`
+	ProductStandard  string   `json:"productStandard"`
+	Picture          string   `json:"picture"`
+	Sale             int      `json:"sale"`
+	Description      string   `json:"description"`
+	Unit             string   `json:"unit"`
+	Weight           float64  `json:"weight"`
+	Attribute        []string `json:"attribute"`
+	Reserve_time     string   `json:"reserveTime"`
+	DiscountAmount   float64  `json:"discountAmount"`
+	MinPrice         float64  `json:"minPrice"`
+	IfReserve        bool     `json:"ifReserve"`
+	IfCut            bool     `json:"ifCut"`
+	SpecialPrice     float64  `json:"specialPrice"`
+	DetailTitle      string   `json:"detailTitle"`
+	DetailDesc       string   `json:"detailDesc"`
+	ProductionArea   string   `json:"productionArea"`
+	DetailImages     []string `json:"detailImages"`
+	StorageEnv       string   `json:"storageEnv"`
+	AlbumPicsList    []string `json:"albumPicsList"`
+	PromotionPrice   float64  `json:"promotionPrice"`
+	OriginalPrice    float64  `json:"originalPrice""`
+	CutPrice         float64  `json:"cutPrice""`
+	Status           int      `json:"status"`
+	ClusterList      []int64  `json:"clusterList"`
+	RecommendProduct []int64  `json:"recommendProduct"`
+	ArrangeProduct   []int64  `json:"arrangeProduct"`
+	IsChecked        bool     `json:"isChecked"`
+	Amount           int      `json:"amount"`
+}
+
+type QuantityInfoDBList struct {
+	InfoList []*QuantityInfoDB `json:"infoList"`
+}
+
+type QuantityInfoDB struct {
+	Name           string `json:"name"`
+	PromotionPrice int64  `json:"promotionPrice"`
+	OriginalPrice  int64  `json:"originalPrice"`
+	Cut            int64  `json:"cut"`
+	IsDefault      bool   `json:"isDefault"`
+}
+
+type QuantityInfo struct {
+	Name           string  `json:"name"`
+	PromotionPrice float64 `json:"promotionPrice"`
+	OriginalPrice  float64 `json:"originalPrice"`
+	IfCut          bool    `json:"ifCut"`
+	Cut            float64 `json:"cut"`
+	SpecialPrice   float64 `json:"specialPrice"`
+	IsDefault      bool    `json:"isDefault"`
+}
+
 type CreateOrderMsgData struct {
 	Language           string         `json:"language"`        // 必填
 	OrderId            string         `json:"orderId"`         // 必填

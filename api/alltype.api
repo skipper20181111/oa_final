@@ -712,6 +712,91 @@ type (
         Data *GetMissionInfoRp `json:"data"`
     }
 )
+type (
+    CompleteProductInfo {
+        ProductId int64 `json:"productId"`
+        // 产品的ID
+        ProductTitle string `json:"productTitle"`
+        // 产品主标题
+        ProductStandard string `json:"productStandard"`
+        // 产品规格
+        Picture string `json:"picture"`
+        // 产品图标
+        Sale int `json:"sale"`
+        // 销量
+
+        Description string `json:"description"`
+        // 商品描述
+        Unit string `json:"unit"`
+        // 商品单位 斤，只，条
+        Weight float64 `json:"weight"`
+        // 商品重量
+        Attribute []string `json:"attribute"`
+        // 商品属性，鲜活，冷冻，冰鲜
+        Reserve_time string `json:"reserveTime"`
+        // 产品预售时间
+        DiscountAmount float64 `json:"discountAmount"`
+        // 满减金额
+        MinPrice float64 `json:"minPrice"`
+        // 满减门槛
+        IfReserve bool `json:"ifReserve"`
+        // 是否预售
+        IfCut bool `json:"ifCut"`
+        // 是否满减
+        SpecialPrice float64 `json:"specialPrice"`
+        //  减价后价格
+        DetailTitle string `json:"detailTitle"`
+        DetailDesc string `json:"detailDesc"`
+        ProductionArea string `json:"productionArea"`
+        DetailImages []string `json:"detailImages"`
+        StorageEnv string `json:"storageEnv"`
+        AlbumPicsList []string `json:"albumPicsList"`
+        PromotionPrice float64 `json:"promotionPrice"`
+        // 出售价格
+        OriginalPrice float64 `json:"originalPrice""`
+        // 市场价格
+        CutPrice float64 `json:"cutPrice""`
+        // 相比上月平均价格差额多少
+        Status int `json:"status"`
+        // 产品状态 1->正常，2->预约商品，3->折扣,4->预约且折扣
+        ClusterList []int64 `json:"clusterList"`
+        // 同类商品不同规格
+        RecommendProduct []int64 `json:"recommendProduct"`
+        // 推荐商品
+        ArrangeProduct []int64 `json:"arrangeProduct"`
+        // 搭配商品
+        IsChecked bool `json:"isChecked"`
+        Amount int `json:"amount"`
+    }
+    QuantityInfoDBList {
+        InfoList []*QuantityInfoDB `json:"infoList"`
+    }
+    QuantityInfoDB {
+        Name string `json:"name"`
+        //  规格名称
+        PromotionPrice int64 `json:"promotionPrice"`
+        // 出售价格
+        OriginalPrice int64 `json:"originalPrice"`
+        // 市场价格
+        Cut int64 `json:"cut"`
+        IsDefault bool `json:"isDefault"`
+    }
+    QuantityInfo {
+        Name string `json:"name"`
+        //  规格名称
+        PromotionPrice float64 `json:"promotionPrice"`
+        // 出售价格
+        OriginalPrice float64 `json:"originalPrice"`
+        // 市场价格
+        IfCut bool `json:"ifCut"`
+        // 是否满减
+        Cut float64 `json:"cut"`
+        // 满减金额
+        SpecialPrice float64 `json:"specialPrice"`
+        IsDefault bool `json:"isDefault"`
+    }
+)
+
 
 
 

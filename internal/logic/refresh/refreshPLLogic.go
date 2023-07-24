@@ -23,11 +23,14 @@ func NewRefreshPLLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Refresh
 }
 
 func (l *RefreshPLLogic) RefreshPL() (resp *types.RefreshResp, err error) {
+
 	refreshUtil := NewRefreshUtilLogic(l.ctx, l.svcCtx)
-	refreshUtil.InfoMapAndMap()
+	refreshUtil.Products()
+
 	refreshUtil.RechargeProduct()
 	refreshUtil.StarMall()
 	refreshUtil.Coupon()
 	refreshUtil.MissionList()
+
 	return &types.RefreshResp{Code: "10000", Msg: "刷新成功"}, err
 }

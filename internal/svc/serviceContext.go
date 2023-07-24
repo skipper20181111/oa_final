@@ -36,6 +36,9 @@ const (
 	SfUrl                  = "https://sfapi-sbox.sf-express.com/std/service"
 	CreateOrderServiceCode = "EXP_RECE_CREATE_ORDER"
 	GetRoutesServiceCode   = "EXP_RECE_SEARCH_ROUTES"
+	ProductDbMap           = "ProductDbMap"
+	ProductQuantityInfoDB  = "ProductQuantityInfoDB"
+	QuantityInfoDBList     = "QuantityInfoDBList"
 )
 
 type ServiceContext struct {

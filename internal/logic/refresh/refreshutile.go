@@ -20,7 +20,7 @@ type RefreshUtilLogic struct {
 func NewRefreshUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshUtilLogic {
 	return &RefreshUtilLogic{
 		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
+		ctx:    context.Background(),
 		svcCtx: svcCtx,
 	}
 }
@@ -42,24 +42,30 @@ func missiondb2info(db *cachemodel.Mission) *types.Mission {
 	minfo.Describe = describelist
 	return minfo
 }
-func (l *RefreshUtilLogic) InfoMapAndMap() bool {
-	defer func() {
-		if e := recover(); e != nil {
-			return
+func (l RefreshUtilLogic) Products() {
+	AllProductsList, _ := l.svcCtx.Product.FindAll(l.ctx)
+	if AllProductsList != nil && len(AllProductsList) > 0 {
+		ProductDBMap := make(map[int64]*cachemodel.Product)
+		QuantityInfoDBList := make(map[int64][]*types.QuantityInfoDB)
+		ProductQuantityInfoDB := make(map[int64]map[string]*types.QuantityInfoDB)
+		for _, product := range AllProductsList {
+			qinfoList := &types.QuantityInfoDBList{}
+			json.Unmarshal([]byte(product.QuantityPriceCutInfo), &qinfoList)
+			QuantityInfoDBList[product.Pid] = qinfoList.InfoList
+			ProductDBMap[product.Pid] = product
+			qinfo := make(map[string]*types.QuantityInfoDB)
+			for _, db := range qinfoList.InfoList {
+				qinfo[db.Name] = db
+			}
+			ProductQuantityInfoDB[product.Pid] = qinfo
 		}
-	}()
-	productList, err := l.svcCtx.Product.FindAll(l.ctx)
-	if err != nil {
-		return false
-	}
 
-	productsMap := make(map[int64]*cachemodel.Product)
-	for _, product := range productList {
-		productsMap[product.Pid] = product
+		l.svcCtx.LocalCache.Set(svc.ProductsMap, ProductDBMap)
+		l.svcCtx.LocalCache.Set(svc.ProductQuantityInfoDB, ProductQuantityInfoDB)
+		l.svcCtx.LocalCache.Set(svc.QuantityInfoDBList, QuantityInfoDBList)
 	}
-	l.svcCtx.LocalCache.Set(svc.ProductsMap, productsMap)
-	return true
 }
+
 func (l *RefreshUtilLogic) RechargeProduct() bool {
 	defer func() {
 		if e := recover(); e != nil {

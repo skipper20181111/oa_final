@@ -119,6 +119,7 @@ type (
     }
     ProductTiny {
         PId int64 `json:"pId"`
+        QuantityName string `json:"quantityName"`
         Amount int64 `json:"amount"`
     }
     UpdateShoppingCartRes {

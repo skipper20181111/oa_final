@@ -100,8 +100,9 @@ type ShoppingCart struct {
 }
 
 type ProductTiny struct {
-	PId    int64 `json:"pId"`
-	Amount int64 `json:"amount"`
+	PId          int64  `json:"pId"`
+	QuantityName string `json:"quantityName"`
+	Amount       int64  `json:"amount"`
 }
 
 type UpdateShoppingCartRes struct {

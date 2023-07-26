@@ -55,9 +55,9 @@ func (l *ContinuepayLogic) Continuepay(req *types.FinishOrderRes) (resp *types.N
 		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}
 	for _, order := range orders {
-		l.svcCtx.Order.Insert(l.ctx, order)
+		l.svcCtx.Order.Update(l.ctx, order)
 		OrderInfos = append(OrderInfos, OrderDb2info(order))
-		if order.UsedCouponinfo != "" {
+		if len(order.UsedCouponinfo) > 6 {
 			UseCoupon = true
 		}
 	}

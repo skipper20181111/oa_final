@@ -70,7 +70,7 @@ func order2req(order *cachemodel.Order) *types.NewOrderRes {
 	if order.CashAccountPayAmount > 0 {
 		req.UseCashFirst = true
 	}
-	if order.UsedCouponinfo != "" {
+	if len(order.UsedCouponinfo) > 6 {
 		uuidmap := Uuidstr2map(order.UsedCouponinfo)
 		for idk, couponmap := range uuidmap {
 			for uuidk, _ := range couponmap {
@@ -218,7 +218,7 @@ func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (Origi
 	PromotionAmount = int64(0)
 	ProductInfoForSf = ""
 	for _, tiny := range ProductTinyList {
-		ProductInfoForSf = fmt.Sprintf("%s%s * %d %s", ProductInfoForSf, l.ProductsMap[tiny.PId].ProductCategoryName, tiny.Amount, "\n")
+		ProductInfoForSf = fmt.Sprintf("%s%s %s * %d %s", ProductInfoForSf, l.ProductsMap[tiny.PId].ProductCategoryName, tiny.QuantityName, tiny.Amount, "\n")
 		OriginalAmount = OriginalAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].OriginalPrice*tiny.Amount
 		PromotionAmount = PromotionAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].PromotionPrice*tiny.Amount
 		ActualAmount = ActualAmount + l.GetPromotionPrice(tiny)*tiny.Amount
@@ -238,6 +238,7 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	marshal, _ := json.Marshal(ProductTinyList)
 	order.Pidlist = string(marshal)
 	order.OriginalAmount, order.PromotionAmount, order.ActualAmount, order.ProductInfo = l.OriProPrice(ProductTinyList)
+	order.CouponAmount = order.PromotionAmount - order.ActualAmount
 	addr, err := json.Marshal(l.req.Address)
 	if err != nil {
 		fmt.Println(err.Error(), "结构体转化为字符串失败")

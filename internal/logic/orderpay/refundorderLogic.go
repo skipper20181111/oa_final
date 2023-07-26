@@ -55,8 +55,11 @@ func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.C
 	if order.WexinPayAmount > 0 {
 		l.wcu.CancelOrder(order)
 	}
+	if (order.CashAccountPayAmount+PayInfo.CashAccountRefundAmount != PayInfo.CashAccountPayAmount) || (order.WexinPayAmount+PayInfo.WexinRefundAmount != PayInfo.WexinPayAmount) {
+		order.UsedCouponinfo = ""
+	}
 	// 然后开始退现金账户的钱和优惠券
-	if order.CashAccountPayAmount > 0 || len(order.UsedCouponinfo) > 3 {
+	if order.CashAccountPayAmount > 0 || len(order.UsedCouponinfo) > 6 {
 		lockmsglist := make([]*types.LockMsg, 0)
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.userphone, Field: "user_coupon"})
 		lockmsglist = append(lockmsglist, &types.LockMsg{Phone: l.userphone, Field: "cash_account"})
@@ -67,7 +70,7 @@ func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.C
 					l.ul.Oplog("更新现金账户失败", order.OrderSn, "开始更新", order.LogId)
 				}
 			}
-			if order.UsedCouponinfo != "" {
+			if len(order.UsedCouponinfo) > 6 {
 				ok, _ := l.oul.UpdateCoupon(order, false)
 				if !ok {
 					l.ul.Oplog("更新优惠券失败", order.OrderSn, "开始更新", order.LogId)

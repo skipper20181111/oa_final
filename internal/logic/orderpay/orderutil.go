@@ -13,19 +13,20 @@ import (
 
 type OrderUtilLogic struct {
 	logx.Logger
-	ctx                context.Context
-	svcCtx             *svc.ServiceContext
-	userphone          string
-	ProductsMap        map[int64]*cachemodel.Product
-	req                *types.NewOrderRes
-	ProductTinyList    []*types.ProductTiny
-	coupon             *cachemodel.Coupon
-	usercoupon         *cachemodel.UserCoupon
-	UsedCouponStorInfo map[int64]map[string]*types.CouponStoreInfo
-	OrdersList         []*cachemodel.Order
-	PayInit            *types.PayInit
-	ul                 *UtilLogic
-	ReallyUseCoupon    bool
+	ctx                   context.Context
+	svcCtx                *svc.ServiceContext
+	userphone             string
+	ProductsMap           map[int64]*cachemodel.Product
+	req                   *types.NewOrderRes
+	ProductTinyList       []*types.ProductTiny
+	coupon                *cachemodel.Coupon
+	usercoupon            *cachemodel.UserCoupon
+	UsedCouponStorInfo    map[int64]map[string]*types.CouponStoreInfo
+	OrdersList            []*cachemodel.Order
+	PayInit               *types.PayInit
+	ul                    *UtilLogic
+	ReallyUseCoupon       bool
+	ProductQuantityInfoDB map[int64]map[string]*types.QuantityInfoDB
 }
 
 func NewOrderUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *OrderUtilLogic {
@@ -95,7 +96,7 @@ func (l OrderUtilLogic) GetAmount(ProductTinyList []*types.ProductTiny) (Origina
 		return 0, 0
 	}
 	for _, ptlist := range ptlists {
-		originalAmount, promotionAmount, _ := l.OriProPrice(ptlist)
+		originalAmount, promotionAmount, _, _ := l.OriProPrice(ptlist)
 		OriginalAmount = OriginalAmount + originalAmount
 		PromotionAmount = PromotionAmount + promotionAmount
 	}
@@ -112,8 +113,13 @@ func (l OrderUtilLogic) req2op(req *types.NewOrderRes) ([]*cachemodel.Order, *ty
 	if ok {
 		l.ProductsMap = PMcache.(map[int64]*cachemodel.Product)
 	}
+	ProductQuantityInfoDB, ok := l.svcCtx.LocalCache.Get(svc.ProductQuantityInfoDB)
+	if ok {
+		l.ProductQuantityInfoDB = ProductQuantityInfoDB.(map[int64]map[string]*types.QuantityInfoDB)
+	}
 	if l.req.UseCouponFirst {
 		get, ok := l.svcCtx.LocalCache.Get(svc.CouponMapKey)
+
 		if ok {
 			l.coupon, ok = get.(map[int64]*cachemodel.Coupon)[l.req.UsedCouponId]
 		}
@@ -131,19 +137,19 @@ func (l OrderUtilLogic) ConsumeInfo(ProductTinyList []*types.ProductTiny) {
 
 }
 func (l OrderUtilLogic) EndPayInit(OrdersList []*cachemodel.Order) []*cachemodel.Order {
-	BiggestOrderIndex := 0
-	BiggestAmount := int64(0)
-	for i, order := range OrdersList {
-		if order.PromotionAmount > BiggestAmount {
-			BiggestAmount = order.PromotionAmount
-			BiggestOrderIndex = i
-		}
+	AllPromotionAmount := int64(0)
+	for _, order := range OrdersList {
+		AllPromotionAmount = AllPromotionAmount + order.PromotionAmount
 	}
-	OrdersList[BiggestOrderIndex].ActualAmount = l.CountCouponPrice(BiggestAmount)
+	_, AllCut := l.CountCouponPrice(AllPromotionAmount)
 	if len(l.UsedCouponStorInfo) > 0 {
-		UsedCouponStorInfoStr, _ := json.Marshal(l.UsedCouponStorInfo)
-		OrdersList[BiggestOrderIndex].UsedCouponinfo = string(UsedCouponStorInfoStr)
-		OrdersList[BiggestOrderIndex].CouponAmount = OrdersList[BiggestOrderIndex].PromotionAmount - OrdersList[BiggestOrderIndex].ActualAmount
+		UsedCouponStorInfoByteList, _ := json.Marshal(l.UsedCouponStorInfo)
+		UsedCouponStorInfoStr := string(UsedCouponStorInfoByteList)
+		for i, _ := range OrdersList {
+			part := float64(OrdersList[i].PromotionAmount) / float64(AllPromotionAmount)
+			OrdersList[i].ActualAmount = OrdersList[i].ActualAmount - int64(float64(AllCut)*part)
+			OrdersList[i].UsedCouponinfo = UsedCouponStorInfoStr
+		}
 	}
 	for _, order := range OrdersList {
 		l.PayInit.TotleAmmount = l.PayInit.TotleAmmount + order.ActualAmount
@@ -169,7 +175,7 @@ func (l OrderUtilLogic) ProductTinyListChina() (bool, [][]*types.ProductTiny) {
 	ProductTinyListForOrder := make([][]*types.ProductTiny, 0)
 	for _, tiny := range l.ProductTinyList {
 		for i := 0; i < int(tiny.Amount); i++ {
-			ProductTinyListForOrder = append(ProductTinyListForOrder, []*types.ProductTiny{{tiny.PId, 1}})
+			ProductTinyListForOrder = append(ProductTinyListForOrder, []*types.ProductTiny{{tiny.PId, tiny.QuantityName, 1}})
 		}
 	}
 	return true, ProductTinyListForOrder
@@ -202,22 +208,22 @@ func (l OrderUtilLogic) GetPromotionPrice(Tiny *types.ProductTiny) int64 {
 	if !l.ReallyUseCoupon {
 		switch l.ProductsMap[Tiny.PId].Status {
 		case 3, 4:
-			if l.ProductsMap[Tiny.PId].PromotionPrice >= l.ProductsMap[Tiny.PId].MinPrice {
-				return l.ProductsMap[Tiny.PId].PromotionPrice - l.ProductsMap[Tiny.PId].Cut
-			}
+			return l.ProductQuantityInfoDB[Tiny.PId][Tiny.QuantityName].PromotionPrice - l.ProductQuantityInfoDB[Tiny.PId][Tiny.QuantityName].Cut
 		}
 	}
-	return l.ProductsMap[Tiny.PId].PromotionPrice
+	return l.ProductQuantityInfoDB[Tiny.PId][Tiny.QuantityName].PromotionPrice
 }
-func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (OriginalAmount int64, PromotionAmount int64, ProductInfoForSf string) {
+func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (OriginalAmount, PromotionAmount, ActualAmount int64, ProductInfoForSf string) {
 	OriginalAmount = int64(0)
 	PromotionAmount = int64(0)
+	ProductInfoForSf = ""
 	for _, tiny := range ProductTinyList {
-		ProductInfoForSf = ProductInfoForSf + l.ProductsMap[tiny.PId].ProductCategoryName + "\n"
-		OriginalAmount = OriginalAmount + l.ProductsMap[tiny.PId].OriginalPrice*tiny.Amount
-		PromotionAmount = PromotionAmount + l.GetPromotionPrice(tiny)*tiny.Amount
+		ProductInfoForSf = fmt.Sprintf("%s%s * %d %s", ProductInfoForSf, l.ProductsMap[tiny.PId].ProductCategoryName, tiny.Amount, "\n")
+		OriginalAmount = OriginalAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].OriginalPrice*tiny.Amount
+		PromotionAmount = PromotionAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].PromotionPrice*tiny.Amount
+		ActualAmount = ActualAmount + l.GetPromotionPrice(tiny)*tiny.Amount
 	}
-	return OriginalAmount, PromotionAmount, ProductInfoForSf
+	return OriginalAmount, PromotionAmount, ActualAmount, ProductInfoForSf
 }
 
 func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cachemodel.Order {
@@ -231,8 +237,7 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	order.CreateOrderTime = time.Now()
 	marshal, _ := json.Marshal(ProductTinyList)
 	order.Pidlist = string(marshal)
-	order.OriginalAmount, order.PromotionAmount, order.ProductInfo = l.OriProPrice(ProductTinyList)
-	order.ActualAmount = order.PromotionAmount
+	order.OriginalAmount, order.PromotionAmount, order.ActualAmount, order.ProductInfo = l.OriProPrice(ProductTinyList)
 	addr, err := json.Marshal(l.req.Address)
 	if err != nil {
 		fmt.Println(err.Error(), "结构体转化为字符串失败")
@@ -248,14 +253,14 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	order.LogId = time.Now().UnixNano()
 	return order
 }
-func (l OrderUtilLogic) CountCouponPrice(PromotionPrice int64) (ActualAmount int64) {
+func (l OrderUtilLogic) CountCouponPrice(PromotionPrice int64) (ActualAmount, Cut int64) {
 	if l.coupon != nil && l.ReallyUseCoupon {
 		if PromotionPrice >= l.coupon.MinPoint {
-			return PromotionPrice - l.coupon.Cut
+			return (PromotionPrice - l.coupon.Cut), l.coupon.Cut
 		}
 	}
 
-	return PromotionPrice
+	return PromotionPrice, 0
 }
 func (l *OrderUtilLogic) CouponEffective() bool {
 	defer func() {
@@ -263,8 +268,7 @@ func (l *OrderUtilLogic) CouponEffective() bool {
 			return
 		}
 	}()
-
-	if l.coupon != nil && l.usercoupon != nil && (l.coupon.MinPoint != 0 && l.coupon.Cut != 0) {
+	if l.coupon != nil && l.usercoupon != nil && (l.coupon.Cut != 0) {
 		usercouponmap := make(map[int64]map[string]*types.CouponStoreInfo)
 		json.Unmarshal([]byte(l.usercoupon.CouponIdMap), &usercouponmap)
 		_, ok := usercouponmap[l.req.UsedCouponId] //连续两次判断我是否有这个优惠券

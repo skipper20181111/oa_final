@@ -50,6 +50,13 @@ func (l *PayUtilLogic) Payorder(PayInit *types.PayInit, OrderList []*cachemodel.
 	if !l.OrdersEnd() {
 		return nil, nil, l.payinfodb2info(), false
 	}
+	//a := l.PayInfo.WexinPayAmount
+	//b := l.PayInfo.CashAccountPayAmount
+	//for _, order := range OrderList {
+	//	a = a - order.WexinPayAmount
+	//	b = b - order.CashAccountPayAmount
+	//}
+	//fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$", a, b)
 	sn, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, PayInit.OutTradeSn)
 	if sn != nil {
 		l.PayInfo.Id = sn.Id
@@ -99,7 +106,7 @@ func (l *PayUtilLogic) OrderEnd(order *cachemodel.Order) (*cachemodel.Order, boo
 		order.CashAccountPayAmount = cashamount
 		l.Cash = l.Cash - cashamount
 	}
-	if l.Cash < 0 {
+	if l.Cash < -10 {
 		return order, false
 	}
 	return order, true

@@ -349,3 +349,12 @@ func getQuantityBool(cut int64) bool {
 		return false
 	}
 }
+func getIfReserve(status int64) bool {
+	switch status {
+	case 2:
+		return true
+	case 4:
+		return true
+	}
+	return false
+}

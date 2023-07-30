@@ -100,6 +100,8 @@ type (
         // 市场价格
         IfCut bool `json:"ifCut"`
         // 是否满减
+        IfReserve bool `json:"ifReserve"`
+        Description string `json:"description"`
         Cut float64 `json:"cut"`
         // 满减金额
         SpecialPrice float64 `json:"specialPrice"`

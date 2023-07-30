@@ -88,6 +88,8 @@ type OrderProductInfo struct {
 	PromotionPrice  float64 `json:"promotionPrice"`
 	OriginalPrice   float64 `json:"originalPrice"`
 	IfCut           bool    `json:"ifCut"`
+	IfReserve       bool    `json:"ifReserve"`
+	Description     string  `json:"description"`
 	Cut             float64 `json:"cut"`
 	SpecialPrice    float64 `json:"specialPrice"`
 }

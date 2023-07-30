@@ -84,6 +84,27 @@ type (
 )
 
 type (
+    OrderProductInfo {
+        PId int64 `json:"pId"`
+        Amount int64 `json:"amount"`
+        ProductTitle string `json:"productTitle"`
+        // 产品主标题
+        ProductStandard string `json:"productStandard"`
+        // 产品规格
+        Picture string `json:"picture"`
+        // 产品图标
+        QuantityName string `json:"quantityName"`
+        PromotionPrice float64 `json:"promotionPrice"`
+        // 出售价格
+        OriginalPrice float64 `json:"originalPrice"`
+        // 市场价格
+        IfCut bool `json:"ifCut"`
+        // 是否满减
+        Cut float64 `json:"cut"`
+        // 满减金额
+        SpecialPrice float64 `json:"specialPrice"`
+    }
+
     ProductInfo {
         ProductId int64 `json:"productId"`
         // 购买商品的数量
@@ -174,7 +195,7 @@ type (
         OrderSn string `json:"orderSn"`
         OutTradeNo string `json:"outTradeNo"`
         CreateTime string `json:"createTime"`
-        PidList []*ProductTiny `json:"pidList"`
+        ProductInfo []*OrderProductInfo `json:"productInfo"`
         OriginalAmount float64 `json:"originalAmount"`
         ProductCutAmount float64 `json:"productCutAmount"`
         PromotionAmount float64 `json:"promotionAmount"`
@@ -529,8 +550,13 @@ type (
     IfOvertimeRes {
         OrderSn string `json:"orderSn"`
     }
+    IfOvertimeRp {
+        OverTimeMilliSeconds int64 `json:"overTimeMilliSeconds"`
+    }
     IfOvertimeResp {
-
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *IfOvertimeRp `json:"data"`
     }
 )
 type (

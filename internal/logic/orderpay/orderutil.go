@@ -8,6 +8,7 @@ import (
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
+	"strings"
 	"time"
 )
 
@@ -225,7 +226,39 @@ func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (Origi
 	}
 	return OriginalAmount, PromotionAmount, ActualAmount, ProductInfoForSf
 }
+func (l OrderUtilLogic) GetOrderProductInfo(tiny *types.ProductTiny) (*types.OrderProductInfo, bool) {
 
+	product := l.ProductsMap[tiny.PId]
+	titleinfo := strings.Split(product.ProductTitle, "#")
+	infoDB := l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName]
+	OrderProductInfo := &types.OrderProductInfo{
+		PId:             product.Pid,
+		Amount:          tiny.Amount,
+		Picture:         product.Picture,
+		ProductTitle:    titleinfo[0],
+		ProductStandard: titleinfo[1],
+		QuantityName:    infoDB.Name,
+		PromotionPrice:  float64(infoDB.PromotionPrice) / 100,
+		OriginalPrice:   float64(infoDB.OriginalPrice) / 100,
+		IfCut:           getQuantityBool(infoDB.Cut),
+		Cut:             float64(infoDB.Cut) / 100,
+		SpecialPrice:    float64(infoDB.PromotionPrice-infoDB.Cut) / 100,
+	}
+	return OrderProductInfo, true
+}
+func (l OrderUtilLogic) GetOrderProductInfoList(ProductTinyList []*types.ProductTiny) ([]*types.OrderProductInfo, bool) {
+
+	OrderProductInfoList := make([]*types.OrderProductInfo, 0)
+	for _, tiny := range ProductTinyList {
+		info, ok := l.GetOrderProductInfo(tiny)
+		if ok {
+			OrderProductInfoList = append(OrderProductInfoList, info)
+		} else {
+			return OrderProductInfoList, false
+		}
+	}
+	return OrderProductInfoList, true
+}
 func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cachemodel.Order {
 	order := &cachemodel.Order{}
 	order.OrderType = status2key(l.ProductsMap[ProductTinyList[0].PId].Status)
@@ -235,8 +268,11 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	order.OutTradeNo = l.PayInit.OutTradeSn
 	order.OutRefundNo = randStr(64)
 	order.CreateOrderTime = time.Now()
-	marshal, _ := json.Marshal(ProductTinyList)
-	order.Pidlist = string(marshal)
+	OrderProductInfo, ok := l.GetOrderProductInfoList(ProductTinyList)
+	if ok {
+		marshal, _ := json.Marshal(OrderProductInfo)
+		order.Pidlist = string(marshal)
+	}
 	order.OriginalAmount, order.PromotionAmount, order.ActualAmount, order.ProductInfo = l.OriProPrice(ProductTinyList)
 	order.CouponAmount = order.PromotionAmount - order.ActualAmount
 	addr, err := json.Marshal(l.req.Address)

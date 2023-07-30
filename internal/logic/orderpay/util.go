@@ -145,7 +145,7 @@ func storedcouponinfo2typeinfo(infostr string) *types.CouponStoreInfo {
 	}
 	return nil
 }
-func OrderCanBeDeleted(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) bool {
+func OrderCanBeOvertime(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) bool {
 	if order.OrderStatus == 7 || order.OrderStatus == 3 {
 		return true
 	}
@@ -158,6 +158,20 @@ func OrderCanBeDeleted(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) boo
 	}
 	return false
 }
+func OrderCanBeDeleted(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) bool {
+	if order.OrderStatus == 7 || order.OrderStatus == 3 {
+		return true
+	}
+	if order.OrderStatus == 0 {
+		if !PartPay(PayInfo) {
+			return true
+		} else {
+			return false
+		}
+	}
+	return false
+}
+
 func PartPay(PayInfo *cachemodel.PayInfo) bool {
 	cash := false
 	weixin := false
@@ -237,10 +251,10 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.PointsOrder = getbool(order.PointsOrder)
 	orderinfo.UsedPoints = order.PointsAmount
 	orderinfo.CreateTime = order.CreateOrderTime.Format("2006-01-02 15:04:05")
-	pidlist := make([]*types.ProductTiny, 0)
-	json.Unmarshal([]byte(order.Pidlist), &pidlist)
+	OrderProducInfo := make([]*types.OrderProductInfo, 0)
+	json.Unmarshal([]byte(order.Pidlist), &OrderProducInfo)
 
-	orderinfo.PidList = pidlist
+	orderinfo.ProductInfo = OrderProducInfo
 	orderinfo.UsedCouponInfo = storedcouponinfo2typeinfo(order.UsedCouponinfo)
 	orderinfo.ProductCutAmount = float64(order.OriginalAmount-order.PromotionAmount) / 100
 	orderinfo.PromotionAmount = float64(order.PromotionAmount) / 100
@@ -327,4 +341,11 @@ func ifcouponuseable(coupon *cachemodel.Coupon, disableTime string, amount int64
 		}
 	}
 	return false
+}
+func getQuantityBool(cut int64) bool {
+	if cut > 0 {
+		return true
+	} else {
+		return false
+	}
 }

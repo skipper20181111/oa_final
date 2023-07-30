@@ -78,6 +78,20 @@ type GetDefaultAddressResp struct {
 	Data *GetDefaultAddressRp `json:"data"`
 }
 
+type OrderProductInfo struct {
+	PId             int64   `json:"pId"`
+	Amount          int64   `json:"amount"`
+	ProductTitle    string  `json:"productTitle"`
+	ProductStandard string  `json:"productStandard"`
+	Picture         string  `json:"picture"`
+	QuantityName    string  `json:"quantityName"`
+	PromotionPrice  float64 `json:"promotionPrice"`
+	OriginalPrice   float64 `json:"originalPrice"`
+	IfCut           bool    `json:"ifCut"`
+	Cut             float64 `json:"cut"`
+	SpecialPrice    float64 `json:"specialPrice"`
+}
+
 type ProductInfo struct {
 	ProductId       int64   `json:"productId"`
 	Amount          int     `json:"amount"`
@@ -155,43 +169,43 @@ type PayInfo struct {
 }
 
 type OrderInfo struct {
-	Phone                string           `json:"phone"`
-	OrderSn              string           `json:"orderSn"`
-	OutTradeNo           string           `json:"outTradeNo"`
-	CreateTime           string           `json:"createTime"`
-	PidList              []*ProductTiny   `json:"pidList"`
-	OriginalAmount       float64          `json:"originalAmount"`
-	ProductCutAmount     float64          `json:"productCutAmount"`
-	PromotionAmount      float64          `json:"promotionAmount"`
-	ActualAmount         float64          `json:"actualAmount"`
-	CouponAmount         float64          `json:"couponAmount"`
-	UsedCouponInfo       *CouponStoreInfo `json:"usedCouponInfo"`
-	WeXinPayAmount       float64          `json:"weXinPayAmount"`
-	InvoiceAmount        float64          `json:"invoiceAmount"`
-	CashAccountPayAmount float64          `json:"cashAccountPayAmount"`
-	CutPrice             float64          `json:"cutPrice"`
-	FreightAmount        float64          `json:"freightAmount"`
-	RealFreightAmount    float64          `json:"realFreightAmount"`
-	CutFreightAmount     float64          `json:"cutFreightAmount"`
-	IfCutFreight         bool             `json:"ifCutFreight"`
-	CutPriceWithFreight  float64          `json:"cutPriceWithFreight"`
-	Growth               int64            `json:"growth"`
-	Address              *AddressInfo     `json:"addressInfo"`
-	OrderNote            string           `json:"orderNote"`
-	OrderStatus          int64            `json:"orderStatus"`
-	DeliveryCompany      string           `json:"deliveryCompany"`
-	DeliverySn           string           `json:"deliverySn"`
-	ConfirmStatus        int64            `json:"confirmStatus"`
-	DeleteStatus         int64            `json:"deleteStatus"`
-	PaymentTime          string           `json:"paymentTime"`
-	DeliveryTime         string           `json:"deliveryTime"`
-	ReceiveTime          string           `json:"receiveTime"`
-	ModifyTime           string           `json:"modifyTime"`
-	UsedPoints           int64            `json:"usedPoints"`
-	PointsOrder          bool             `json:"pointsOrder"`
-	InvoiceStatus        int64            `json:"invoiceStatus"`
-	MarketPlayerId       int64            `json:"marketPlayerId"`
-	RouteList            *RouteList       `json:"routeList"`
+	Phone                string              `json:"phone"`
+	OrderSn              string              `json:"orderSn"`
+	OutTradeNo           string              `json:"outTradeNo"`
+	CreateTime           string              `json:"createTime"`
+	ProductInfo          []*OrderProductInfo `json:"productInfo"`
+	OriginalAmount       float64             `json:"originalAmount"`
+	ProductCutAmount     float64             `json:"productCutAmount"`
+	PromotionAmount      float64             `json:"promotionAmount"`
+	ActualAmount         float64             `json:"actualAmount"`
+	CouponAmount         float64             `json:"couponAmount"`
+	UsedCouponInfo       *CouponStoreInfo    `json:"usedCouponInfo"`
+	WeXinPayAmount       float64             `json:"weXinPayAmount"`
+	InvoiceAmount        float64             `json:"invoiceAmount"`
+	CashAccountPayAmount float64             `json:"cashAccountPayAmount"`
+	CutPrice             float64             `json:"cutPrice"`
+	FreightAmount        float64             `json:"freightAmount"`
+	RealFreightAmount    float64             `json:"realFreightAmount"`
+	CutFreightAmount     float64             `json:"cutFreightAmount"`
+	IfCutFreight         bool                `json:"ifCutFreight"`
+	CutPriceWithFreight  float64             `json:"cutPriceWithFreight"`
+	Growth               int64               `json:"growth"`
+	Address              *AddressInfo        `json:"addressInfo"`
+	OrderNote            string              `json:"orderNote"`
+	OrderStatus          int64               `json:"orderStatus"`
+	DeliveryCompany      string              `json:"deliveryCompany"`
+	DeliverySn           string              `json:"deliverySn"`
+	ConfirmStatus        int64               `json:"confirmStatus"`
+	DeleteStatus         int64               `json:"deleteStatus"`
+	PaymentTime          string              `json:"paymentTime"`
+	DeliveryTime         string              `json:"deliveryTime"`
+	ReceiveTime          string              `json:"receiveTime"`
+	ModifyTime           string              `json:"modifyTime"`
+	UsedPoints           int64               `json:"usedPoints"`
+	PointsOrder          bool                `json:"pointsOrder"`
+	InvoiceStatus        int64               `json:"invoiceStatus"`
+	MarketPlayerId       int64               `json:"marketPlayerId"`
+	RouteList            *RouteList          `json:"routeList"`
 }
 
 type Billinfo struct {
@@ -518,7 +532,14 @@ type IfOvertimeRes struct {
 	OrderSn string `json:"orderSn"`
 }
 
+type IfOvertimeRp struct {
+	OverTimeMilliSeconds int64 `json:"overTimeMilliSeconds"`
+}
+
 type IfOvertimeResp struct {
+	Code string        `json:"code"`
+	Msg  string        `json:"msg"`
+	Data *IfOvertimeRp `json:"data"`
 }
 
 type CompanyInvoiceInfo struct {

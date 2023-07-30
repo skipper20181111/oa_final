@@ -143,14 +143,18 @@ func (l OrderUtilLogic) EndPayInit(OrdersList []*cachemodel.Order) []*cachemodel
 		AllPromotionAmount = AllPromotionAmount + order.PromotionAmount
 	}
 	_, AllCut := l.CountCouponPrice(AllPromotionAmount)
+	AllCutReal := AllCut
 	if len(l.UsedCouponStorInfo) > 0 {
 		UsedCouponStorInfoByteList, _ := json.Marshal(l.UsedCouponStorInfo)
 		UsedCouponStorInfoStr := string(UsedCouponStorInfoByteList)
 		for i, _ := range OrdersList {
 			part := float64(OrdersList[i].PromotionAmount) / float64(AllPromotionAmount)
-			OrdersList[i].ActualAmount = OrdersList[i].ActualAmount - int64(float64(AllCut)*part)
+			RealCut := int64(float64(AllCut) * part)
+			AllCutReal = AllCutReal - RealCut
+			OrdersList[i].ActualAmount = OrdersList[i].ActualAmount - RealCut
 			OrdersList[i].UsedCouponinfo = UsedCouponStorInfoStr
 		}
+		OrdersList[0].ActualAmount = OrdersList[0].ActualAmount - AllCutReal
 	}
 	for _, order := range OrdersList {
 		l.PayInit.TotleAmmount = l.PayInit.TotleAmmount + order.ActualAmount

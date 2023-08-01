@@ -26,38 +26,34 @@ func NewContinuepayLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Conti
 	}
 }
 
-func (l *ContinuepayLogic) Continuepay(req *types.FinishOrderRes) (resp *types.NewOrderResp, err error) {
-	UseAccount := false
-	UseCoupon := false
-	oldorder, err := l.svcCtx.Order.FindOneByOrderSn(l.ctx, req.OrderSn)
-	if oldorder == nil {
+func (l *ContinuepayLogic) Continuepay(req *types.ContinuePayRes) (resp *types.NewOrderResp, err error) {
+	PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, req.OutTradeNo)
+	if PayInfo == nil {
 		return &types.NewOrderResp{Code: "4004", Msg: "未查询到订单,请重建订单"}, nil
 	}
-	if oldorder.OrderStatus != 0 {
+	if PayInfo.Status != 0 {
 		return &types.NewOrderResp{Code: "4004", Msg: "此订单不可支付"}, nil
 	}
-	newreq := order2req(oldorder)
+	UseAccount := false
+	UseCoupon := false
 	OrderInfos := make([]*types.OrderInfo, 0)
-	OrderList, payInit, ok := l.ou.req2op(newreq)
+	NewOrderRes := PayInfo2req(PayInfo, req)
+	OrderList, payInit, ok := l.ou.req2op(NewOrderRes)
+	payInit.OutTradeSn = PayInfo.OutTradeNo
 	if !ok {
 		return &types.NewOrderResp{Code: "10000", Msg: "error", Data: &types.NewOrderRp{}}, nil
-	}
-	if len(OrderList) == 1 {
-		OrderList[0].OrderSn = oldorder.OrderSn
-		OrderList[0].Id = oldorder.Id
-		OrderList[0].CreateOrderTime = oldorder.CreateOrderTime
-		OrderList[0].ModifyTime = oldorder.ModifyTime
-		OrderList[0].LogId = oldorder.LogId
 	}
 	payInit.TransactionType = "普通商品"
 	payMsg, orders, payinfo, success := l.pu.Payorder(payInit, OrderList)
 	if !success {
 		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}
+	l.svcCtx.Order.DeleteByOutTradeSn(l.ctx, payInit.OutTradeSn)
 	for _, order := range orders {
-		l.svcCtx.Order.Update(l.ctx, order)
+		order.OutTradeNo = payInit.OutTradeSn
+		l.svcCtx.Order.Insert(l.ctx, order)
 		OrderInfos = append(OrderInfos, OrderDb2info(order))
-		if len(order.UsedCouponinfo) > 6 {
+		if order.UsedCouponinfo != "" {
 			UseCoupon = true
 		}
 	}

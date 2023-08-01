@@ -25,21 +25,21 @@ func NewCheckOrderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CheckO
 		wul:    NewWeChatUtilLogic(ctx, svcCtx),
 	}
 }
-func (l *CheckOrderLogic) MonitorOrderStatus(OrderSn string) (*types.GetOrderResp, error) {
+func (l *CheckOrderLogic) MonitorOrderStatus(OutTradeNo string) (*types.GetAllOrderResp, error) {
 	l.userphone = l.ctx.Value("phone").(string)
-	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
-	if order == nil {
-		return &types.GetOrderResp{Code: "4004", Msg: "数据库失效，请重新下单"}, nil
-	}
-	PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
+	PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, OutTradeNo)
 	if PayInfo == nil {
-		return &types.GetOrderResp{Code: "4004", Msg: "数据库失效，请重新下单"}, nil
+		return &types.GetAllOrderResp{Code: "4004", Msg: "数据库失效，请重新下单"}, nil
 	}
-	if order.Phone != l.userphone {
-		return &types.GetOrderResp{Code: "4004", Msg: "不要使用别人的token"}, nil
+	if PayInfo.Phone != l.userphone {
+		return &types.GetAllOrderResp{Code: "4004", Msg: "不要使用别人的token"}, nil
 	}
-	order = l.Checkall(order, PayInfo)
-	return &types.GetOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetOrderRp{OrderInfo: OrderDb2info(order)}}, nil
+	OrderInfos := make([]*types.OrderInfo, 0)
+	Orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, OutTradeNo)
+	for _, order := range Orders {
+		OrderInfos = append(OrderInfos, OrderDb2info(l.Checkall(order, PayInfo)))
+	}
+	return &types.GetAllOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetAllOrderRp{OrderInfos: OrderInfos}}, nil
 }
 
 func (l *CheckOrderLogic) Checkall(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) *cachemodel.Order {
@@ -70,6 +70,9 @@ func (l *CheckOrderLogic) Checkall(order *cachemodel.Order, PayInfo *cachemodel.
 	return order
 }
 func IfFinished(PayInfo *cachemodel.PayInfo) (total bool, cash bool, weixin bool) {
+	if PayInfo.Status == 1 {
+		return true, true, true
+	}
 	total = false
 	cash = false
 	weixin = false

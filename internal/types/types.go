@@ -219,6 +219,16 @@ type Billinfo struct {
 	BankAccount    string `json:"bankAccount"`
 }
 
+type ContinuePayRes struct {
+	OutTradeNo     string       `json:"outTradeNo"`
+	Address        *AddressInfo `json:"address"`
+	OrderNote      string       `json:"orderNote"` // 订单备注
+	UsedCouponId   int64        `json:"usedCouponId"`
+	UsedCouponUUID string       `json:"usedCoupUUID"`
+	UseCouponFirst bool         `json:"useCouponFirst"`
+	UseCashFirst   bool         `json:"useCashFirst"`
+}
+
 type NewOrderRes struct {
 	ProductTinyList []*ProductTiny `json:"productTinyList"`
 	Address         *AddressInfo   `json:"address"`
@@ -309,6 +319,7 @@ type PreNewOrderResp struct {
 
 type GetAllOrderRes struct {
 	PageNumber int `json:"pageNumber"`
+	PageSize   int `json:"pageSize"`
 }
 
 type GetAllOrderRp struct {
@@ -322,7 +333,7 @@ type GetAllOrderResp struct {
 }
 
 type GetOrderRes struct {
-	OrderSn string `json:"orderSn"`
+	OutTradeNo string `json:"outTradeNo"`
 }
 
 type GetOrderRp struct {
@@ -489,11 +500,12 @@ type StarMallOrderResp struct {
 }
 
 type PayInit struct {
-	Phone           string `json:"phone"`
-	OutTradeSn      string `json:"outTradeSn"`
-	NeedCashAccount bool   `json:"needCashAccount"`
-	TotleAmmount    int64  `json:"totleAmmount"`
-	TransactionType string `json:"transactionType"`
+	Phone           string         `json:"phone"`
+	OutTradeSn      string         `json:"outTradeSn"`
+	NeedCashAccount bool           `json:"needCashAccount"`
+	TotleAmmount    int64          `json:"totleAmmount"`
+	TransactionType string         `json:"transactionType"`
+	ProductTinyList []*ProductTiny `json:"productTinyList"`
 }
 
 type TransactionInit struct {

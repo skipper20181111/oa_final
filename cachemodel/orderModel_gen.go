@@ -42,6 +42,8 @@ type (
 		FindStatus2(ctx context.Context) ([]*Order, error)
 		UpdateDeliver(ctx context.Context, DeliverSn, DeliverCompany, OrderSn string) error
 		UpdateInvoice(ctx context.Context, OrderSn string, InvoiceStatus int64) error
+		FindAllByOutTradeNos(ctx context.Context, phone string, PayInfos []*PayInfo) ([]*Order, error)
+		DeleteByOutTradeSn(ctx context.Context, OutTradeSn string) error
 	}
 
 	defaultOrderModel struct {
@@ -97,7 +99,11 @@ func newOrderModel(conn sqlx.SqlConn) *defaultOrderModel {
 		table: "`order`",
 	}
 }
-
+func (m *defaultOrderModel) DeleteByOutTradeSn(ctx context.Context, OutTradeSn string) error {
+	query := fmt.Sprintf("delete from %s where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, OutTradeSn)
+	return err
+}
 func (m *defaultOrderModel) Delete(ctx context.Context, id int64) error {
 	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
@@ -122,7 +128,23 @@ func (m *defaultOrderModel) FindAllByPhone(ctx context.Context, phone string, pa
 		return nil, err
 	}
 }
-
+func (m *defaultOrderModel) FindAllByOutTradeNos(ctx context.Context, phone string, PayInfos []*PayInfo) ([]*Order, error) {
+	OutTradeNoList := [5]string{"1", "1", "1", "1", "1"}
+	for i, info := range PayInfos {
+		OutTradeNoList[i] = info.OutTradeNo
+	}
+	query := fmt.Sprintf("select %s from %s where `phone` = ? and `out_trade_no` in (?,?,?,?,?)  order by `create_order_time` desc", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone, OutTradeNoList[0], OutTradeNoList[1], OutTradeNoList[2], OutTradeNoList[3], OutTradeNoList[4])
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) FindAllByOutTradeNo(ctx context.Context, OutTradeNo string) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? ", orderRows, m.table)
 	var resp []*Order

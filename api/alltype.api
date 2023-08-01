@@ -239,6 +239,15 @@ type (
         OpeningBank string `json:"openingBank"`
         BankAccount string `json:"bankAccount"`
     }
+    ContinuePayRes {
+        OutTradeNo string `json:"outTradeNo"`
+        Address *AddressInfo `json:"address"`
+        OrderNote string `json:"orderNote"` // 订单备注
+        UsedCouponId int64 `json:"usedCouponId"`
+        UsedCouponUUID string `json:"usedCoupUUID"`
+        UseCouponFirst bool `json:"useCouponFirst"`
+        UseCashFirst bool `json:"useCashFirst"`
+    }
     NewOrderRes {
         ProductTinyList []*ProductTiny `json:"productTinyList"`
         Address *AddressInfo `json:"address"`
@@ -327,6 +336,7 @@ type (
 type (
     GetAllOrderRes {
         PageNumber int `json:"pageNumber"`
+        PageSize int `json:"pageSize"`
     }
     GetAllOrderRp {
         OrderInfos []*OrderInfo `json:"orderInfos"`
@@ -339,7 +349,7 @@ type (
 )
 type (
     GetOrderRes {
-        OrderSn string `json:"orderSn"`
+        OutTradeNo string `json:"outTradeNo"`
     }
     GetOrderRp {
         OrderInfo *OrderInfo `json:"orderInfo"`
@@ -515,6 +525,7 @@ type (
         NeedCashAccount bool `json:"needCashAccount"`
         TotleAmmount int64 `json:"totleAmmount"`
         TransactionType string `json:"transactionType"`
+        ProductTinyList []*ProductTiny `json:"productTinyList"`
     }
     TransactionInit {
         Phone string `json:"phone"`

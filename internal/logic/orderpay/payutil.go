@@ -2,6 +2,7 @@ package orderpay
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/zeromicro/go-zero/core/logx"
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
@@ -123,6 +124,8 @@ func (l *PayUtilLogic) payinfoinit() {
 	l.PayInfo.CashAccountPaymentTime = inittime
 	l.PayInfo.WexinPaymentTime = inittime
 	l.PayInfo.LogId = time.Now().UnixNano()
+	marshal, _ := json.Marshal(l.PayInit.ProductTinyList)
+	l.PayInfo.Pidlist = string(marshal)
 }
 func (l *PayUtilLogic) payinfofinish() {
 	if l.PayInit.NeedCashAccount {

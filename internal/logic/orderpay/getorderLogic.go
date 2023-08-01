@@ -25,8 +25,8 @@ func NewGetorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getorder
 	}
 }
 
-func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetOrderResp, err error) {
+func (l *GetorderLogic) Getorder(req *types.GetOrderRes) (resp *types.GetAllOrderResp, err error) {
 	// todo: add your logic here and delete this line
 
-	return l.col.MonitorOrderStatus(req.OrderSn)
+	return l.col.MonitorOrderStatus(req.OutTradeNo)
 }

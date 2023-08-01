@@ -57,6 +57,20 @@ func UpdatePayInfoIfFinished(svcCtx *svc.ServiceContext, PayInfo *cachemodel.Pay
 		svcCtx.PayInfo.UpdateAllPay(context.Background(), PayInfo.OutTradeNo)
 	}
 }
+func PayInfo2req(PayInfo *cachemodel.PayInfo, ContinuePayReq *types.ContinuePayRes) *types.NewOrderRes {
+	ProductTinyList := make([]*types.ProductTiny, 0)
+	json.Unmarshal([]byte(PayInfo.Pidlist), &ProductTinyList)
+	NewOrderRes := &types.NewOrderRes{
+		ProductTinyList: ProductTinyList,
+		Address:         ContinuePayReq.Address,
+		OrderNote:       ContinuePayReq.OrderNote,
+		UsedCouponId:    ContinuePayReq.UsedCouponId,
+		UsedCouponUUID:  ContinuePayReq.UsedCouponUUID,
+		UseCouponFirst:  ContinuePayReq.UseCouponFirst,
+		UseCashFirst:    ContinuePayReq.UseCashFirst,
+	}
+	return NewOrderRes
+}
 func order2req(order *cachemodel.Order) *types.NewOrderRes {
 	req := &types.NewOrderRes{}
 	pidlist := make([]*types.ProductTiny, 0)
@@ -132,6 +146,7 @@ func (l OrderUtilLogic) req2op(req *types.NewOrderRes) ([]*cachemodel.Order, *ty
 	l.PayInit.Phone = l.userphone
 	l.PayInit.OutTradeSn = randStr(32)
 	l.PayInit.NeedCashAccount = l.req.UseCashFirst
+	l.PayInit.ProductTinyList = l.req.ProductTinyList
 	return l.EndPayInit(l.OrderChina()), l.PayInit, true
 }
 func (l OrderUtilLogic) ConsumeInfo(ProductTinyList []*types.ProductTiny) {

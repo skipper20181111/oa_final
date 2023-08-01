@@ -58,7 +58,7 @@ service oa-api {
 	
 	@doc "继续支付"
 	@handler continuepay
-	post /continuepay (FinishOrderRes) returns (NewOrderResp)
+	post /continuepay (ContinuePayRes) returns (NewOrderResp)
 	
 	@doc "获取所有订单"
 	@handler getallorder
@@ -66,7 +66,7 @@ service oa-api {
 	
 	@doc "获取单个订单"
 	@handler getorder
-	post /getorder (GetOrderRes) returns (GetOrderResp)
+	post /getorder (GetOrderRes) returns (GetAllOrderResp)
 }
 
 @server(

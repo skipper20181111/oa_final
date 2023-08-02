@@ -80,6 +80,7 @@ type GetDefaultAddressResp struct {
 
 type OrderProductInfo struct {
 	PId             int64   `json:"pId"`
+	PIdQuantity     string  `json:"pIdQuantity"`
 	Amount          int64   `json:"amount"`
 	ProductTitle    string  `json:"productTitle"`
 	ProductStandard string  `json:"productStandard"`

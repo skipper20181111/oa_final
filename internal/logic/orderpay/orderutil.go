@@ -8,6 +8,7 @@ import (
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -253,6 +254,7 @@ func (l OrderUtilLogic) GetOrderProductInfo(tiny *types.ProductTiny) (*types.Ord
 	OrderProductInfo := &types.OrderProductInfo{
 		PId:             product.Pid,
 		Amount:          tiny.Amount,
+		PIdQuantity:     strconv.FormatInt(product.Pid, 10) + infoDB.Name,
 		Picture:         product.Picture,
 		ProductTitle:    titleinfo[0],
 		ProductStandard: titleinfo[1],

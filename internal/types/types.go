@@ -318,8 +318,9 @@ type PreNewOrderResp struct {
 }
 
 type GetAllOrderRes struct {
-	PageNumber int `json:"pageNumber"`
-	PageSize   int `json:"pageSize"`
+	PageNumber    int  `json:"pageNumber"`
+	PageSize      int  `json:"pageSize"`
+	IsPointsOrder bool `json:"isPointsOrder"`
 }
 
 type GetAllOrderRp struct {

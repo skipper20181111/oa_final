@@ -337,6 +337,7 @@ type (
     GetAllOrderRes {
         PageNumber int `json:"pageNumber"`
         PageSize int `json:"pageSize"`
+        IsPointsOrder bool `json:"isPointsOrder"`
     }
     GetAllOrderRp {
         OrderInfos []*OrderInfo `json:"orderInfos"`

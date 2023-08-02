@@ -36,11 +36,12 @@ type (
 	}
 
 	StarmallLonglist struct {
-		Id             int64 `db:"id"`              // id
-		Subregion      int64 `db:"subregion"`       // 0->长列表商品区，1->礼品级商品区，2->促销区
-		Cid            int64 `db:"cid"`             // 商品种类id
-		ProductId      int64 `db:"product_id"`      // 商品id
-		ExchangePoints int64 `db:"exchange_points"` // 兑换所需积分
+		Id             int64  `db:"id"`              // id
+		Subregion      int64  `db:"subregion"`       // 0->长列表商品区，1->礼品级商品区，2->促销区
+		Cid            int64  `db:"cid"`             // 商品种类id
+		ProductId      int64  `db:"product_id"`      // 商品id
+		ExchangePoints int64  `db:"exchange_points"` // 兑换所需积分
+		QuantityName   string `db:"quantity_name"`   // 商品规格名称
 	}
 )
 
@@ -49,6 +50,12 @@ func newStarmallLonglistModel(conn sqlx.SqlConn) *defaultStarmallLonglistModel {
 		conn:  conn,
 		table: "`starmall_longlist`",
 	}
+}
+
+func (m *defaultStarmallLonglistModel) Delete(ctx context.Context, id int64) error {
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
+	return err
 }
 func (m *defaultStarmallLonglistModel) FindAll(ctx context.Context) ([]*StarmallLonglist, error) {
 	query := fmt.Sprintf("select %s from %s", starmallLonglistRows, m.table)
@@ -63,12 +70,6 @@ func (m *defaultStarmallLonglistModel) FindAll(ctx context.Context) ([]*Starmall
 		return nil, err
 	}
 }
-func (m *defaultStarmallLonglistModel) Delete(ctx context.Context, id int64) error {
-	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, id)
-	return err
-}
-
 func (m *defaultStarmallLonglistModel) FindOne(ctx context.Context, id int64) (*StarmallLonglist, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", starmallLonglistRows, m.table)
 	var resp StarmallLonglist
@@ -84,14 +85,14 @@ func (m *defaultStarmallLonglistModel) FindOne(ctx context.Context, id int64) (*
 }
 
 func (m *defaultStarmallLonglistModel) Insert(ctx context.Context, data *StarmallLonglist) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, starmallLonglistRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Subregion, data.Cid, data.ProductId, data.ExchangePoints)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, starmallLonglistRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Subregion, data.Cid, data.ProductId, data.ExchangePoints, data.QuantityName)
 	return ret, err
 }
 
 func (m *defaultStarmallLonglistModel) Update(ctx context.Context, data *StarmallLonglist) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, starmallLonglistRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.Subregion, data.Cid, data.ProductId, data.ExchangePoints, data.Id)
+	_, err := m.conn.ExecCtx(ctx, query, data.Subregion, data.Cid, data.ProductId, data.ExchangePoints, data.QuantityName, data.Id)
 	return err
 }
 

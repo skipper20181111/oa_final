@@ -83,9 +83,10 @@ func getinfolist(couponmap map[int64]map[string]*types.CouponStoreInfo, couponin
 			if disabletime.Before(time.Now()) {
 				delete(*chilemap, uuid)
 			} else {
-				couponinfomap[cid].CouponUUID = uuid
-				couponinfomap[cid].DisabledTime = storeInfo.DisabledTime
-				infolist = append(infolist, couponinfomap[cid])
+				couponinfo := *(couponinfomap[cid])
+				couponinfo.CouponUUID = uuid
+				couponinfo.DisabledTime = storeInfo.DisabledTime
+				infolist = append(infolist, &couponinfo)
 			}
 		}
 		couponmap[cid] = *chilemap

@@ -24,19 +24,30 @@ func NewDeleteorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Delet
 }
 
 func (l *DeleteorderLogic) Deleteorder(req *types.DeletOrderRes) (resp *types.DeletOrderResp, err error) {
-	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, req.OrderSn)
-	if order == nil {
-		return &types.DeletOrderResp{Code: "10000", Msg: "订单不存在"}, nil
+	resp = &types.DeletOrderResp{Code: "10000", Msg: "删除成功"}
+	for _, OrderSn := range req.OrderSn {
+		ok := l.DeletOneOrder(OrderSn)
+		if !ok {
+			resp = &types.DeletOrderResp{Code: "4004", Msg: "订单中部分商品暂无法删除，请您核实后再进行尝试"}
+		}
 	}
+	return resp, nil
+}
+func (l DeleteorderLogic) DeletOneOrder(OrderSn string) bool {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
 	PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
-
 	if PayInfo == nil {
 		l.svcCtx.Order.Delete(l.ctx, order.Id)
-		return &types.DeletOrderResp{Code: "10000", Msg: "yes"}, nil
+		return true
 	}
 	if OrderCanBeDeleted(order, PayInfo) {
 		l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 9, order.OrderSn)
-		return &types.DeletOrderResp{Code: "10000", Msg: "yes"}, nil
+		return true
 	}
-	return &types.DeletOrderResp{Code: "10000", Msg: "订单状态不可删除"}, nil
+	return false
 }

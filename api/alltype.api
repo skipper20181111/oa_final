@@ -378,11 +378,12 @@ type (
 )
 type (
     CancelOrderRes {
-        OrderSn string `json:"orderSn"`
+        OrderSn []string `json:"orderSn"`
     }
     CancelOrderRp {
         BillNum float64 `json:"billNum"`
-        OrderInfo *OrderInfo `json:"orderInfo"`
+        SuccessOrderInfos []*OrderInfo `json:"successOrderInfos"`
+        FailedOrderInfos []string `json:"failedOrderInfos"`
     }
     CancelOrderResp {
         Code string `json:"code"`
@@ -554,7 +555,7 @@ type (
 )
 type (
     DeletOrderRes {
-        OrderSn string `json:"orderSn"`
+        OrderSn []string `json:"orderSn"`
     }
     DeletOrderResp {
         Code string `json:"code"`

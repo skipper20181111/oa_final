@@ -3,6 +3,7 @@ package coupon
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
 	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
@@ -36,7 +37,7 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 	couponinfomap := get.(map[int64]*types.CouponInfo)
 	couponadd, _ := l.svcCtx.Coupon.FindOneByCouponId(l.ctx, req.Cid)
 	userpoints, _ := l.svcCtx.UserPoints.FindOneByPhone(l.ctx, l.phone)
-	if userpoints == nil || userpoints.AvailablePoints < couponadd.UsePoints || couponadd.UsePoints == 0 {
+	if userpoints == nil || couponadd == nil || userpoints.AvailablePoints < couponadd.UsePoints || couponadd.UsePoints == 0 {
 		return &types.StarMallCouponOrderResp{Code: "10000", Msg: "积分不够"}, nil
 	}
 	couponbyphone, err := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.ctx.Value("phone").(string))
@@ -51,10 +52,10 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 		json.Unmarshal([]byte(couponbyphone.CouponIdMap), &couponmap)
 		_, ok := couponmap[req.Cid]
 		if ok {
-			couponmap[req.Cid][strconv.FormatInt(time.Now().UnixNano(), 10)] = &types.CouponStoreInfo{CouponId: req.Cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*couponadd.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+			couponmap[req.Cid][strconv.FormatInt(time.Now().UnixNano()+rand.Int63n(10000), 10)] = &types.CouponStoreInfo{CouponId: req.Cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*couponadd.EfficientPeriod)).Format("2006-01-02 15:04:05")}
 		} else {
 			couponmap[req.Cid] = make(map[string]*types.CouponStoreInfo)
-			couponmap[req.Cid][strconv.FormatInt(time.Now().UnixNano(), 10)] = &types.CouponStoreInfo{CouponId: req.Cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*couponadd.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+			couponmap[req.Cid][strconv.FormatInt(time.Now().UnixNano()+rand.Int63n(10000), 10)] = &types.CouponStoreInfo{CouponId: req.Cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*couponadd.EfficientPeriod)).Format("2006-01-02 15:04:05")}
 		}
 		couponmapstr, _ := json.Marshal(couponmap)
 		couponbyphone.CouponIdMap = string(couponmapstr)
@@ -64,9 +65,10 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 		infolist := make([]*types.CouponInfo, 0)
 		for cid, uuidmap := range couponmap {
 			for uuid, storeInfo := range uuidmap {
-				couponinfomap[cid].CouponUUID = uuid
-				couponinfomap[cid].DisabledTime = storeInfo.DisabledTime
-				infolist = append(infolist, couponinfomap[cid])
+				couponinfo := *(couponinfomap[cid])
+				couponinfo.CouponUUID = uuid
+				couponinfo.DisabledTime = storeInfo.DisabledTime
+				infolist = append(infolist, &couponinfo)
 			}
 		}
 		return &types.StarMallCouponOrderResp{Code: "10000", Msg: "列表如下", Data: &types.GetSmallCouponRp{CouponInfoList: infolist}}, nil

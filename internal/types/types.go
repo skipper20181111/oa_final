@@ -364,12 +364,13 @@ type ChangeOrdeRaddressResp struct {
 }
 
 type CancelOrderRes struct {
-	OrderSn string `json:"orderSn"`
+	OrderSn []string `json:"orderSn"`
 }
 
 type CancelOrderRp struct {
-	BillNum   float64    `json:"billNum"`
-	OrderInfo *OrderInfo `json:"orderInfo"`
+	BillNum           float64      `json:"billNum"`
+	SuccessOrderInfos []*OrderInfo `json:"successOrderInfos"`
+	FailedOrderInfos  []string     `json:"failedOrderInfos"`
 }
 
 type CancelOrderResp struct {
@@ -536,7 +537,7 @@ type PayMsg struct {
 }
 
 type DeletOrderRes struct {
-	OrderSn string `json:"orderSn"`
+	OrderSn []string `json:"orderSn"`
 }
 
 type DeletOrderResp struct {

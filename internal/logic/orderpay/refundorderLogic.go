@@ -35,17 +35,35 @@ func NewRefundorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Refun
 }
 
 func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.CancelOrderResp, err error) {
+	resp = &types.CancelOrderResp{Code: "10000",
+		Msg: "Success",
+		Data: &types.CancelOrderRp{
+			SuccessOrderInfos: make([]*types.OrderInfo, 0),
+			FailedOrderInfos:  make([]string, 0),
+		},
+	}
+
+	for _, OrderSn := range req.OrderSn {
+		orderInfo, ok := l.RefundOneOrder(OrderSn)
+		if !ok {
+			resp.Data.FailedOrderInfos = append(resp.Data.FailedOrderInfos, OrderSn)
+		} else {
+			resp.Data.SuccessOrderInfos = append(resp.Data.SuccessOrderInfos, orderInfo)
+		}
+	}
+	return resp, nil
+}
+func (l RefundorderLogic) RefundOneOrder(OrderSn string) (*types.OrderInfo, bool) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
 	//必须注意，这个接口是发起退款接口，不参与判定是否退款成功
-	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, req.OrderSn)
-	if order == nil {
-		return &types.CancelOrderResp{Code: "4004", Msg: "数据库失效，请重新下单"}, nil
-	}
+	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
 	PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
-	if PayInfo == nil {
-		return &types.CancelOrderResp{Code: "4004", Msg: "数据库失效，请重新下单"}, nil
-	}
 	if order.OrderStatus != 1 || PayInfo.Status != 1 {
-		return &types.CancelOrderResp{Code: "10000", Msg: "您好，您的订单非已付款未发货状态，暂不可取消订单，若商品有质量问题请点击投诉按钮投诉，我们会在24小时内为您处理！"}, nil
+		return nil, false
 	}
 	order.OrderStatus = 6 // 删除订单，设置为开始退款。
 	order.ModifyTime = time.Now()
@@ -81,6 +99,5 @@ func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.C
 
 	}
 	//结束更新现金账户与优惠券账户
-	return &types.CancelOrderResp{Code: "10000", Msg: "yes", Data: &types.CancelOrderRp{OrderInfo: OrderDb2info(order)}}, nil
-
+	return OrderDb2info(order), true
 }

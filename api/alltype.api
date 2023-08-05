@@ -564,10 +564,10 @@ type (
 )
 type (
     IfOvertimeRes {
-        OrderSn string `json:"orderSn"`
+        OrderSnList []string `json:"orderSnList"`
     }
     IfOvertimeRp {
-        OverTimeMilliSeconds int64 `json:"overTimeMilliSeconds"`
+        OverTimeMilliSecondsList []int64 `json:"overTimeMilliSecondsList"`
     }
     IfOvertimeResp {
         Code string `json:"code"`

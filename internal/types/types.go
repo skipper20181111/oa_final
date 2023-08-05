@@ -546,11 +546,11 @@ type DeletOrderResp struct {
 }
 
 type IfOvertimeRes struct {
-	OrderSn string `json:"orderSn"`
+	OrderSnList []string `json:"orderSnList"`
 }
 
 type IfOvertimeRp struct {
-	OverTimeMilliSeconds int64 `json:"overTimeMilliSeconds"`
+	OverTimeMilliSecondsList []int64 `json:"overTimeMilliSecondsList"`
 }
 
 type IfOvertimeResp struct {

@@ -364,11 +364,11 @@ type (
 )
 type (
     ChangeOrdeRaddressRes {
-        OrderSn string `json:"orderSn"`
+        OrderSnList []string `json:"orderSnList"`
         Address *AddressInfo `json:"address"`
     }
     ChangeOrdeRaddressRp {
-        OrderInfo *OrderInfo `json:"orderInfo"`
+        OrderInfoList []*OrderInfo `json:"orderInfoList"`
     }
     ChangeOrdeRaddressResp {
         Code string `json:"code"`
@@ -839,6 +839,41 @@ type (
         IsDefault bool `json:"isDefault"`
     }
 )
+type (
+    GetOrderSnRes {
+        FinishPayOrder bool `json:"finishPayOrder"`
+        PrepareGoods bool `json:"prepareGoods"`
+        Delivering bool `json:"delivering"`
+    }
+    GetOrderSnRp {
+        OrderInfos []*OrderInfo `json:"orderInfos"`
+    }
+    GetOrderSnResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetOrderSnRp `json:"data"`
+    }
+    PrepareGoodsRes {
+        OrderSns []string `json:"orderSns"`
+    }
+    PrepareGoodsRp {
+        SuccessOrderSn []string `json:"successOrderSn"`
+        FailedOrderSn []string `json:"failedOrderSn"`
+    }
+    PrepareGoodsResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *PrepareGoodsRp `json:"data"`
+    }
+    GiveSFRes{
+    QrCode string `json:"qrCode"`
+    }
+    GiveSFResp{
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+    }
+)
+
 
 
 

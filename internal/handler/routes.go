@@ -7,6 +7,7 @@ import (
 	address "oa_final/internal/handler/address"
 	associator "oa_final/internal/handler/associator"
 	coupon "oa_final/internal/handler/coupon"
+	deliver "oa_final/internal/handler/deliver"
 	invoice "oa_final/internal/handler/invoice"
 	orderpay "oa_final/internal/handler/orderpay"
 	payrecall "oa_final/internal/handler/payrecall"
@@ -19,6 +20,28 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/getnotdelivered",
+				Handler: deliver.GetordersnHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/preparegoods",
+				Handler: deliver.PreparegoodsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/givesf",
+				Handler: deliver.GivesfHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.AuthBackEnd.AccessSecret),
+		rest.WithPrefix("/deliver"),
+	)
+
 	server.AddRoutes(
 		[]rest.Route{
 			{

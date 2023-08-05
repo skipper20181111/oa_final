@@ -11,6 +11,10 @@ type Config struct {
 		AccessSecret string
 		AccessExpire int64
 	}
+	AuthBackEnd struct {
+		AccessSecret string
+		AccessExpire int64
+	}
 	DB struct {
 		DataSource string
 	}

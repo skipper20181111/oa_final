@@ -349,12 +349,12 @@ type GetOrderResp struct {
 }
 
 type ChangeOrdeRaddressRes struct {
-	OrderSn string       `json:"orderSn"`
-	Address *AddressInfo `json:"address"`
+	OrderSnList []string     `json:"orderSnList"`
+	Address     *AddressInfo `json:"address"`
 }
 
 type ChangeOrdeRaddressRp struct {
-	OrderInfo *OrderInfo `json:"orderInfo"`
+	OrderInfoList []*OrderInfo `json:"orderInfoList"`
 }
 
 type ChangeOrdeRaddressResp struct {
@@ -801,6 +801,46 @@ type QuantityInfo struct {
 	Cut            float64 `json:"cut"`
 	SpecialPrice   float64 `json:"specialPrice"`
 	IsDefault      bool    `json:"isDefault"`
+}
+
+type GetOrderSnRes struct {
+	FinishPayOrder bool `json:"finishPayOrder"`
+	PrepareGoods   bool `json:"prepareGoods"`
+	Delivering     bool `json:"delivering"`
+}
+
+type GetOrderSnRp struct {
+	OrderInfos []*OrderInfo `json:"orderInfos"`
+}
+
+type GetOrderSnResp struct {
+	Code string        `json:"code"`
+	Msg  string        `json:"msg"`
+	Data *GetOrderSnRp `json:"data"`
+}
+
+type PrepareGoodsRes struct {
+	OrderSns []string `json:"orderSns"`
+}
+
+type PrepareGoodsRp struct {
+	SuccessOrderSn []string `json:"successOrderSn"`
+	FailedOrderSn  []string `json:"failedOrderSn"`
+}
+
+type PrepareGoodsResp struct {
+	Code string          `json:"code"`
+	Msg  string          `json:"msg"`
+	Data *PrepareGoodsRp `json:"data"`
+}
+
+type GiveSFRes struct {
+	QrCode string `json:"qrCode"`
+}
+
+type GiveSFResp struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
 }
 
 type CreateOrderMsgData struct {

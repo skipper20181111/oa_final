@@ -146,11 +146,10 @@ func storedcouponinfo2typeinfo(infostr string) *types.CouponStoreInfo {
 	return nil
 }
 func OrderCanBeOvertime(order *cachemodel.Order, PayInfo *cachemodel.PayInfo) bool {
-	if order.OrderStatus == 7 || order.OrderStatus == 3 {
-		return true
-	}
 	if order.OrderStatus == 0 {
-		if !PartPay(PayInfo) && order.CreateOrderTime.Add(time.Minute*15).Before(time.Now()) {
+		//over:=order.CreateOrderTime.Add(time.Minute*15).Before(time.Now())
+		over := order.CreateOrderTime.Add(time.Second * 30).Before(time.Now())
+		if !PartPay(PayInfo) && over {
 			return true
 		} else {
 			return false

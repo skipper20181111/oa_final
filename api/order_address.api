@@ -9,6 +9,27 @@ info(
 )
 import "alltype.api"
 @server(
+	group: deliver
+	prefix : deliver
+	jwt : AuthBackEnd
+	//    middleware : Limit_count
+)
+service oa-api{
+	@doc "获取订单号，需要指明获取哪一部分"
+	@handler getordersn
+	post /getnotdelivered (GetOrderSnRes) returns (GetOrderSnResp)
+	
+	@doc "将订单status改为1001，代表商品正在准备中，且生成快递单号但不展示，后台可看到单号用于发货"
+	@handler preparegoods
+	post /preparegoods (PrepareGoodsRes) returns (PrepareGoodsResp)
+	
+	@doc "扫码告诉后端，某个订单已经给了顺丰，更改为已发货状态"
+	@handler givesf
+	post /givesf (GiveSFRes) returns (GiveSFResp)
+	
+}
+
+@server(
 	group: orderpay
 	prefix : orderpay
 	jwt : Auth

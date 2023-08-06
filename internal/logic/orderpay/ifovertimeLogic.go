@@ -2,6 +2,7 @@ package orderpay
 
 import (
 	"context"
+	"oa_final/cachemodel"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 	"time"
@@ -28,32 +29,31 @@ func (l *IfovertimeLogic) Ifovertime(req *types.IfOvertimeRes) (resp *types.IfOv
 		Code: "10000",
 		Msg:  "success",
 		Data: &types.IfOvertimeRp{
-			OverTimeMilliSecondsList: make([]int64, 0),
+			OverTimeMilliSecondsMap: make(map[string]int64, 0),
 		},
 	}
-	for _, OrderSn := range req.OrderSnList {
-		overTime, ok := l.GetOverTime(OrderSn)
+	payinfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, req.OutTradeSn)
+	if payinfo == nil {
+		resp.Code = "4004"
+		return resp, nil
+	}
+	orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, req.OutTradeSn)
+	for _, order := range orders {
+		overTime, ok := l.GetOverTime(order, payinfo)
 		if !ok {
 			resp.Msg = "Not All Overed,or Db Error"
 		}
-		resp.Data.OverTimeMilliSecondsList = append(resp.Data.OverTimeMilliSecondsList, overTime)
+		resp.Data.OverTimeMilliSecondsMap[order.OrderSn] = overTime
 	}
+
 	return resp, nil
 }
-func (l IfovertimeLogic) GetOverTime(OrderSn string) (int64, bool) {
-	OverTime := int64(1000)
-	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
-	if order == nil {
-		return OverTime, false
-	} else {
-		OverTime = order.CreateOrderTime.Add(time.Minute*15).UnixMilli() - time.Now().UnixMilli()
-	}
-	payinfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
-	if payinfo == nil {
-		return OverTime, false
-	}
-	if OrderCanBeOvertime(order, payinfo) {
-		l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 8, order.OrderSn)
+func (l IfovertimeLogic) GetOverTime(Order *cachemodel.Order, payinfo *cachemodel.PayInfo) (int64, bool) {
+	//OverTime := Order.CreateOrderTime.Add(time.Minute*15).UnixMilli() - time.Now().UnixMilli()
+
+	OverTime := Order.CreateOrderTime.Add(time.Second*30).UnixMilli() - time.Now().UnixMilli()
+	if OrderCanBeOvertime(Order, payinfo) {
+		l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 8, Order.OrderSn)
 		return OverTime, true
 	}
 	return OverTime, false

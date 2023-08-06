@@ -39,10 +39,7 @@ func (l *IfovertimeLogic) Ifovertime(req *types.IfOvertimeRes) (resp *types.IfOv
 	}
 	orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, req.OutTradeSn)
 	for _, order := range orders {
-		overTime, ok := l.GetOverTime(order, payinfo)
-		if !ok {
-			resp.Msg = "Not All Overed,or Db Error"
-		}
+		overTime, _ := l.GetOverTime(order, payinfo)
 		resp.Data.OverTimeMilliSecondsMap[order.OrderSn] = overTime
 	}
 

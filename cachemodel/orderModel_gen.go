@@ -147,7 +147,7 @@ func (m *defaultOrderModel) FindAllByOutTradeNos(ctx context.Context, phone stri
 	for i, info := range PayInfos {
 		OutTradeNoList[i] = info.OutTradeNo
 	}
-	query := fmt.Sprintf("select %s from %s where `phone` = ? and `out_trade_no` in (?,?,?,?,?)  and `points_order`=0  order by `create_order_time` desc", orderRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? and `out_trade_no` in (?,?,?,?,?)  and `points_order`=0 and `order_status`<>8 and `order_status`<>9  order by `create_order_time` desc", orderRows, m.table)
 	var resp []*Order
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone, OutTradeNoList[0], OutTradeNoList[1], OutTradeNoList[2], OutTradeNoList[3], OutTradeNoList[4])
 	switch err {

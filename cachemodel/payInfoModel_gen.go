@@ -91,8 +91,8 @@ func (m *defaultPayInfoModel) FindOne(ctx context.Context, id int64) (*PayInfo, 
 	}
 }
 func (m *defaultPayInfoModel) FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*PayInfo, error) {
-	if pagenumber <= 0 || pagenumber > 10 {
-		pagenumber = 1
+	if pagenumber <= 0 || pagenumber > 7 {
+		return make([]*PayInfo, 0), nil
 	}
 	sheetlen := 5
 	offset := sheetlen * (pagenumber - 1)

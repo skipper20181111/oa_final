@@ -43,7 +43,7 @@ func (l *IfovertimeLogic) Ifovertime(req *types.IfOvertimeRes) (resp *types.IfOv
 		resp.Data.OverTimeMilliSecondsMap[order.OrderSn] = overTime
 	}
 	deleted, _ := l.svcCtx.Order.FindAllByOutTradeNoNotDeleted(l.ctx, req.OutTradeSn)
-	if deleted != nil && len(deleted) == 0 {
+	if len(deleted) == 0 {
 		l.svcCtx.PayInfo.UpdateStatus(l.ctx, req.OutTradeSn, 8)
 	}
 	return resp, nil

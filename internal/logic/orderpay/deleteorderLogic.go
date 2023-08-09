@@ -2,7 +2,6 @@ package orderpay
 
 import (
 	"context"
-
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 
@@ -34,8 +33,9 @@ func (l *DeleteorderLogic) Deleteorder(req *types.DeletOrderRes) (resp *types.De
 		}
 	}
 	for OutTradeSn, _ := range OutTradeSnMap {
+
 		deleted, _ := l.svcCtx.Order.FindAllByOutTradeNoNotDeleted(l.ctx, OutTradeSn)
-		if deleted != nil && len(deleted) == 0 {
+		if len(deleted) == 0 {
 			l.svcCtx.PayInfo.UpdateStatus(l.ctx, OutTradeSn, 9)
 		}
 	}

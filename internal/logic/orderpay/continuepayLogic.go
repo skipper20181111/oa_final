@@ -47,7 +47,7 @@ func (l *ContinuepayLogic) Continuepay(req *types.ContinuePayRes) (resp *types.N
 	if !success {
 		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}
-	l.svcCtx.Order.DeleteByOutTradeSn(l.ctx, payInit.OutTradeSn)
+	l.svcCtx.Order.DeleteByOutTradeSn(l.ctx, PayInfo.OutTradeNo)
 	l.svcCtx.PayInfo.Delete(l.ctx, PayInfo.Id)
 	for _, order := range orders {
 		order.OutTradeNo = payInit.OutTradeSn

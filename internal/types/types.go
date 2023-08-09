@@ -182,7 +182,7 @@ type OrderInfo struct {
 	PromotionAmount      float64             `json:"promotionAmount"`
 	ActualAmount         float64             `json:"actualAmount"`
 	CouponAmount         float64             `json:"couponAmount"`
-	UsedCouponInfo       *CouponStoreInfo    `json:"usedCouponInfo"`
+	UsedCouponInfo       *OrderCouponInfo    `json:"usedCouponInfo"`
 	WeXinPayAmount       float64             `json:"weXinPayAmount"`
 	InvoiceAmount        float64             `json:"invoiceAmount"`
 	CashAccountPayAmount float64             `json:"cashAccountPayAmount"`
@@ -610,6 +610,12 @@ type OrderOptionResp struct {
 	Code string         `json:"code"`
 	Msg  string         `json:"msg"`
 	Data *OrderOptionRp `json:"data"`
+}
+
+type OrderCouponInfo struct {
+	CouponId     int64  `json:"couponId"`
+	DisabledTime string `json:"disabledTime"`
+	CouponUUID   string `json:"couponUUID"`
 }
 
 type CouponStoreInfo struct {

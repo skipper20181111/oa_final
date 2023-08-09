@@ -135,12 +135,16 @@ func getbool(intbool int64) bool {
 	}
 	return true
 }
-func storedcouponinfo2typeinfo(infostr string) *types.CouponStoreInfo {
+func storedcouponinfo2typeinfo(infostr string) *types.OrderCouponInfo {
 	couponinfo := make(map[int64]map[string]*types.CouponStoreInfo)
 	json.Unmarshal([]byte(infostr), &couponinfo)
 	for _, V := range couponinfo {
-		for _, info := range V {
-			return info
+		for uuid, info := range V {
+			return &types.OrderCouponInfo{
+				CouponId:     info.CouponId,
+				CouponUUID:   uuid,
+				DisabledTime: info.DisabledTime,
+			}
 		}
 	}
 	return nil
@@ -252,7 +256,6 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.CreateTime = order.CreateOrderTime.Format("2006-01-02 15:04:05")
 	OrderProducInfo := make([]*types.OrderProductInfo, 0)
 	json.Unmarshal([]byte(order.Pidlist), &OrderProducInfo)
-
 	orderinfo.ProductInfo = OrderProducInfo
 	orderinfo.UsedCouponInfo = storedcouponinfo2typeinfo(order.UsedCouponinfo)
 	orderinfo.ProductCutAmount = float64(order.OriginalAmount-order.PromotionAmount) / 100

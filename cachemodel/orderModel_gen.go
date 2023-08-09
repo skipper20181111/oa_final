@@ -5,6 +5,7 @@ package cachemodel
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -45,6 +46,7 @@ type (
 		FindAllByOutTradeNos(ctx context.Context, phone string, PayInfos []*PayInfo) ([]*Order, error)
 		DeleteByOutTradeSn(ctx context.Context, OutTradeSn string) error
 		FindAllPointsOrder(ctx context.Context, phone string) ([]*Order, error)
+		FindAllByOutTradeNoNotDeleted(ctx context.Context, OutTradeNo string) ([]*Order, error)
 	}
 
 	defaultOrderModel struct {
@@ -159,6 +161,20 @@ func (m *defaultOrderModel) FindAllByOutTradeNos(ctx context.Context, phone stri
 		return nil, err
 	}
 }
+func (m *defaultOrderModel) FindAllByOutTradeNoNotDeleted(ctx context.Context, OutTradeNo string) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? and `order_status`<>8 and `order_status`<>9", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, OutTradeNo)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, errors.New("no")
+	default:
+		return nil, err
+	}
+}
+
 func (m *defaultOrderModel) FindAllByOutTradeNo(ctx context.Context, OutTradeNo string) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? ", orderRows, m.table)
 	var resp []*Order
@@ -167,7 +183,7 @@ func (m *defaultOrderModel) FindAllByOutTradeNo(ctx context.Context, OutTradeNo 
 	case nil:
 		return resp, nil
 	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
+		return nil, errors.New("no")
 	default:
 		return nil, err
 	}

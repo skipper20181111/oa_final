@@ -68,10 +68,9 @@ func GetRoutesList(SfSn string) *types.RouteList {
 	return ApiResultDatastruct.MsgData.RouteResps[0]
 }
 func (l SfUtilLogic) GetSfSn(order *cachemodel.Order) {
-	status, sfsn := CreateOrder(order)
-	if status == 1 {
+	_, sfsn := CreateOrder(order)
+	if sfsn != "" {
 		l.svcCtx.Order.UpdateDeliver(l.ctx, sfsn, "顺丰", order.OrderSn)
-		l.svcCtx.SfInfo.Insert(l.ctx, orderdb2sfinfodb(order, sfsn))
 	}
 }
 func (l SfUtilLogic) IfReceived(order *cachemodel.Order) {

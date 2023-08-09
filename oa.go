@@ -64,6 +64,7 @@ func monitorOrder(ctx *svc.ServiceContext) {
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")
 		changed, _ := ctx.Order.FindCanChanged(backcontext)
+		sf := orderpay.NewSfUtilLogic(context.Background(), ctx)
 		if changed != nil && len(changed) > 0 {
 			l := orderpay.NewCheckOrderLogic(backcontext, ctx)
 			for _, order := range changed {
@@ -74,6 +75,8 @@ func monitorOrder(ctx *svc.ServiceContext) {
 					} else {
 						l.Checkall(order, payinfo)
 					}
+				} else if order.OrderStatus == 1001 && len(order.DeliverySn) < 3 {
+					sf.GetSfSn(order)
 				}
 			}
 		}

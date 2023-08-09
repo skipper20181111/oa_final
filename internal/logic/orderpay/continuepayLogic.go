@@ -27,7 +27,7 @@ func NewContinuepayLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Conti
 }
 
 func (l *ContinuepayLogic) Continuepay(req *types.ContinuePayRes) (resp *types.NewOrderResp, err error) {
-	PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, req.OutTradeNo)
+	PayInfo, err := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, req.OutTradeNo)
 	if PayInfo == nil {
 		return &types.NewOrderResp{Code: "4004", Msg: "未查询到订单,请重建订单"}, nil
 	}
@@ -39,7 +39,6 @@ func (l *ContinuepayLogic) Continuepay(req *types.ContinuePayRes) (resp *types.N
 	OrderInfos := make([]*types.OrderInfo, 0)
 	NewOrderRes := PayInfo2req(PayInfo, req)
 	OrderList, payInit, ok := l.ou.req2op(NewOrderRes)
-	payInit.OutTradeSn = PayInfo.OutTradeNo
 	if !ok {
 		return &types.NewOrderResp{Code: "10000", Msg: "error", Data: &types.NewOrderRp{}}, nil
 	}
@@ -49,6 +48,7 @@ func (l *ContinuepayLogic) Continuepay(req *types.ContinuePayRes) (resp *types.N
 		return &types.NewOrderResp{Code: "4004", Msg: "fatal error"}, nil
 	}
 	l.svcCtx.Order.DeleteByOutTradeSn(l.ctx, payInit.OutTradeSn)
+	l.svcCtx.PayInfo.Delete(l.ctx, PayInfo.Id)
 	for _, order := range orders {
 		order.OutTradeNo = payInit.OutTradeSn
 		l.svcCtx.Order.Insert(l.ctx, order)

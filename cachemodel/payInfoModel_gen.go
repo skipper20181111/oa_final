@@ -35,6 +35,7 @@ type (
 		UpdateAllPay(ctx context.Context, OutTradeNo string) error
 		UpdateCashPay(ctx context.Context, OutTradeNo string) error
 		FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*PayInfo, error)
+		UpdateStatus(ctx context.Context, OutTradeNo string, Status int64) error
 	}
 
 	defaultPayInfoModel struct {
@@ -96,7 +97,7 @@ func (m *defaultPayInfoModel) FindAllByPhone(ctx context.Context, phone string, 
 	}
 	sheetlen := 5
 	offset := sheetlen * (pagenumber - 1)
-	query := fmt.Sprintf("select %s from %s where `phone` = ?  order by `create_order_time` desc  limit ? OFFSET ?", payInfoRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? and `status`<>8 and `status`<>9  order by `create_order_time` desc  limit ? OFFSET ?", payInfoRows, m.table)
 	var resp []*PayInfo
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone, sheetlen, offset)
 	switch err {
@@ -147,6 +148,11 @@ func (m *defaultPayInfoModel) UpdateCashReject(ctx context.Context, RefundAmount
 func (m *defaultPayInfoModel) UpdateWeixinPay(ctx context.Context, OutTradeNo, TransactionId string) error {
 	query := fmt.Sprintf("update %s set `finish_weixinpay`=1,`transaction_id`=?,`wexin_payment_time`=? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, TransactionId, time.Now(), OutTradeNo)
+	return err
+}
+func (m *defaultPayInfoModel) UpdateStatus(ctx context.Context, OutTradeNo string, Status int64) error {
+	query := fmt.Sprintf("update %s set `status`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, Status, OutTradeNo)
 	return err
 }
 

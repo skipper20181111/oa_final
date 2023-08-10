@@ -139,3 +139,77 @@ type (
         OpCode string `json:"opcode"`
     }
 )
+type (
+    QueryMsgData {
+        OrderId string `json:"orderId"`
+    }
+    QueryResultData {
+        Success bool `json:"success"`
+        ErrorMsg string `json:"errorMsg"`
+        ErrorCode string `json:"errorCode"`
+        MsgData *OrderSearch `json:"msgData"`
+    }
+    OrderSearch {
+        OrderId string `json:"orderId"`
+        WaybillNoInfoList []*WaybillNoInfoList `json:"waybillNoInfoList"`
+        RouteLabelInfo []*RouteLabelInfo `json:"routeLabelInfo"`
+    }
+    WaybillNoInfoList {
+        WaybillNo string `json:"waybillNo"`
+        WaybillType int `json:"waybillType"`
+    }
+)
+type (
+    WayBillsSheetMsgData {
+        TemplateCode string `json:"templateCode"`
+        //  面单模板编码 类似：fm_76130_standard_{partnerId}
+        Documents []*WayBillInfo `json:"documents"`
+        //	顺丰运单信息
+        Version string `json:"version"`
+        //	版本号，传固定值2.0
+        Sync bool `json:"sync"`
+        //	是否同步回传面单下载信息
+    }
+    WayBillInfo {
+        MasterWaybillNo string `json:"masterWaybillNo"`
+        //	主运单号，因为我从来只发一个包裹，那么我就只发送此字段即可
+        Remark string `json:"remark"`
+        //	订单备注，我应当在此处打印订单信息，免得发货的人看不见
+    }
+    WayBillSheetResponse {
+        Success bool `json:"success"`
+        ErrorMessage string `json:"errorMessage"`
+        ErrorCode string `json:"errorCode"`
+        RequestId string `json:"requestId"`
+        Obj *PrintFileListInfo `json:"obj"`
+    }
+    PrintFileListInfo {
+        ClientCode string `json:"clientCode"`
+        TemplateCode string `json:"templateCode"`
+        FileType string `json:"fileType"`
+        Files []*PrintFile `json:"files"`
+    }
+    PrintFile {
+        Url string `json:"url"`
+        // 	pdf文件的url下载地址,使用 GET 协议
+        Token string `json:"token"`
+        // 下载文件时需要的token,设置在请求头的 X-Auth-token 字段，有效期 24h
+        WaybillNo string `json:"waybillNo"`
+        SeqNo string `json:"seqNo"`
+        AreaNo string `json:"areaNo"`
+        PageNo string `json:"pageNo"`
+    }
+    UpdateArticle {
+        //ID            int    `path:"id"`
+        //Device        string `form:"device,options=ios,android,web,desktop"`
+        Authorization string `header:"X-Auth-token"`
+        //Title         string `json:"title"`
+        //Body          string `json:"body"`
+        //Author        string `json:"author"`
+        //Type          int    `json:"type"`
+    }
+    RefundMsgData  {
+        OrderId  string `json:"orderId"`
+        DealType int    `json:"dealType"`
+    }
+)

@@ -1,6 +1,7 @@
 package orderpay
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -67,10 +68,105 @@ func GetRoutesList(SfSn string) *types.RouteList {
 	resp.Body.Close()
 	return ApiResultDatastruct.MsgData.RouteResps[0]
 }
+func (l SfUtilLogic) GetPDF(order *cachemodel.Order, sfsn string) {
+	order.DeliverySn = sfsn
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	Timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	MsgDataStruct := &types.WayBillsSheetMsgData{
+		TemplateCode: svc.TemplateCode,
+		Documents:    []*types.WayBillInfo{{MasterWaybillNo: order.DeliverySn, Remark: order.ProductInfo}},
+		Version:      "2.0",
+		Sync:         true,
+	}
+	MsgDataByte, _ := json.Marshal(MsgDataStruct)
+	ToVerifyText := string(MsgDataByte) + Timestamp + svc.CheckCodeSbox
+	ToVerifyText = url.QueryEscape(ToVerifyText)
+	MsgDigest := md5V(ToVerifyText)
+	params := url.Values{}
+	params.Add("serviceCode", svc.DownPDFServiceCode)
+	params.Add("partnerID", svc.ParterID)
+	params.Add("requestID", strconv.FormatInt(time.Now().UnixNano(), 10))
+	params.Add("timestamp", Timestamp)
+	params.Add("msgDigest", MsgDigest)
+	params.Add("msgData", string(MsgDataByte))
+	urlPath := "https://sfapi-sbox.sf-express.com/std/service"
+	urlPath = urlPath + "?" + params.Encode()
+	resp, err := httpc.Do(context.Background(), http.MethodPost, urlPath, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+	res := &types.MotherResponse{}
+	body, _ := ioutil.ReadAll(resp.Body)
+	json.Unmarshal(body, res)
+	ApiResultDatastruct := &types.WayBillSheetResponse{}
+	json.Unmarshal([]byte(res.ApiResultData), ApiResultDatastruct)
+	fmt.Println(resp.Body.Close())
+	data := &types.UpdateArticle{Authorization: ApiResultDatastruct.Obj.Files[0].Token}
+	downpdf, _ := httpc.Do(context.Background(), http.MethodGet, ApiResultDatastruct.Obj.Files[0].Url, data)
+	if downpdf != nil {
+		pdf, _ := ioutil.ReadAll(downpdf.Body)
+		//os.WriteFile("sftest/test150.pdf", pdf, 0666)
+		reader := bytes.NewReader(pdf)
+		key := "img/sfpdf/" + order.DeliverySn + ".pdf"
+		l.svcCtx.FileClient.Object.Put(context.Background(), key, reader, nil)
+		//realPictureUrl := "https://img.waterflowfit.top/" + key
+	}
+
+}
+func RefundSfOrder(OrderSn string) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	Timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	MsgDataStruct := &types.RefundMsgData{
+		OrderId:  GetSha256(OrderSn),
+		DealType: 2,
+	}
+	MsgDataByte, _ := json.Marshal(MsgDataStruct)
+	ToVerifyText := string(MsgDataByte) + Timestamp + svc.CheckCodeSbox
+	ToVerifyText = url.QueryEscape(ToVerifyText)
+	MsgDigest := md5V(ToVerifyText)
+	params := url.Values{}
+	params.Add("serviceCode", svc.RefundServiceCode)
+	params.Add("partnerID", svc.ParterID)
+	params.Add("requestID", strconv.FormatInt(time.Now().UnixNano(), 10))
+	params.Add("timestamp", Timestamp)
+	params.Add("msgDigest", MsgDigest)
+	params.Add("msgData", string(MsgDataByte))
+	urlPath := "https://sfapi-sbox.sf-express.com/std/service"
+	urlPath = urlPath + "?" + params.Encode()
+	resp, _ := httpc.Do(context.Background(), http.MethodPost, urlPath, nil)
+	resp.Body.Close()
+}
 func (l SfUtilLogic) GetSfSn(order *cachemodel.Order) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
 	_, sfsn := CreateOrder(order)
 	if sfsn != "" {
 		l.svcCtx.Order.UpdateDeliver(l.ctx, sfsn, "顺丰", order.OrderSn)
+		l.GetPDF(order, sfsn)
+	} else {
+		ok, qsfsn := QuerySfSn(order)
+		if ok {
+			sfsn = qsfsn
+			l.svcCtx.Order.UpdateDeliver(l.ctx, sfsn, "顺丰", order.OrderSn)
+			l.GetPDF(order, sfsn)
+		} else {
+			l.svcCtx.ErrLog.Insert(l.ctx, &cachemodel.ErrLog{
+				Interface: "顺丰单号无法获取，请手动查看",
+				Info:      order.OrderSn,
+				Time:      time.Now(),
+			})
+		}
 	}
 }
 func (l SfUtilLogic) IfReceived(order *cachemodel.Order) {
@@ -91,7 +187,43 @@ func orderdb2sfinfodb(order *cachemodel.Order, SfSn string) *cachemodel.SfInfo {
 		ProductInfo: order.ProductInfo,
 	}
 }
+func QuerySfSn(order *cachemodel.Order) (bool, string) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	Timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 
+	MsgDataStruct := &types.QueryMsgData{
+		OrderId: GetSha256(order.OrderSn),
+	}
+	MsgDataByte, _ := json.Marshal(MsgDataStruct)
+	ToVerifyText := string(MsgDataByte) + Timestamp + svc.CheckCodeSbox
+	ToVerifyText = url.QueryEscape(ToVerifyText)
+	MsgDigest := md5V(ToVerifyText)
+	params := url.Values{}
+	params.Add("serviceCode", svc.QueryOrderServiceCode)
+	params.Add("partnerID", svc.ParterID)
+	params.Add("requestID", strconv.FormatInt(time.Now().UnixNano(), 10))
+	params.Add("timestamp", Timestamp)
+	params.Add("msgDigest", MsgDigest)
+	params.Add("msgData", string(MsgDataByte))
+	urlPath := svc.SfUrl
+	urlPath = urlPath + "?" + params.Encode()
+	resp, err := httpc.Do(context.Background(), http.MethodPost, urlPath, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+	res := &types.MotherResponse{}
+	body, _ := ioutil.ReadAll(resp.Body)
+	json.Unmarshal(body, res)
+	resp.Body.Close()
+	ApiResultDatastruct := &types.QueryResultData{}
+	err = json.Unmarshal([]byte(res.ApiResultData), ApiResultDatastruct)
+	SfSn := ApiResultDatastruct.MsgData.WaybillNoInfoList[0].WaybillNo
+	return true, SfSn
+}
 func CreateOrder(order *cachemodel.Order) (status int, SfSn string) {
 	defer func() {
 		if e := recover(); e != nil {

@@ -40,6 +40,11 @@ func main() {
 	server.Start()
 }
 func IfReceived(ctx *svc.ServiceContext) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
 	for true {
 		RefreshGap := time.Minute * time.Duration(rand.Intn(120)+1)
 		time.Sleep(RefreshGap)
@@ -56,8 +61,13 @@ func IfReceived(ctx *svc.ServiceContext) {
 	}
 }
 func monitorOrder(ctx *svc.ServiceContext) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
 	for true {
-		RefreshGap := time.Second * time.Duration(rand.Intn(200)+1)
+		RefreshGap := time.Second * time.Duration(rand.Intn(100)+50)
 		time.Sleep(RefreshGap)
 		//time.Sleep(time.Second * 10)
 		backcontext := context.Background()
@@ -75,7 +85,7 @@ func monitorOrder(ctx *svc.ServiceContext) {
 					} else {
 						l.Checkall(order, payinfo)
 					}
-				} else if order.OrderStatus == 1001 && len(order.DeliverySn) < 3 {
+				} else if order.OrderStatus == 1 && len(order.DeliverySn) < 3 {
 					sf.GetSfSn(order)
 				}
 			}

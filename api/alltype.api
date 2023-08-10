@@ -879,6 +879,15 @@ type (
         Msg string `json:"msg"`
     }
 )
+type (
+    DownPDFRes {
+
+    }
+    DownPDFResp {
+
+    }
+)
+
 
 
 

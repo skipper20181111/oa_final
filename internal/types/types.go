@@ -849,6 +849,12 @@ type GiveSFResp struct {
 	Msg  string `json:"msg"`
 }
 
+type DownPDFRes struct {
+}
+
+type DownPDFResp struct {
+}
+
 type CreateOrderMsgData struct {
 	Language           string         `json:"language"`        // 必填
 	OrderId            string         `json:"orderId"`         // 必填
@@ -974,4 +980,71 @@ type RouteInfo struct {
 	AcceptAddress string `json:"acceptAddress"`
 	Remark        string `json:"remark"`
 	OpCode        string `json:"opcode"`
+}
+
+type QueryMsgData struct {
+	OrderId string `json:"orderId"`
+}
+
+type QueryResultData struct {
+	Success   bool         `json:"success"`
+	ErrorMsg  string       `json:"errorMsg"`
+	ErrorCode string       `json:"errorCode"`
+	MsgData   *OrderSearch `json:"msgData"`
+}
+
+type OrderSearch struct {
+	OrderId           string               `json:"orderId"`
+	WaybillNoInfoList []*WaybillNoInfoList `json:"waybillNoInfoList"`
+	RouteLabelInfo    []*RouteLabelInfo    `json:"routeLabelInfo"`
+}
+
+type WaybillNoInfoList struct {
+	WaybillNo   string `json:"waybillNo"`
+	WaybillType int    `json:"waybillType"`
+}
+
+type WayBillsSheetMsgData struct {
+	TemplateCode string         `json:"templateCode"`
+	Documents    []*WayBillInfo `json:"documents"`
+	Version      string         `json:"version"`
+	Sync         bool           `json:"sync"`
+}
+
+type WayBillInfo struct {
+	MasterWaybillNo string `json:"masterWaybillNo"`
+	Remark          string `json:"remark"`
+}
+
+type WayBillSheetResponse struct {
+	Success      bool               `json:"success"`
+	ErrorMessage string             `json:"errorMessage"`
+	ErrorCode    string             `json:"errorCode"`
+	RequestId    string             `json:"requestId"`
+	Obj          *PrintFileListInfo `json:"obj"`
+}
+
+type PrintFileListInfo struct {
+	ClientCode   string       `json:"clientCode"`
+	TemplateCode string       `json:"templateCode"`
+	FileType     string       `json:"fileType"`
+	Files        []*PrintFile `json:"files"`
+}
+
+type PrintFile struct {
+	Url       string `json:"url"`
+	Token     string `json:"token"`
+	WaybillNo string `json:"waybillNo"`
+	SeqNo     string `json:"seqNo"`
+	AreaNo    string `json:"areaNo"`
+	PageNo    string `json:"pageNo"`
+}
+
+type UpdateArticle struct {
+	Authorization string `header:"X-Auth-token"`
+}
+
+type RefundMsgData struct {
+	OrderId  string `json:"orderId"`
+	DealType int    `json:"dealType"`
 }

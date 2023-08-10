@@ -3,6 +3,7 @@ package svc
 import (
 	"context"
 	"crypto/rsa"
+	"github.com/tencentyun/cos-go-sdk-v5"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/auth/verifiers"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/cipher/decryptors"
@@ -14,11 +15,14 @@ import (
 	"github.com/zeromicro/go-zero/core/collection"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"log"
+	"net/http"
+	"net/url"
 	"oa_final/cachemodel"
 	"oa_final/internal/config"
 	"time"
 )
 
+const ()
 const (
 	localCacheExpire       = time.Duration(time.Second * 800)
 	localCacheExpire2      = time.Duration(time.Second * 20)
@@ -36,9 +40,13 @@ const (
 	SfUrl                  = "https://sfapi-sbox.sf-express.com/std/service"
 	CreateOrderServiceCode = "EXP_RECE_CREATE_ORDER"
 	GetRoutesServiceCode   = "EXP_RECE_SEARCH_ROUTES"
+	QueryOrderServiceCode  = "EXP_RECE_SEARCH_ORDER_RESP"
+	DownPDFServiceCode     = "COM_RECE_CLOUD_PRINT_WAYBILLS"
+	RefundServiceCode      = "EXP_RECE_UPDATE_ORDER"
 	ProductDbMap           = "ProductDbMap"
 	ProductQuantityInfoDB  = "ProductQuantityInfoDB"
 	QuantityInfoDBList     = "QuantityInfoDBList"
+	TemplateCode           = "fm_76130_standard_SRLZNXTDZ"
 )
 
 type ServiceContext struct {
@@ -53,6 +61,7 @@ type ServiceContext struct {
 	CashAccount       cachemodel.CashAccountModel
 	CashLog           cachemodel.CashLogModel
 	Client            *core.Client
+	FileClient        *cos.Client
 	MchPrivateKey     *rsa.PrivateKey
 	Handler           *notify.Handler
 	Coupon            cachemodel.CouponModel
@@ -72,6 +81,7 @@ type ServiceContext struct {
 	Order             cachemodel.OrderModel
 	RefundInfo        cachemodel.RefundInfoModel
 	SfInfo            cachemodel.SfInfoModel
+	ErrLog            cachemodel.ErrLogModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -111,7 +121,14 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	certificateVisitor := downloader.MgrInstance().GetCertificateVisitor(c.WxConf.MchID)
 	// 3. 使用证书访问器初始化 `notify.Handler`
 	handler := notify.NewNotifyHandler(c.WxConf.MchAPIv3Key, verifiers.NewSHA256WithRSAVerifier(certificateVisitor))
-
+	u, _ := url.Parse("https://kunlun-1310629238.cos.ap-shanghai.myqcloud.com")
+	b := &cos.BaseURL{BucketURL: u}
+	CDNclient := cos.NewClient(b, &http.Client{
+		Transport: &cos.AuthorizationTransport{
+			SecretID:  "AKIDkKeAQRBftrZ6NN7bpmTu50f4D6i5C2cw", // 用户的 SecretId，建议使用子账号密钥，授权遵循最小权限指引，降低使用风险。子账号密钥获取可参考 https://cloud.tencent.com/document/product/598/37140
+			SecretKey: "6vUnqdARSCgtqWw5yby5vWquhFXYJr9B",     // 用户的 SecretKey，建议使用子账号密钥，授权遵循最小权限指引，降低使用风险。子账号密钥获取可参考 https://cloud.tencent.com/document/product/598/37140
+		},
+	})
 	return &ServiceContext{
 		Config:            c,
 		UserShopping:      cachemodel.NewUserShoppingCartModel(sqlx.NewMysql(c.DB.DataSource)),
@@ -143,5 +160,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Order:             cachemodel.NewOrderModel(sqlx.NewMysql(c.DB.DataSource)),
 		RefundInfo:        cachemodel.NewRefundInfoModel(sqlx.NewMysql(c.DB.DataSource)),
 		SfInfo:            cachemodel.NewSfInfoModel(sqlx.NewMysql(c.DB.DataSource)),
+		ErrLog:            cachemodel.NewErrLogModel(sqlx.NewMysql(c.DB.DataSource)),
+		FileClient:        CDNclient,
 	}
 }

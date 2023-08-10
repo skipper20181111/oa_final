@@ -62,13 +62,17 @@ func (l RefundorderLogic) RefundOneOrder(OrderSn string) (*types.OrderInfo, bool
 	//必须注意，这个接口是发起退款接口，不参与判定是否退款成功
 	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
 	PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
-	if order.OrderStatus != 1 || PayInfo.Status != 1 {
+	if (order.OrderStatus != 1 && order.OrderStatus != 1000) || PayInfo.Status != 1 {
 		return nil, false
 	}
 	order.OrderStatus = 6 // 删除订单，设置为开始退款。
 	order.ModifyTime = time.Now()
-	l.svcCtx.Order.Update(l.ctx, order)
-
+	l.svcCtx.Order.UpdateRefund(l.ctx, order.OrderSn)
+	order, _ = l.svcCtx.Order.FindOneByOrderSn(l.ctx, order.OrderSn)
+	if order.OrderStatus != 6 {
+		return nil, false
+	}
+	go RefundSfOrder(order.OrderSn)
 	// 首先开始退微信支付的钱
 	if order.WexinPayAmount > 0 {
 		l.wcu.CancelOrder(order)

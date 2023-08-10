@@ -3,7 +3,6 @@ package deliver
 import (
 	"context"
 	"oa_final/internal/logic/orderpay"
-
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 
@@ -19,7 +18,7 @@ type PreparegoodsLogic struct {
 
 func NewPreparegoodsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PreparegoodsLogic {
 	return &PreparegoodsLogic{
-		Logger: logx.WithContext(ctx),
+		Logger: logx.WithContext(context.Background()),
 		ctx:    context.Background(),
 		svcCtx: svcCtx,
 		sf:     orderpay.NewSfUtilLogic(context.Background(), svcCtx),
@@ -37,6 +36,7 @@ func (l *PreparegoodsLogic) Preparegoods(req *types.PrepareGoodsRes) (resp *type
 	}
 	for _, orderSn := range req.OrderSns {
 		if l.ChangeOrderStatus(orderSn) {
+			l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 1001, orderSn)
 			resp.Data.SuccessOrderSn = append(resp.Data.SuccessOrderSn, orderSn)
 		} else {
 			resp.Data.FailedOrderSn = append(resp.Data.FailedOrderSn, orderSn)
@@ -46,13 +46,12 @@ func (l *PreparegoodsLogic) Preparegoods(req *types.PrepareGoodsRes) (resp *type
 }
 func (l PreparegoodsLogic) ChangeOrderStatus(OrderSn string) bool {
 	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
-	if order.OrderStatus == 1 {
-		l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 1001, OrderSn)
-		order, _ = l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
-		if order.OrderStatus == 1001 {
-			l.sf.GetSfSn(order)
-			return true
-		}
+	if order.OrderStatus == 1 && order.DeliverySn == "" {
+		l.sf.GetSfSn(order)
+		return true
+	}
+	if order.OrderStatus == 1000 && order.DeliverySn != "" {
+		return true
 	}
 	return false
 }

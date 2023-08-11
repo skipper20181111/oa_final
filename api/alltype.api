@@ -890,6 +890,12 @@ type (
         SfPDFs []string `json:"sfPdFs"`
         //        SfOrderInfo []SfOrderInfo `json:"pdFs"`
     }
+    DownLoadedRes {
+        SfSn []string `json:"sfSn"`
+    }
+    DownLoadedResp{
+        sfsn1002 []string `json:"sfsn1002"`
+    }
 )
 type (
     DownPDFRes {

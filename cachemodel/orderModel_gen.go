@@ -32,6 +32,7 @@ type (
 		Update(ctx context.Context, data *Order) error
 		Delete(ctx context.Context, id int64) error
 		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
+		FinishDownload(ctx context.Context, status int64, SfSn string) error
 		UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error
 		RefundCash(ctx context.Context, orderSn string) error
 		RefundWeChat(ctx context.Context, orderSn string) error
@@ -49,6 +50,8 @@ type (
 		FindAllByOutTradeNoNotDeleted(ctx context.Context, OutTradeNo string) ([]*Order, error)
 		UpdateRefund(ctx context.Context, orderSn string) error
 		FindAllToDownLoad(ctx context.Context) ([]*Order, error)
+		FindAll1002(ctx context.Context) ([]*Order, error)
+		FindDelivering(ctx context.Context) ([]*Order, error)
 	}
 
 	defaultOrderModel struct {
@@ -176,7 +179,19 @@ func (m *defaultOrderModel) FindAllByOutTradeNoNotDeleted(ctx context.Context, O
 		return nil, err
 	}
 }
-
+func (m *defaultOrderModel) FindAll1002(ctx context.Context) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `order_status` = 1002 ", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, errors.New("no")
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) FindAllByOutTradeNo(ctx context.Context, OutTradeNo string) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? ", orderRows, m.table)
 	var resp []*Order
@@ -206,7 +221,11 @@ func (m *defaultOrderModel) RefundCash(ctx context.Context, orderSn string) erro
 	_, err := m.conn.ExecCtx(ctx, query, orderSn)
 	return err
 }
-
+func (m *defaultOrderModel) FinishDownload(ctx context.Context, status int64, SfSn string) error {
+	query := fmt.Sprintf("update %s set `order_status`=? where `delivery_sn` = ? and `order_status`=1001", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, status, SfSn)
+	return err
+}
 func (m *defaultOrderModel) UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error {
 	query := fmt.Sprintf("update %s set `order_status`=? where `order_sn` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, status, orderSn)
@@ -254,6 +273,21 @@ func (m *defaultOrderModel) UpdateInvoice(ctx context.Context, OrderSn string, I
 	_, err := m.conn.ExecCtx(ctx, query, InvoiceStatus, OrderSn)
 	return err
 }
+
+func (m *defaultOrderModel) FindDelivering(ctx context.Context) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `order_status` in(1002,1003)", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
 func (m *defaultOrderModel) FindStatus2(ctx context.Context) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `order_status` =2 limit 100", orderRows, m.table)
 	var resp []*Order

@@ -859,6 +859,14 @@ type DownloadSFPDFResp struct {
 	SfPDFs []string `json:"sfPdFs"`
 }
 
+type DownLoadedRes struct {
+	SfSn []string `json:"sfSn"`
+}
+
+type DownLoadedResp struct {
+	Sfsn1002 []string `json:"sfsn1002"`
+}
+
 type DownPDFRes struct {
 }
 

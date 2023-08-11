@@ -39,6 +39,27 @@ func main() {
 	go IfReceived(ctx)
 	server.Start()
 }
+func delivering(ctx *svc.ServiceContext) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	for true {
+		RefreshGap := time.Minute * time.Duration(rand.Intn(30)+1)
+		time.Sleep(RefreshGap)
+		backcontext := context.Background()
+		backcontext = context.WithValue(backcontext, "phone", "17854230845")
+		backcontext = context.WithValue(backcontext, "openid", "17854230845")
+		orderlist, _ := ctx.Order.FindDelivering(backcontext)
+		if orderlist != nil && len(orderlist) > 0 {
+			sf := orderpay.NewSfUtilLogic(backcontext, ctx)
+			for _, order := range orderlist {
+				sf.IfDelivering(order)
+			}
+		}
+	}
+}
 func IfReceived(ctx *svc.ServiceContext) {
 	defer func() {
 		if e := recover(); e != nil {

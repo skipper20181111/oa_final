@@ -37,6 +37,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/givesf",
 				Handler: deliver.GivesfHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/downloadsfpdf",
+				Handler: deliver.DownloadsfpdfHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.AuthBackEnd.AccessSecret),
 		rest.WithPrefix("/deliver"),

@@ -849,6 +849,16 @@ type GiveSFResp struct {
 	Msg  string `json:"msg"`
 }
 
+type SfOrderInfo struct {
+	OrderSn     string `json:"orderSn"`
+	SfSn        string `json:"sfSn"`
+	ProductInfo string `json:"productInfo"`
+}
+
+type DownloadSFPDFResp struct {
+	SfPDFs []string `json:"sfPdFs"`
+}
+
 type DownPDFRes struct {
 }
 

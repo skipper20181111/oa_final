@@ -48,6 +48,7 @@ type (
 		FindAllPointsOrder(ctx context.Context, phone string) ([]*Order, error)
 		FindAllByOutTradeNoNotDeleted(ctx context.Context, OutTradeNo string) ([]*Order, error)
 		UpdateRefund(ctx context.Context, orderSn string) error
+		FindAllToDownLoad(ctx context.Context) ([]*Order, error)
 	}
 
 	defaultOrderModel struct {
@@ -211,7 +212,19 @@ func (m *defaultOrderModel) UpdateStatusByOrderSn(ctx context.Context, status in
 	_, err := m.conn.ExecCtx(ctx, query, status, orderSn)
 	return err
 }
-
+func (m *defaultOrderModel) FindAllToDownLoad(ctx context.Context) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `order_status` = 1001", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error {
 	query := fmt.Sprintf("update %s set `order_status`=? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)

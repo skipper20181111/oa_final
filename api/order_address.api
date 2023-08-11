@@ -27,6 +27,9 @@ service oa-api{
 	@handler givesf
 	post /givesf (GiveSFRes) returns (GiveSFResp)
 	
+	@doc "获取所有待下载sf单号"
+	@handler downloadsfpdf
+	post /downloadsfpdf  returns (DownloadSFPDFResp)
 }
 
 @server(

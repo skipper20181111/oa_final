@@ -848,8 +848,11 @@ type (
 type (
     GetOrderSnRes {
         FinishPayOrder bool `json:"finishPayOrder"`
+        //         orderstatus=1,1000
         PrepareGoods bool `json:"prepareGoods"`
+        //         orderstatus=1001，1002，1003
         Delivering bool `json:"delivering"`
+        //
     }
     GetOrderSnRp {
         OrderInfos []*OrderInfo `json:"orderInfos"`
@@ -877,6 +880,15 @@ type (
     GiveSFResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
+    }
+    SfOrderInfo {
+        OrderSn string `json:"orderSn"`
+        SfSn string `json:"sfSn"`
+        ProductInfo string `json:"productInfo"`
+    }
+    DownloadSFPDFResp {
+        SfPDFs []string `json:"sfPdFs"`
+        //        SfOrderInfo []SfOrderInfo `json:"pdFs"`
     }
 )
 type (

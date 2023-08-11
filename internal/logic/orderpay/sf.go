@@ -115,7 +115,6 @@ func (l SfUtilLogic) GetPDF(order *cachemodel.Order, sfsn string) {
 		l.svcCtx.FileClient.Object.Put(context.Background(), key, reader, nil)
 		//realPictureUrl := "https://img.waterflowfit.top/" + key
 	}
-
 }
 func RefundSfOrder(OrderSn string) {
 	defer func() {

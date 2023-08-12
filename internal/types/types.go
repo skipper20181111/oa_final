@@ -318,6 +318,13 @@ type PreNewOrderResp struct {
 	Data *PreNewOrderRp `json:"data"`
 }
 
+type GetInvoiceOrderRes struct {
+	IsCompleted bool `json:"isCompleted"`
+	Invoice     bool `json:"invoice"`
+	PageNumber  int  `json:"pageNumber"`
+	PageSize    int  `json:"pageSize"`
+}
+
 type GetAllOrderRes struct {
 	PageNumber    int  `json:"pageNumber"`
 	PageSize      int  `json:"pageSize"`

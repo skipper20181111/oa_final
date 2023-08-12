@@ -31,6 +31,7 @@ type (
 		FindOneByOutRefundNo(ctx context.Context, outRefundNo string) (*Order, error)
 		Update(ctx context.Context, data *Order) error
 		Delete(ctx context.Context, id int64) error
+		FindInvoiceByPhone(ctx context.Context, phone string, pagenumber int) ([]*Order, error)
 		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
 		FinishDownload(ctx context.Context, status int64, SfSn string) error
 		UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error
@@ -116,6 +117,26 @@ func (m *defaultOrderModel) Delete(ctx context.Context, id int64) error {
 	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
+}
+
+func (m *defaultOrderModel) FindInvoiceByPhone(ctx context.Context, phone string, pagenumber int) ([]*Order, error) {
+	if pagenumber <= 0 || pagenumber > 10 {
+		return make([]*Order, 0), nil
+	}
+	sheetlen := 10
+	pagenumber = 1
+	offset := sheetlen * (pagenumber - 1)
+	query := fmt.Sprintf("select %s from %s where `phone` = ? and `order_status` in(3,4) and `invoice_status` in (0,1) order by create_order_time desc  limit ? OFFSET ?", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone, sheetlen, offset)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
 }
 func (m *defaultOrderModel) FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*Order, error) {
 	if pagenumber <= 0 || pagenumber > 10 {

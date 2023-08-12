@@ -336,10 +336,17 @@ type (
     }
 )
 type (
+    GetInvoiceOrderRes{
+        IsCompleted bool `json:"isCompleted"`
+        Invoice bool `json:"invoice"`
+        PageNumber int `json:"pageNumber"`
+        PageSize int `json:"pageSize"`
+    }
     GetAllOrderRes {
         PageNumber int `json:"pageNumber"`
         PageSize int `json:"pageSize"`
         IsPointsOrder bool `json:"isPointsOrder"`
+
     }
     GetAllOrderRp {
         OrderInfos []*OrderInfo `json:"orderInfos"`
@@ -893,7 +900,7 @@ type (
     DownLoadedRes {
         SfSn []string `json:"sfSn"`
     }
-    DownLoadedResp{
+    DownLoadedResp {
         sfsn1002 []string `json:"sfsn1002"`
     }
 )

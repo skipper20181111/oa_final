@@ -47,6 +47,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/downloaded",
 				Handler: deliver.DownloadedHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/printed",
+				Handler: deliver.PrintedHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.AuthBackEnd.AccessSecret),
 		rest.WithPrefix("/deliver"),
@@ -108,6 +113,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodPost,
 				Path:    "/getallorder",
 				Handler: orderpay.GetallorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getinvoiceorder",
+				Handler: orderpay.GetinvoiceorderHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,

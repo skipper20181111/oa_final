@@ -319,10 +319,10 @@ type PreNewOrderResp struct {
 }
 
 type GetInvoiceOrderRes struct {
-	IsCompleted bool `json:"isCompleted"`
-	Invoice     bool `json:"invoice"`
-	PageNumber  int  `json:"pageNumber"`
-	PageSize    int  `json:"pageSize"`
+	IsCompleted   bool    `json:"isCompleted"`
+	InvoiceStatus []int64 `json:"invoiceStatus"`
+	PageNumber    int     `json:"pageNumber"`
+	PageSize      int     `json:"pageSize"`
 }
 
 type GetAllOrderRes struct {

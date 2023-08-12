@@ -338,7 +338,7 @@ type (
 type (
     GetInvoiceOrderRes{
         IsCompleted bool `json:"isCompleted"`
-        Invoice bool `json:"invoice"`
+        InvoiceStatus []int64 `json:"invoiceStatus"`
         PageNumber int `json:"pageNumber"`
         PageSize int `json:"pageSize"`
     }

@@ -27,10 +27,10 @@ type (
 		Insert(ctx context.Context, data *Invoice) (sql.Result, error)
 		FindOne(ctx context.Context, id int64) (*Invoice, error)
 		FindOneByInvoiceSn(ctx context.Context, invoiceSn string) (*Invoice, error)
-		FindOneByOrderSn(ctx context.Context, orderSn string) (*Invoice, error)
+		FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*Invoice, error)
 		Update(ctx context.Context, data *Invoice) error
 		Delete(ctx context.Context, id int64) error
-		FindAllByPhone(ctx context.Context, phone string) ([]*Invoice, error)
+		FindAll(ctx context.Context, phone string) ([]*Invoice, error)
 	}
 
 	defaultInvoiceModel struct {
@@ -42,7 +42,7 @@ type (
 		Id             int64     `db:"id"`              // id
 		Phone          string    `db:"phone"`           // 账户手机号
 		OrderType      int64     `db:"order_type"`      // 订单类型
-		OrderSn        string    `db:"order_sn"`        // 订单编号
+		OutTradeNo     string    `db:"out_trade_no"`    // 支付链路编号
 		Money          int64     `db:"money"`           // 总金额
 		InvoiceSn      string    `db:"invoice_sn"`      // 发票编号
 		InvoiceType    int64     `db:"invoice_type"`    // 发票类型：0->增值税专用发票；1->增值税普通发票
@@ -74,8 +74,8 @@ func (m *defaultInvoiceModel) Delete(ctx context.Context, id int64) error {
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
-func (m *defaultInvoiceModel) FindAllByPhone(ctx context.Context, phone string) ([]*Invoice, error) {
-	query := fmt.Sprintf("select %s from %s where `phone` = ? limit 20", invoiceRows, m.table)
+func (m *defaultInvoiceModel) FindAll(ctx context.Context, phone string) ([]*Invoice, error) {
+	query := fmt.Sprintf("select %s from %s where `phone` = ? order by `apply_time` desc", invoiceRows, m.table)
 	var resp []*Invoice
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone)
 	switch err {
@@ -115,10 +115,10 @@ func (m *defaultInvoiceModel) FindOneByInvoiceSn(ctx context.Context, invoiceSn 
 	}
 }
 
-func (m *defaultInvoiceModel) FindOneByOrderSn(ctx context.Context, orderSn string) (*Invoice, error) {
+func (m *defaultInvoiceModel) FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*Invoice, error) {
 	var resp Invoice
-	query := fmt.Sprintf("select %s from %s where `order_sn` = ? limit 1", invoiceRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, orderSn)
+	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? limit 1", invoiceRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, outTradeNo)
 	switch err {
 	case nil:
 		return &resp, nil
@@ -131,13 +131,13 @@ func (m *defaultInvoiceModel) FindOneByOrderSn(ctx context.Context, orderSn stri
 
 func (m *defaultInvoiceModel) Insert(ctx context.Context, data *Invoice) (sql.Result, error) {
 	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, invoiceRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderType, data.OrderSn, data.Money, data.InvoiceSn, data.InvoiceType, data.Target, data.Ifdetail, data.Email, data.PostAddress, data.InvoiceTitle, data.CompanyAddress, data.CompanyPhone, data.TaxId, data.OpeningBank, data.BankAccount, data.ApplyTime, data.Status, data.FinishTime)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderType, data.OutTradeNo, data.Money, data.InvoiceSn, data.InvoiceType, data.Target, data.Ifdetail, data.Email, data.PostAddress, data.InvoiceTitle, data.CompanyAddress, data.CompanyPhone, data.TaxId, data.OpeningBank, data.BankAccount, data.ApplyTime, data.Status, data.FinishTime)
 	return ret, err
 }
 
 func (m *defaultInvoiceModel) Update(ctx context.Context, newData *Invoice) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, invoiceRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderType, newData.OrderSn, newData.Money, newData.InvoiceSn, newData.InvoiceType, newData.Target, newData.Ifdetail, newData.Email, newData.PostAddress, newData.InvoiceTitle, newData.CompanyAddress, newData.CompanyPhone, newData.TaxId, newData.OpeningBank, newData.BankAccount, newData.ApplyTime, newData.Status, newData.FinishTime, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderType, newData.OutTradeNo, newData.Money, newData.InvoiceSn, newData.InvoiceType, newData.Target, newData.Ifdetail, newData.Email, newData.PostAddress, newData.InvoiceTitle, newData.CompanyAddress, newData.CompanyPhone, newData.TaxId, newData.OpeningBank, newData.BankAccount, newData.ApplyTime, newData.Status, newData.FinishTime, newData.Id)
 	return err
 }
 

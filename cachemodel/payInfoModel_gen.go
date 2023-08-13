@@ -39,6 +39,7 @@ type (
 		FindStatus0(ctx context.Context) ([]*PayInfo, error)
 		FindStatus1(ctx context.Context) ([]*PayInfo, error)
 		FindStatus4(ctx context.Context, pagenumber int) ([]*PayInfo, error)
+		UpdateInvoiceStatus(ctx context.Context, OutTradeNo string, Status int64) error
 	}
 
 	defaultPayInfoModel struct {
@@ -61,7 +62,8 @@ type (
 		CashAccountRefundAmount int64     `db:"cash_account_refund_amount"` // 现金账户退款金额
 		FinishWeixinpay         int64     `db:"finish_weixinpay"`           // 是否完成微信支付
 		FinishAccountpay        int64     `db:"finish_accountpay"`          // 是否完成账户支付
-		Status                  int64     `db:"status"`                     // 0->未完成；1->已完成；2->部分退款;3->全部退款
+		Status                  int64     `db:"status"`                     // 0->未完成；1->已完成；2->部分退款;3->全部退款，4->全部已收货
+		InvoiceStatus           int64     `db:"invoice_status"`             // 处理：1->已填信息预开票状态；2->开票中；3->开票完成；4->开票失败
 		WexinPaymentTime        time.Time `db:"wexin_payment_time"`         // 微信支付时间
 		CashAccountPaymentTime  time.Time `db:"cash_account_payment_time"`  // 现金账户支付时间
 		LogId                   int64     `db:"log_id"`
@@ -191,7 +193,6 @@ func (m *defaultPayInfoModel) UpdateCashReject(ctx context.Context, RefundAmount
 	_, err := m.conn.ExecCtx(ctx, query, RefundAmount, OutTradeNo)
 	return err
 }
-
 func (m *defaultPayInfoModel) UpdateWeixinPay(ctx context.Context, OutTradeNo, TransactionId string) error {
 	query := fmt.Sprintf("update %s set `finish_weixinpay`=1,`transaction_id`=?,`wexin_payment_time`=? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, TransactionId, time.Now(), OutTradeNo)
@@ -202,7 +203,11 @@ func (m *defaultPayInfoModel) UpdateStatus(ctx context.Context, OutTradeNo strin
 	_, err := m.conn.ExecCtx(ctx, query, Status, OutTradeNo)
 	return err
 }
-
+func (m *defaultPayInfoModel) UpdateInvoiceStatus(ctx context.Context, OutTradeNo string, Status int64) error {
+	query := fmt.Sprintf("update %s set `invoice_status`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, Status, OutTradeNo)
+	return err
+}
 func (m *defaultPayInfoModel) UpdateCashPay(ctx context.Context, OutTradeNo string) error {
 	query := fmt.Sprintf("update %s set `finish_accountpay`=1,`cash_account_payment_time`=? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OutTradeNo)
@@ -214,7 +219,6 @@ func (m *defaultPayInfoModel) UpdateAllPay(ctx context.Context, OutTradeNo strin
 	_, err := m.conn.ExecCtx(ctx, query, OutTradeNo)
 	return err
 }
-
 func (m *defaultPayInfoModel) tableName() string {
 	return m.table
 }

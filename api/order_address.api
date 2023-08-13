@@ -199,9 +199,9 @@ service oa-api {
 	@handler applyinvoice
 	post /applyinvoice (ApplyInvoiceRes) returns (ApplyInvoiceResp)
 	
-	@doc "获取发票信息"
-	@handler getinvoice
-	post /getinvoice (GetInvoiceRes) returns (GetInvoiceResp)
+	//	@doc "获取发票信息"
+	//	@handler getinvoice
+	//	post /getinvoice (GetInvoiceRes) returns (GetInvoiceResp)
 	
 	@doc "获取发票信息"
 	@handler getallinvoice

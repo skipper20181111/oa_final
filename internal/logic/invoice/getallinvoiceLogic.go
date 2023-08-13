@@ -23,7 +23,7 @@ func NewGetallinvoiceLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Get
 }
 
 func (l *GetallinvoiceLogic) Getallinvoice(req *types.GetAllInvoiceRes) (resp *types.GetAllInvoiceResp, err error) {
-	phone, _ := l.svcCtx.Invoice.FindAllByPhone(l.ctx, l.ctx.Value("phone").(string))
+	phone, _ := l.svcCtx.Invoice.FindAll(l.ctx, l.ctx.Value("phone").(string))
 	infos := make([]*types.InvoiceRp, 0)
 	if phone != nil || len(phone) >= 1 {
 		for _, invoice := range phone {

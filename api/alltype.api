@@ -452,7 +452,7 @@ type (
     ApplyInvoiceRes {
         OrderType int64 `json:"orderType"`
         // 订单类型 0代表order 1代表充值
-        OrderSn string `json:"orderSn"`
+        OutTradeSn string `json:"outTradeSn"`
         PostAddress *AddressInfo `json:"postAddress"`
         InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
     }
@@ -476,7 +476,7 @@ type (
         Phone string `json:"phone"`
         OrderType int64 `json:"orderType"`
         // 订单类型 0代表order 1代表充值
-        OrderSn string `json:"orderSn"`
+        OutTradeSn string `json:"outTradeSn"`
         // 开发票对应的订单号
         PostAddress *AddressInfo `json:"postAddress"`
         InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`

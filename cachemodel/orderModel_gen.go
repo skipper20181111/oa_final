@@ -44,7 +44,7 @@ type (
 		FindCanChanged(ctx context.Context) ([]*Order, error)
 		FindStatus2(ctx context.Context) ([]*Order, error)
 		UpdateDeliver(ctx context.Context, DeliverSn, DeliverCompany, OrderSn string) error
-		UpdateInvoice(ctx context.Context, OrderSn string, InvoiceStatus int64) error
+		UpdateInvoice(ctx context.Context, OutTradeSn string, InvoiceStatus int64) error
 		FindAllByOutTradeNos(ctx context.Context, phone string, PayInfos []*PayInfo) ([]*Order, error)
 		DeleteByOutTradeSn(ctx context.Context, OutTradeSn string) error
 		FindAllPointsOrder(ctx context.Context, phone string) ([]*Order, error)
@@ -309,9 +309,9 @@ func (m *defaultOrderModel) UpdateDeliver(ctx context.Context, DeliverSn, Delive
 	return err
 }
 
-func (m *defaultOrderModel) UpdateInvoice(ctx context.Context, OrderSn string, InvoiceStatus int64) error {
-	query := fmt.Sprintf("update %s set `invoice_status`=? where `order_sn` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, InvoiceStatus, OrderSn)
+func (m *defaultOrderModel) UpdateInvoice(ctx context.Context, OutTradeSn string, InvoiceStatus int64) error {
+	query := fmt.Sprintf("update %s set `invoice_status`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, InvoiceStatus, OutTradeSn)
 	return err
 }
 

@@ -24,7 +24,7 @@ func NewGetinvoiceLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getinv
 }
 
 func (l *GetinvoiceLogic) Getinvoice(req *types.GetInvoiceRes) (resp *types.GetInvoiceResp, err error) {
-	sn, _ := l.svcCtx.Invoice.FindOneByOrderSn(l.ctx, req.OrderSn)
+	sn, _ := l.svcCtx.Invoice.FindOneByOutTradeNo(l.ctx, req.OrderSn)
 	if sn != nil && sn.Phone == l.ctx.Value("phone").(string) {
 		return &types.GetInvoiceResp{Code: "10000", Msg: "success", Data: db2info(sn)}, nil
 	}

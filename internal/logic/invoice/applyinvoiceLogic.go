@@ -22,39 +22,34 @@ type ApplyinvoiceLogic struct {
 
 func NewApplyinvoiceLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ApplyinvoiceLogic {
 	return &ApplyinvoiceLogic{
-		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
-		svcCtx: svcCtx,
+		Logger:    logx.WithContext(ctx),
+		ctx:       ctx,
+		svcCtx:    svcCtx,
+		userphone: ctx.Value("phone").(string),
 	}
 }
 
 func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *types.ApplyInvoiceResp, err error) {
-	l.userphone = l.ctx.Value("phone").(string)
-	sn, _ := l.svcCtx.Invoice.FindOneByOrderSn(l.ctx, req.OrderSn)
-	l.order, _ = l.svcCtx.Order.FindOneByOrderSn(l.ctx, req.OrderSn)
-	if l.order == nil || l.order.OrderStatus != 3 {
+	invoice, _ := l.svcCtx.Invoice.FindOneByOutTradeNo(l.ctx, req.OutTradeSn)
+	payInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, req.OutTradeSn)
+	if payInfo == nil || payInfo.Status != 4 {
 		return &types.ApplyInvoiceResp{Code: "10000", Msg: "此订单号不可开发票（无此订单或订单未完成）"}, nil
 	}
-	orderSn := &cachemodel.Invoice{}
-	if sn != nil {
-		if sn.Status > 1 {
+	InvoiceByOTS := &cachemodel.Invoice{}
+	if invoice != nil {
+		if invoice.Status > 1 {
 			return &types.ApplyInvoiceResp{Code: "10000", Msg: "此订单已经开过发票或开票失败"}, nil
 		} else {
 			newsn := l.req2db(req)
-			newsn.Id = sn.Id
+			newsn.Id = invoice.Id
 			l.svcCtx.Invoice.Update(l.ctx, newsn)
-			orderSn, _ = l.svcCtx.Invoice.FindOneByOrderSn(l.ctx, req.OrderSn)
 		}
 	} else {
 		l.svcCtx.Invoice.Insert(l.ctx, l.req2db(req))
-		l.svcCtx.Order.UpdateInvoice(l.ctx, req.OrderSn, 1)
-		orderSn, _ = l.svcCtx.Invoice.FindOneByOrderSn(l.ctx, req.OrderSn)
+		l.svcCtx.Order.UpdateInvoice(l.ctx, req.OutTradeSn, 1)
 	}
-	if orderSn.OrderSn == req.OrderSn {
-		return &types.ApplyInvoiceResp{Code: "10000", Msg: "success", Data: db2info(orderSn)}, nil
-	} else {
-		return &types.ApplyInvoiceResp{Code: "10000", Msg: "数据库失效"}, nil
-	}
+	InvoiceByOTS, _ = l.svcCtx.Invoice.FindOneByOutTradeNo(l.ctx, req.OutTradeSn)
+	return &types.ApplyInvoiceResp{Code: "10000", Msg: "success", Data: db2info(InvoiceByOTS)}, nil
 }
 func db2info(db *cachemodel.Invoice) *types.InvoiceRp {
 	info := &types.InvoiceRp{PostAddress: &types.AddressInfo{}, InvoinceInfo: &types.InvoiceInfo{}}
@@ -75,7 +70,7 @@ func db2info(db *cachemodel.Invoice) *types.InvoiceRp {
 
 	info.Phone = db.Phone
 	info.Status = db.Status
-	info.OrderSn = db.OrderSn
+	info.OutTradeSn = db.OutTradeNo
 	info.OrderType = db.OrderType
 	info.ApplyTime = db.ApplyTime.Format("2006-01-02 15:04:05")
 	info.FinishTime = db.FinishTime.Format("2006-01-02 15:04:05")
@@ -86,8 +81,8 @@ func db2info(db *cachemodel.Invoice) *types.InvoiceRp {
 func (l *ApplyinvoiceLogic) req2db(req *types.ApplyInvoiceRes) *cachemodel.Invoice {
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	db := &cachemodel.Invoice{}
-	db.OrderSn = req.OrderSn
-	db.InvoiceSn = req.OrderSn
+	db.OutTradeNo = req.OutTradeSn
+	db.InvoiceSn = req.OutTradeSn
 	db.Phone = l.userphone
 	db.OrderType = req.OrderType
 	db.Ifdetail = req.InvoinceInfo.IfDetail

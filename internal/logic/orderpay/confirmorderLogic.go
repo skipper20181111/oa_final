@@ -24,6 +24,13 @@ func NewConfirmorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Conf
 }
 
 func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *types.ConfirmOrderResp, err error) {
+	resp = &types.ConfirmOrderResp{
+		Code: "10000",
+		Msg:  "success",
+		Data: &types.GetAllOrderRp{
+			OrderInfos: make([]*types.OrderInfo, 0),
+		},
+	}
 	status, _ := l.svcCtx.Order.FindAllStatusByOutTradeNo(l.ctx, req.OutTradeNo)
 	yes := true
 	for _, sta := range status {
@@ -35,5 +42,9 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 		l.svcCtx.PayInfo.UpdateStatus(l.ctx, req.OutTradeNo, 4)
 		l.svcCtx.Order.UpdateStatusByOutTradeSn(l.ctx, 4, req.OutTradeNo)
 	}
-	return
+	orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, req.OutTradeNo)
+	for _, order := range orders {
+		resp.Data.OrderInfos = append(resp.Data.OrderInfos, OrderDb2info(order))
+	}
+	return resp, nil
 }

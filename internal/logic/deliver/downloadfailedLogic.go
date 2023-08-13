@@ -31,5 +31,5 @@ func (l *DownloadfailedLogic) Downloadfailed(req *types.DownLoadedRes) error {
 func (l DownloadfailedLogic) GetSfSnPDF(SfSn string) {
 	sf := orderpay.NewSfUtilLogic(context.Background(), l.svcCtx)
 	order, _ := l.svcCtx.Order.FindOneBySfSn(l.ctx, SfSn)
-	sf.GetSfSn(order)
+	sf.GetPDF(order, SfSn)
 }

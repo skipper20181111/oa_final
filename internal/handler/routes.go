@@ -49,6 +49,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
+				Path:    "/downloadfailed",
+				Handler: deliver.DownloadfailedHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/printed",
 				Handler: deliver.PrintedHandler(serverCtx),
 			},

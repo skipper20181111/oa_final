@@ -50,7 +50,7 @@ func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address *types.Ad
 		}
 	}()
 	sn2order, err := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
-	if sn2order == nil || sn2order.Phone != l.userphone {
+	if sn2order == nil || sn2order.Phone != l.userphone || (sn2order.OrderStatus != 0 && sn2order.OrderStatus != 1 && sn2order.OrderStatus != 1000) {
 		return nil, false
 	}
 	addr, err := json.Marshal(Address)

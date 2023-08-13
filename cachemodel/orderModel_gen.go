@@ -50,11 +50,12 @@ type (
 		FindAllPointsOrder(ctx context.Context, phone string) ([]*Order, error)
 		FindAllByOutTradeNoNotDeleted(ctx context.Context, OutTradeNo string) ([]*Order, error)
 		UpdateRefund(ctx context.Context, orderSn string) error
-		FindAllToDownLoad(ctx context.Context) ([]*Order, error)
+		FindAll1001(ctx context.Context) ([]*Order, error)
 		FindAll1002(ctx context.Context) ([]*Order, error)
 		FindDelivering(ctx context.Context) ([]*Order, error)
 		FindStatus3(ctx context.Context) ([]string, error)
 		FindAllStatusByOutTradeNo(ctx context.Context, OutTradeNo string) ([]int64, error)
+		FindOneBySfSn(ctx context.Context, SfSn string) (*Order, error)
 	}
 
 	defaultOrderModel struct {
@@ -272,7 +273,7 @@ func (m *defaultOrderModel) UpdateStatusByOrderSn(ctx context.Context, status in
 	_, err := m.conn.ExecCtx(ctx, query, status, orderSn)
 	return err
 }
-func (m *defaultOrderModel) FindAllToDownLoad(ctx context.Context) ([]*Order, error) {
+func (m *defaultOrderModel) FindAll1001(ctx context.Context) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `order_status` = 1001", orderRows, m.table)
 	var resp []*Order
 	err := m.conn.QueryRowsCtx(ctx, &resp, query)
@@ -381,7 +382,19 @@ func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, erro
 		return nil, err
 	}
 }
-
+func (m *defaultOrderModel) FindOneBySfSn(ctx context.Context, SfSn string) (*Order, error) {
+	var resp Order
+	query := fmt.Sprintf("select %s from %s where `delivery_sn` = ? limit 1", orderRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, SfSn)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) FindOneByOrderSn(ctx context.Context, orderSn string) (*Order, error) {
 	var resp Order
 	query := fmt.Sprintf("select %s from %s where `order_sn` = ? limit 1", orderRows, m.table)

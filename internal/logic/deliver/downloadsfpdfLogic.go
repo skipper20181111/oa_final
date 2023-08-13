@@ -27,7 +27,7 @@ func (l *DownloadsfpdfLogic) Downloadsfpdf() (resp *types.DownloadSFPDFResp, err
 	resp = &types.DownloadSFPDFResp{
 		SfPDFs: make([]string, 0),
 	}
-	orders, _ := l.svcCtx.Order.FindAllToDownLoad(l.ctx)
+	orders, _ := l.svcCtx.Order.FindAll1001(l.ctx)
 	for _, order := range orders {
 		resp.SfPDFs = append(resp.SfPDFs, order.DeliverySn)
 	}

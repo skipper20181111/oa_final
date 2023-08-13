@@ -91,6 +91,10 @@ service oa-api {
 	@handler continuepay
 	post /continuepay (ContinuePayRes) returns (NewOrderResp)
 	
+	@doc "确认收货"
+	@handler confirmorder
+	post /confirmorder (ConfirmOrderRes) returns (ConfirmOrderResp)
+	
 	@doc "获取所有订单"
 	@handler getallorder
 	post /getallorder (GetAllOrderRes) returns (GetAllOrderResp)

@@ -336,9 +336,7 @@ type (
     }
 )
 type (
-    GetInvoiceOrderRes{
-        IsCompleted bool `json:"isCompleted"`
-        InvoiceStatus []int64 `json:"invoiceStatus"`
+    GetInvoiceOrderRes {
         PageNumber int `json:"pageNumber"`
         PageSize int `json:"pageSize"`
     }
@@ -346,7 +344,6 @@ type (
         PageNumber int `json:"pageNumber"`
         PageSize int `json:"pageSize"`
         IsPointsOrder bool `json:"isPointsOrder"`
-
     }
     GetAllOrderRp {
         OrderInfos []*OrderInfo `json:"orderInfos"`
@@ -912,6 +909,17 @@ type (
 
     }
 )
+type (
+    ConfirmOrderRes {
+        OutTradeNo string `json:"outTradeNo"`
+    }
+    ConfirmOrderResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetAllOrderRp `json:"data"`
+    }
+)
+
 
 
 

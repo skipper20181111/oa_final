@@ -111,6 +111,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
+				Path:    "/confirmorder",
+				Handler: orderpay.ConfirmorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/getallorder",
 				Handler: orderpay.GetallorderHandler(serverCtx),
 			},

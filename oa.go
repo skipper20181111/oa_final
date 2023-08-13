@@ -69,6 +69,7 @@ func IfReceived(ctx *svc.ServiceContext) {
 	for true {
 		RefreshGap := time.Minute * time.Duration(rand.Intn(120)+1)
 		time.Sleep(RefreshGap)
+		//time.Sleep(time.Second * 10)
 		backcontext := context.Background()
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")
@@ -77,6 +78,14 @@ func IfReceived(ctx *svc.ServiceContext) {
 			sf := orderpay.NewSfUtilLogic(backcontext, ctx)
 			for _, order := range orderlist {
 				sf.IfReceived(order)
+			}
+		}
+		OutTradeSnList, _ := ctx.Order.FindStatus3(backcontext)
+		for _, OutTradeSn := range OutTradeSnList {
+			status, _ := ctx.Order.FindAllStatusByOutTradeNo(backcontext, OutTradeSn)
+			if len(status) == 1 && status[0] == 3 {
+				ctx.PayInfo.UpdateStatus(backcontext, OutTradeSn, 4)
+				ctx.Order.UpdateStatusByOutTradeSn(backcontext, 4, OutTradeSn)
 			}
 		}
 	}
@@ -88,9 +97,9 @@ func monitorOrder(ctx *svc.ServiceContext) {
 		}
 	}()
 	for true {
-		//RefreshGap := time.Second * time.Duration(rand.Intn(100)+50)
-		//time.Sleep(RefreshGap)
-		time.Sleep(time.Second * 10)
+		RefreshGap := time.Second * time.Duration(rand.Intn(100)+50)
+		time.Sleep(RefreshGap)
+		//time.Sleep(time.Second * 10)
 		backcontext := context.Background()
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")

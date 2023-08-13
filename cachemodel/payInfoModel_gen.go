@@ -37,6 +37,8 @@ type (
 		FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*PayInfo, error)
 		UpdateStatus(ctx context.Context, OutTradeNo string, Status int64) error
 		FindStatus0(ctx context.Context) ([]*PayInfo, error)
+		FindStatus1(ctx context.Context) ([]*PayInfo, error)
+		FindStatus4(ctx context.Context, pagenumber int) ([]*PayInfo, error)
 	}
 
 	defaultPayInfoModel struct {
@@ -123,7 +125,37 @@ func (m *defaultPayInfoModel) FindOneByOutTradeNo(ctx context.Context, outTradeN
 		return nil, err
 	}
 }
-
+func (m *defaultPayInfoModel) FindStatus4(ctx context.Context, pagenumber int) ([]*PayInfo, error) {
+	if pagenumber <= 0 || pagenumber > 7 {
+		return make([]*PayInfo, 0), nil
+	}
+	sheetlen := 5
+	offset := sheetlen * (pagenumber - 1)
+	var resp []*PayInfo
+	query := fmt.Sprintf("select %s from %s where `status` = 4 order by `create_order_time` desc  limit ? OFFSET ?", payInfoRows, m.table)
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, sheetlen, offset)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+func (m *defaultPayInfoModel) FindStatus1(ctx context.Context) ([]*PayInfo, error) {
+	var resp []*PayInfo
+	query := fmt.Sprintf("select %s from %s where `status` = 1", payInfoRows, m.table)
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultPayInfoModel) FindStatus0(ctx context.Context) ([]*PayInfo, error) {
 	var resp []*PayInfo
 	query := fmt.Sprintf("select %s from %s where `status` = 0", payInfoRows, m.table)

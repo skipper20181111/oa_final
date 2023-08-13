@@ -26,6 +26,7 @@ func NewGetinvoiceorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 }
 
 func (l *GetinvoiceorderLogic) Getinvoiceorder(req *types.GetInvoiceOrderRes) (resp *types.GetAllOrderResp, err error) {
+	userphone := l.ctx.Value("phone").(string)
 	resp = &types.GetAllOrderResp{
 		Code: "10000",
 		Msg:  "success",
@@ -33,7 +34,8 @@ func (l *GetinvoiceorderLogic) Getinvoiceorder(req *types.GetInvoiceOrderRes) (r
 			OrderInfos: make([]*types.OrderInfo, 0),
 		},
 	}
-	Orders, _ := l.svcCtx.Order.FindInvoiceByPhone(l.ctx, l.phone, req.PageNumber, req.InvoiceStatus)
+	payInfos, _ := l.svcCtx.PayInfo.FindStatus4(l.ctx, req.PageNumber)
+	Orders, _ := l.svcCtx.Order.FindAllByOutTradeNos(l.ctx, userphone, payInfos)
 	for _, order := range Orders {
 		resp.Data.OrderInfos = append(resp.Data.OrderInfos, OrderDb2info(order))
 	}

@@ -53,6 +53,8 @@ type (
 		FindAllToDownLoad(ctx context.Context) ([]*Order, error)
 		FindAll1002(ctx context.Context) ([]*Order, error)
 		FindDelivering(ctx context.Context) ([]*Order, error)
+		FindStatus3(ctx context.Context) ([]string, error)
+		FindAllStatusByOutTradeNo(ctx context.Context, OutTradeNo string) ([]int64, error)
 	}
 
 	defaultOrderModel struct {
@@ -217,6 +219,20 @@ func (m *defaultOrderModel) FindAll1002(ctx context.Context) ([]*Order, error) {
 		return nil, err
 	}
 }
+func (m *defaultOrderModel) FindAllStatusByOutTradeNo(ctx context.Context, OutTradeNo string) ([]int64, error) {
+	query := fmt.Sprintf("select distinct `order_status` from %s where `out_trade_no` = ? ", m.table)
+	var resp []int64
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, OutTradeNo)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, errors.New("no")
+	default:
+		return nil, err
+	}
+}
+
 func (m *defaultOrderModel) FindAllByOutTradeNo(ctx context.Context, OutTradeNo string) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? ", orderRows, m.table)
 	var resp []*Order
@@ -312,7 +328,19 @@ func (m *defaultOrderModel) FindDelivering(ctx context.Context) ([]*Order, error
 		return nil, err
 	}
 }
-
+func (m *defaultOrderModel) FindStatus3(ctx context.Context) ([]string, error) {
+	query := fmt.Sprintf("select distinct `out_trade_no` from %s where `order_status` =3", m.table)
+	var resp []string
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) FindStatus2(ctx context.Context) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `order_status` =2 limit 100", orderRows, m.table)
 	var resp []*Order

@@ -319,10 +319,8 @@ type PreNewOrderResp struct {
 }
 
 type GetInvoiceOrderRes struct {
-	IsCompleted   bool    `json:"isCompleted"`
-	InvoiceStatus []int64 `json:"invoiceStatus"`
-	PageNumber    int     `json:"pageNumber"`
-	PageSize      int     `json:"pageSize"`
+	PageNumber int `json:"pageNumber"`
+	PageSize   int `json:"pageSize"`
 }
 
 type GetAllOrderRes struct {
@@ -878,6 +876,16 @@ type DownPDFRes struct {
 }
 
 type DownPDFResp struct {
+}
+
+type ConfirmOrderRes struct {
+	OutTradeNo string `json:"outTradeNo"`
+}
+
+type ConfirmOrderResp struct {
+	Code string         `json:"code"`
+	Msg  string         `json:"msg"`
+	Data *GetAllOrderRp `json:"data"`
 }
 
 type CreateOrderMsgData struct {

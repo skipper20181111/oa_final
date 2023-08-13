@@ -36,6 +36,7 @@ type (
 		UpdateCashPay(ctx context.Context, OutTradeNo string) error
 		FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*PayInfo, error)
 		UpdateStatus(ctx context.Context, OutTradeNo string, Status int64) error
+		FindStatus0(ctx context.Context) ([]*PayInfo, error)
 	}
 
 	defaultPayInfoModel struct {
@@ -116,6 +117,20 @@ func (m *defaultPayInfoModel) FindOneByOutTradeNo(ctx context.Context, outTradeN
 	switch err {
 	case nil:
 		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultPayInfoModel) FindStatus0(ctx context.Context) ([]*PayInfo, error) {
+	var resp []*PayInfo
+	query := fmt.Sprintf("select %s from %s where `status` = 0", payInfoRows, m.table)
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
 	case sqlc.ErrNotFound:
 		return nil, ErrNotFound
 	default:

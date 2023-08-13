@@ -88,9 +88,9 @@ func monitorOrder(ctx *svc.ServiceContext) {
 		}
 	}()
 	for true {
-		RefreshGap := time.Second * time.Duration(rand.Intn(100)+50)
-		time.Sleep(RefreshGap)
-		//time.Sleep(time.Second * 10)
+		//RefreshGap := time.Second * time.Duration(rand.Intn(100)+50)
+		//time.Sleep(RefreshGap)
+		time.Sleep(time.Second * 10)
 		backcontext := context.Background()
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")
@@ -111,6 +111,14 @@ func monitorOrder(ctx *svc.ServiceContext) {
 				}
 			}
 		}
+		PayInfos, _ := ctx.PayInfo.FindStatus0(backcontext)
+		for _, PayInfo := range PayInfos {
+			deleted, _ := ctx.Order.FindAllByOutTradeNoNotDeleted(backcontext, PayInfo.OutTradeNo)
+			if len(deleted) == 0 {
+				ctx.PayInfo.UpdateStatus(backcontext, PayInfo.OutTradeNo, 8)
+			}
+		}
+
 	}
 }
 func refresscache() {

@@ -16,8 +16,8 @@ import "alltype.api"
 )
 service oa-api{
 	@doc "获取订单号，需要指明获取哪一部分"
-	@handler getordersn
-	post /getnotdelivered (GetOrderSnRes) returns (GetOrderSnResp)
+	@handler getsfsn
+	post /getsfsn (GetSfSnRes) returns (GetSfSnResp)
 	
 	@doc "将订单status改为1001，代表商品正在准备中，且生成快递单号但不展示，后台可看到单号用于发货"
 	@handler preparegoods

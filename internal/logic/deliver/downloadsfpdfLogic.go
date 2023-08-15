@@ -25,11 +25,11 @@ func NewDownloadsfpdfLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Dow
 
 func (l *DownloadsfpdfLogic) Downloadsfpdf() (resp *types.DownloadSFPDFResp, err error) {
 	resp = &types.DownloadSFPDFResp{
-		SfPDFs: make([]string, 0),
+		PDFList: make([]string, 0),
 	}
 	orders, _ := l.svcCtx.Order.FindAll1001(l.ctx)
 	for _, order := range orders {
-		resp.SfPDFs = append(resp.SfPDFs, order.DeliverySn)
+		resp.PDFList = append(resp.PDFList, order.DeliverySn)
 	}
 	return resp, nil
 }

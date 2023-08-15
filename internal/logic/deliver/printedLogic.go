@@ -24,7 +24,11 @@ func NewPrintedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PrintedLo
 }
 
 func (l *PrintedLogic) Printed(req *types.DownLoadedRes) (resp *types.DownLoadedResp, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	resp = &types.DownLoadedResp{
+		PDFList: make([]string, 0),
+	}
+	for _, sfsn := range req.SfSn {
+		l.svcCtx.Order.UpdateStatusByDeliverySn(l.ctx, 1003, sfsn)
+	}
+	return resp, nil
 }

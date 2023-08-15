@@ -814,20 +814,14 @@ type QuantityInfo struct {
 	IsDefault      bool    `json:"isDefault"`
 }
 
-type GetOrderSnRes struct {
-	FinishPayOrder bool `json:"finishPayOrder"`
-	PrepareGoods   bool `json:"prepareGoods"`
-	Delivering     bool `json:"delivering"`
+type GetSfSnRes struct {
+	StatusList []int64 `json:"statusList"`
 }
 
-type GetOrderSnRp struct {
-	OrderInfos []*OrderInfo `json:"orderInfos"`
-}
-
-type GetOrderSnResp struct {
-	Code string        `json:"code"`
-	Msg  string        `json:"msg"`
-	Data *GetOrderSnRp `json:"data"`
+type GetSfSnResp struct {
+	Code string             `json:"code"`
+	Msg  string             `json:"msg"`
+	Data map[int64][]string `json:"data"`
 }
 
 type PrepareGoodsRes struct {
@@ -861,7 +855,7 @@ type SfOrderInfo struct {
 }
 
 type DownloadSFPDFResp struct {
-	SfPDFs []string `json:"sfPdFs"`
+	PDFList []string `json:"pdfList"`
 }
 
 type DownLoadedRes struct {
@@ -869,7 +863,7 @@ type DownLoadedRes struct {
 }
 
 type DownLoadedResp struct {
-	Sfsn1002 []string `json:"sfsn1002"`
+	PDFList []string `json:"pdfList"`
 }
 
 type DownPDFRes struct {

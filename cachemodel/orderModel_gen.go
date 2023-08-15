@@ -33,7 +33,7 @@ type (
 		Delete(ctx context.Context, id int64) error
 		FindInvoiceByPhone(ctx context.Context, phone string, pagenumber int, InvoiceStatus []int64) ([]*Order, error)
 		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
-		FinishDownload(ctx context.Context, status int64, SfSn string) error
+		UpdateStatusByDeliverySn(ctx context.Context, status int64, SfSn string) error
 		UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error
 		RefundCash(ctx context.Context, orderSn string) error
 		RefundWeChat(ctx context.Context, orderSn string) error
@@ -52,6 +52,7 @@ type (
 		UpdateRefund(ctx context.Context, orderSn string) error
 		FindAll1001(ctx context.Context) ([]*Order, error)
 		FindAll1002(ctx context.Context) ([]*Order, error)
+		FindAllByStatus(ctx context.Context, status int64) ([]*Order, error)
 		FindDelivering(ctx context.Context) ([]*Order, error)
 		FindStatus3(ctx context.Context) ([]string, error)
 		FindAllStatusByOutTradeNo(ctx context.Context, OutTradeNo string) ([]int64, error)
@@ -207,6 +208,20 @@ func (m *defaultOrderModel) FindAllByOutTradeNoNotDeleted(ctx context.Context, O
 		return nil, err
 	}
 }
+func (m *defaultOrderModel) FindAllByStatus(ctx context.Context, status int64) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `order_status` = ? ", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, status)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, errors.New("no")
+	default:
+		return nil, err
+	}
+}
+
 func (m *defaultOrderModel) FindAll1002(ctx context.Context) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `order_status` = 1002 ", orderRows, m.table)
 	var resp []*Order
@@ -263,7 +278,7 @@ func (m *defaultOrderModel) RefundCash(ctx context.Context, orderSn string) erro
 	_, err := m.conn.ExecCtx(ctx, query, orderSn)
 	return err
 }
-func (m *defaultOrderModel) FinishDownload(ctx context.Context, status int64, SfSn string) error {
+func (m *defaultOrderModel) UpdateStatusByDeliverySn(ctx context.Context, status int64, SfSn string) error {
 	query := fmt.Sprintf("update %s set `order_status`=? where `delivery_sn` = ? and `order_status`=1001", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, status, SfSn)
 	return err

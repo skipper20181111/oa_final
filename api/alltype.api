@@ -850,21 +850,13 @@ type (
     }
 )
 type (
-    GetOrderSnRes {
-        FinishPayOrder bool `json:"finishPayOrder"`
-        //         orderstatus=1,1000
-        PrepareGoods bool `json:"prepareGoods"`
-        //         orderstatus=1001，1002，1003
-        Delivering bool `json:"delivering"`
-        //
+    GetSfSnRes {
+    StatusList []int64 `json:"statusList"`
     }
-    GetOrderSnRp {
-        OrderInfos []*OrderInfo `json:"orderInfos"`
-    }
-    GetOrderSnResp {
+    GetSfSnResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
-        Data *GetOrderSnRp `json:"data"`
+        Data map[int64][]string `json:"data"`
     }
     PrepareGoodsRes {
         OrderSns []string `json:"orderSns"`
@@ -891,14 +883,14 @@ type (
         ProductInfo string `json:"productInfo"`
     }
     DownloadSFPDFResp {
-        SfPDFs []string `json:"sfPdFs"`
+        PDFList []string `json:"pdfList"`
         //        SfOrderInfo []SfOrderInfo `json:"pdFs"`
     }
     DownLoadedRes {
         SfSn []string `json:"sfSn"`
     }
     DownLoadedResp {
-        sfsn1002 []string `json:"sfsn1002"`
+        PDFList []string `json:"pdfList"`
     }
 )
 type (

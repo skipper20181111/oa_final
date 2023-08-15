@@ -25,14 +25,14 @@ func NewDownloadedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Downlo
 
 func (l *DownloadedLogic) Downloaded(req *types.DownLoadedRes) (resp *types.DownLoadedResp, err error) {
 	resp = &types.DownLoadedResp{
-		Sfsn1002: make([]string, 0),
+		PDFList: make([]string, 0),
 	}
 	for _, sfsn := range req.SfSn {
-		l.svcCtx.Order.FinishDownload(l.ctx, 1002, sfsn)
+		l.svcCtx.Order.UpdateStatusByDeliverySn(l.ctx, 1002, sfsn)
 	}
 	orders, _ := l.svcCtx.Order.FindAll1002(l.ctx)
 	for _, order := range orders {
-		resp.Sfsn1002 = append(resp.Sfsn1002, order.DeliverySn)
+		resp.PDFList = append(resp.PDFList, order.DeliverySn)
 	}
 	return resp, nil
 }

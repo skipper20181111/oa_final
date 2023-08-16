@@ -171,7 +171,7 @@ func (l SfUtilLogic) GetSfSn(order *cachemodel.Order) {
 func (l SfUtilLogic) IfDelivering(order *cachemodel.Order) {
 	routelist := GetRoutesList(order.DeliverySn)
 	for _, route := range routelist.Routes {
-		if strings.Contains(route.Remark, "收件") || strings.Contains(route.Remark, "揽收") || strings.Contains(route.Remark, "已揽收") {
+		if route.OpCode == "50" || route.OpCode == "30" || strings.Contains(route.Remark, "收件") || strings.Contains(route.Remark, "已收取") || strings.Contains(route.Remark, "揽收") || strings.Contains(route.Remark, "已揽收") {
 			l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 2, order.OrderSn)
 		}
 	}

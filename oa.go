@@ -38,6 +38,7 @@ func main() {
 	go PrepareGoods(ctx)
 	go monitorOrder(ctx)
 	go IfReceived(ctx)
+	go delivering(ctx)
 	server.Start()
 }
 func delivering(ctx *svc.ServiceContext) {
@@ -49,6 +50,7 @@ func delivering(ctx *svc.ServiceContext) {
 	for true {
 		RefreshGap := time.Minute * time.Duration(rand.Intn(30)+1)
 		time.Sleep(RefreshGap)
+		//time.Sleep(time.Second)
 		backcontext := context.Background()
 		orderlist, _ := ctx.Order.FindDelivering(backcontext)
 		if orderlist != nil && len(orderlist) > 0 {

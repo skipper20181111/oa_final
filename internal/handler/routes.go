@@ -44,6 +44,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
+				Path:    "/getdelivering",
+				Handler: deliver.GetdeliveringHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/downloaded",
 				Handler: deliver.DownloadedHandler(serverCtx),
 			},

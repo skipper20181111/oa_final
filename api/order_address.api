@@ -30,11 +30,15 @@ service oa-api{
 	@doc "获取所有待下载sf单号"
 	@handler downloadsfpdf
 	post /downloadsfpdf  returns (DownloadSFPDFResp)
+	
+	@doc "获取已经发货，可以删除的PDF列表"
+	@handler getdelivering
+	post /getdelivering  returns (DownloadSFPDFResp)
+	
 	@doc "通知后台，已经成功下载，不要再通知前台了"
 	@handler downloaded
 	post /downloaded (DownLoadedRes) returns (DownLoadedResp)
-
-
+	
 	@doc "通知后台，下载失败"
 	@handler downloadfailed
 	post /downloadfailed (DownLoadedRes) returns ()

@@ -28,7 +28,7 @@ func (l *DownloadedLogic) Downloaded(req *types.DownLoadedRes) (resp *types.Down
 		PDFList: make([]string, 0),
 	}
 	for _, sfsn := range req.SfSn {
-		l.svcCtx.Order.UpdateStatusByDeliverySn(l.ctx, 1002, sfsn)
+		l.svcCtx.Order.UpdateStatusByDeliverySn(l.ctx, 1002, 1001, sfsn)
 	}
 	orders, _ := l.svcCtx.Order.FindAll1002(l.ctx)
 	for _, order := range orders {

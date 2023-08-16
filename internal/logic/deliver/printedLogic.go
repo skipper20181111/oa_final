@@ -28,7 +28,8 @@ func (l *PrintedLogic) Printed(req *types.DownLoadedRes) (resp *types.DownLoaded
 		PDFList: make([]string, 0),
 	}
 	for _, sfsn := range req.SfSn {
-		l.svcCtx.Order.UpdateStatusByDeliverySn(l.ctx, 1003, sfsn)
+		l.svcCtx.Order.UpdateStatusByDeliverySn(l.ctx, 1003, 1002, sfsn)
+		resp.PDFList = append(resp.PDFList, sfsn)
 	}
 	return resp, nil
 }

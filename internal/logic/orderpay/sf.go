@@ -116,7 +116,7 @@ func (l SfUtilLogic) GetPDF(order *cachemodel.Order, sfsn string) {
 		//realPictureUrl := "https://img.waterflowfit.top/" + key
 	}
 }
-func RefundSfOrder(OrderSn string) {
+func RefundSfOrder(order cachemodel.Order) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -124,7 +124,7 @@ func RefundSfOrder(OrderSn string) {
 	}()
 	Timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	MsgDataStruct := &types.RefundMsgData{
-		OrderId:  GetSha256(OrderSn),
+		OrderId:  GetSha256(order.OrderSn + order.Address),
 		DealType: 2,
 	}
 	MsgDataByte, _ := json.Marshal(MsgDataStruct)
@@ -195,6 +195,7 @@ func orderdb2sfinfodb(order *cachemodel.Order, SfSn string) *cachemodel.SfInfo {
 		ProductInfo: order.ProductInfo,
 	}
 }
+
 func QuerySfSn(order *cachemodel.Order) (bool, string) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -204,7 +205,7 @@ func QuerySfSn(order *cachemodel.Order) (bool, string) {
 	Timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 
 	MsgDataStruct := &types.QueryMsgData{
-		OrderId: GetSha256(order.OrderSn),
+		OrderId: GetSha256(order.OrderSn + order.Address),
 	}
 	MsgDataByte, _ := json.Marshal(MsgDataStruct)
 	ToVerifyText := string(MsgDataByte) + Timestamp + svc.CheckCodeSbox
@@ -245,7 +246,7 @@ func CreateOrder(order *cachemodel.Order) (status int, SfSn string) {
 	CargoDetailList := []*types.CargoDetail{{Name: "毅明生鲜"}}
 	MsgDataStruct := &types.CreateOrderMsgData{
 		PayMethod: 1, Language: "zh-CN",
-		OrderId:            GetSha256(order.OrderSn),
+		OrderId:            GetSha256(order.OrderSn + order.Address),
 		ContactInfoList:    contactinfolist,
 		MonthlyCard:        svc.MonthlyCard,
 		ExpressTypeId:      1,

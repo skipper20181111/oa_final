@@ -72,7 +72,7 @@ func (l RefundorderLogic) RefundOneOrder(OrderSn string) (*types.OrderInfo, bool
 	if order.OrderStatus != 6 {
 		return nil, false
 	}
-	go RefundSfOrder(order.OrderSn)
+	go RefundSfOrder(*order)
 	// 首先开始退微信支付的钱
 	if order.WexinPayAmount > 0 {
 		l.wcu.CancelOrder(order)

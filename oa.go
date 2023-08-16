@@ -35,6 +35,7 @@ func main() {
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	go refresscache()
+	go PrepareGoods(ctx)
 	go monitorOrder(ctx)
 	go IfReceived(ctx)
 	server.Start()
@@ -49,8 +50,6 @@ func delivering(ctx *svc.ServiceContext) {
 		RefreshGap := time.Minute * time.Duration(rand.Intn(30)+1)
 		time.Sleep(RefreshGap)
 		backcontext := context.Background()
-		backcontext = context.WithValue(backcontext, "phone", "17854230845")
-		backcontext = context.WithValue(backcontext, "openid", "17854230845")
 		orderlist, _ := ctx.Order.FindDelivering(backcontext)
 		if orderlist != nil && len(orderlist) > 0 {
 			sf := orderpay.NewSfUtilLogic(backcontext, ctx)
@@ -90,6 +89,26 @@ func IfReceived(ctx *svc.ServiceContext) {
 		}
 	}
 }
+func PrepareGoods(SvcCtx *svc.ServiceContext) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	for true {
+		RefreshGap := time.Second * time.Duration(rand.Intn(10)+1)
+		time.Sleep(RefreshGap)
+		//time.Sleep(time.Second * 10)
+		ctx := context.Background()
+		Orders, _ := SvcCtx.Order.FindStatusBiggerThan1(ctx)
+		if len(Orders) > 0 {
+			sf := orderpay.NewSfUtilLogic(context.Background(), SvcCtx)
+			for _, order := range Orders {
+				sf.GetSfSn(order)
+			}
+		}
+	}
+}
 func monitorOrder(ctx *svc.ServiceContext) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -104,7 +123,6 @@ func monitorOrder(ctx *svc.ServiceContext) {
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")
 		changed, _ := ctx.Order.FindCanChanged(backcontext)
-		sf := orderpay.NewSfUtilLogic(context.Background(), ctx)
 		if changed != nil && len(changed) > 0 {
 			l := orderpay.NewCheckOrderLogic(backcontext, ctx)
 			for _, order := range changed {
@@ -115,8 +133,6 @@ func monitorOrder(ctx *svc.ServiceContext) {
 					} else {
 						l.Checkall(order, payinfo)
 					}
-				} else if order.OrderStatus == 1 && len(order.DeliverySn) < 3 {
-					sf.GetSfSn(order)
 				}
 			}
 		}

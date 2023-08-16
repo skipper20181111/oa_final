@@ -3,8 +3,6 @@ package orderpay
 import (
 	"context"
 	"encoding/json"
-	"time"
-
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 
@@ -35,15 +33,16 @@ func (l *ChangeorderaddressLogic) Changeorderaddress(req *types.ChangeOrdeRaddre
 			OrderInfoList: make([]*types.OrderInfo, 0),
 		},
 	}
+	addr, _ := json.Marshal(req.Address)
 	for _, OrderSn := range req.OrderSnList {
-		Order, ok := l.ChangeAddress(OrderSn, req.Address)
+		Order, ok := l.ChangeAddress(OrderSn, string(addr))
 		if ok {
 			resp.Data.OrderInfoList = append(resp.Data.OrderInfoList, Order)
 		}
 	}
 	return resp, nil
 }
-func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address *types.AddressInfo) (*types.OrderInfo, bool) {
+func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address string) (*types.OrderInfo, bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -53,13 +52,13 @@ func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address *types.Ad
 	if sn2order == nil || sn2order.Phone != l.userphone || (sn2order.OrderStatus != 0 && sn2order.OrderStatus != 1 && sn2order.OrderStatus != 1000) {
 		return nil, false
 	}
-	addr, err := json.Marshal(Address)
-	if err != nil {
+	if getsha512(Address) == getsha512(sn2order.Address) {
 		return nil, false
 	}
-	sn2order.Address = string(addr)
-	sn2order.ModifyTime = time.Now()
-	err = l.svcCtx.Order.Update(l.ctx, sn2order)
+	go RefundSfOrder(*sn2order)
+	sn2order.Address = Address
+	sn2order.DeliverySn = ""
+	err = l.svcCtx.Order.UpdateAddress(l.ctx, OrderSn, Address)
 	if err != nil {
 		return nil, false
 	}

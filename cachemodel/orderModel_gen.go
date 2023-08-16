@@ -33,7 +33,7 @@ type (
 		Delete(ctx context.Context, id int64) error
 		FindInvoiceByPhone(ctx context.Context, phone string, pagenumber int, InvoiceStatus []int64) ([]*Order, error)
 		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
-		UpdateStatusByDeliverySn(ctx context.Context, status int64, SfSn string) error
+		UpdateStatusByDeliverySn(ctx context.Context, Status, OriStatus int64, SfSn string) error
 		UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error
 		RefundCash(ctx context.Context, orderSn string) error
 		RefundWeChat(ctx context.Context, orderSn string) error
@@ -42,6 +42,7 @@ type (
 		UpdateWeChatPay(ctx context.Context, status int64, OutTradeNo string) error
 		UpdateCashPay(ctx context.Context, status int64, OutTradeNo string) error
 		FindCanChanged(ctx context.Context) ([]*Order, error)
+		FindStatusBiggerThan1(ctx context.Context) ([]*Order, error)
 		FindStatus2(ctx context.Context) ([]*Order, error)
 		UpdateDeliver(ctx context.Context, DeliverSn, DeliverCompany, OrderSn string) error
 		UpdateInvoice(ctx context.Context, OutTradeSn string, InvoiceStatus int64) error
@@ -57,6 +58,7 @@ type (
 		FindStatus3(ctx context.Context) ([]string, error)
 		FindAllStatusByOutTradeNo(ctx context.Context, OutTradeNo string) ([]int64, error)
 		FindOneBySfSn(ctx context.Context, SfSn string) (*Order, error)
+		UpdateAddress(ctx context.Context, OrderSn, AddressStr string) error
 	}
 
 	defaultOrderModel struct {
@@ -278,9 +280,10 @@ func (m *defaultOrderModel) RefundCash(ctx context.Context, orderSn string) erro
 	_, err := m.conn.ExecCtx(ctx, query, orderSn)
 	return err
 }
-func (m *defaultOrderModel) UpdateStatusByDeliverySn(ctx context.Context, status int64, SfSn string) error {
-	query := fmt.Sprintf("update %s set `order_status`=? where `delivery_sn` = ? and `order_status`=1001", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, status, SfSn)
+
+func (m *defaultOrderModel) UpdateStatusByDeliverySn(ctx context.Context, Status, OriStatus int64, SfSn string) error {
+	query := fmt.Sprintf("update %s set `order_status`=? where `delivery_sn` = ? and `order_status`=?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, Status, SfSn, OriStatus)
 	return err
 }
 func (m *defaultOrderModel) UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error {
@@ -331,6 +334,12 @@ func (m *defaultOrderModel) UpdateInvoice(ctx context.Context, OutTradeSn string
 	return err
 }
 
+func (m *defaultOrderModel) UpdateAddress(ctx context.Context, OrderSn, AddressStr string) error {
+	query := fmt.Sprintf("update %s set `address`=?,`delivery_sn`='' where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, AddressStr, OrderSn)
+	return err
+}
+
 func (m *defaultOrderModel) FindDelivering(ctx context.Context) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `order_status` in(1002,1003)", orderRows, m.table)
 	var resp []*Order
@@ -371,7 +380,7 @@ func (m *defaultOrderModel) FindStatus2(ctx context.Context) ([]*Order, error) {
 	}
 }
 func (m *defaultOrderModel) FindCanChanged(ctx context.Context) ([]*Order, error) {
-	query := fmt.Sprintf("select %s from %s where `order_status` in(0,1,6) limit 100", orderRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `order_status` in(0,6) limit 100", orderRows, m.table)
 	var resp []*Order
 	err := m.conn.QueryRowsCtx(ctx, &resp, query)
 	switch err {
@@ -383,7 +392,19 @@ func (m *defaultOrderModel) FindCanChanged(ctx context.Context) ([]*Order, error
 		return nil, err
 	}
 }
-
+func (m *defaultOrderModel) FindStatusBiggerThan1(ctx context.Context) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `order_status` in(1,1000,1001) and `delivery_sn`='' limit 100", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", orderRows, m.table)
 	var resp Order

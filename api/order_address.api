@@ -33,7 +33,8 @@ service oa-api{
 	@doc "通知后台，已经成功下载，不要再通知前台了"
 	@handler downloaded
 	post /downloaded (DownLoadedRes) returns (DownLoadedResp)
-	
+
+
 	@doc "通知后台，下载失败"
 	@handler downloadfailed
 	post /downloadfailed (DownLoadedRes) returns ()

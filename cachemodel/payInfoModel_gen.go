@@ -96,6 +96,33 @@ func (m *defaultPayInfoModel) FindOne(ctx context.Context, id int64) (*PayInfo, 
 		return nil, err
 	}
 }
+
+func (m *defaultPayInfoModel) FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*PayInfo, error) {
+	var resp PayInfo
+	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? limit 1", payInfoRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, outTradeNo)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultPayInfoModel) Insert(ctx context.Context, data *PayInfo) (sql.Result, error) {
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, payInfoRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OutTradeNo, data.TransactionType, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.TotleAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.WexinRefundAmount, data.CashAccountRefundAmount, data.FinishWeixinpay, data.FinishAccountpay, data.Status, data.InvoiceStatus, data.WexinPaymentTime, data.CashAccountPaymentTime, data.LogId)
+	return ret, err
+}
+
+func (m *defaultPayInfoModel) Update(ctx context.Context, newData *PayInfo) error {
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, payInfoRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OutTradeNo, newData.TransactionType, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.TotleAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.WexinRefundAmount, newData.CashAccountRefundAmount, newData.FinishWeixinpay, newData.FinishAccountpay, newData.Status, newData.InvoiceStatus, newData.WexinPaymentTime, newData.CashAccountPaymentTime, newData.LogId, newData.Id)
+	return err
+}
+
 func (m *defaultPayInfoModel) FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*PayInfo, error) {
 	if pagenumber <= 0 || pagenumber > 7 {
 		return make([]*PayInfo, 0), nil
@@ -114,19 +141,7 @@ func (m *defaultPayInfoModel) FindAllByPhone(ctx context.Context, phone string, 
 		return nil, err
 	}
 }
-func (m *defaultPayInfoModel) FindOneByOutTradeNo(ctx context.Context, outTradeNo string) (*PayInfo, error) {
-	var resp PayInfo
-	query := fmt.Sprintf("select %s from %s where `out_trade_no` = ? limit 1", payInfoRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, outTradeNo)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
+
 func (m *defaultPayInfoModel) FindStatus4(ctx context.Context, pagenumber int) ([]*PayInfo, error) {
 	if pagenumber <= 0 || pagenumber > 7 {
 		return make([]*PayInfo, 0), nil
@@ -172,17 +187,6 @@ func (m *defaultPayInfoModel) FindStatus0(ctx context.Context) ([]*PayInfo, erro
 	}
 }
 
-func (m *defaultPayInfoModel) Insert(ctx context.Context, data *PayInfo) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, payInfoRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OutTradeNo, data.TransactionType, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.TotleAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.WexinRefundAmount, data.CashAccountRefundAmount, data.FinishWeixinpay, data.FinishAccountpay, data.Status, data.WexinPaymentTime, data.CashAccountPaymentTime, data.LogId)
-	return ret, err
-}
-
-func (m *defaultPayInfoModel) Update(ctx context.Context, newData *PayInfo) error {
-	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, payInfoRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OutTradeNo, newData.TransactionType, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.TotleAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.WexinRefundAmount, newData.CashAccountRefundAmount, newData.FinishWeixinpay, newData.FinishAccountpay, newData.Status, newData.WexinPaymentTime, newData.CashAccountPaymentTime, newData.LogId, newData.Id)
-	return err
-}
 func (m *defaultPayInfoModel) UpdateWeixinReject(ctx context.Context, RefundAmount int64, OutTradeNo string) error {
 	query := fmt.Sprintf("update %s set `wexin_refund_amount`=`wexin_refund_amount`+? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, RefundAmount, OutTradeNo)
@@ -219,6 +223,7 @@ func (m *defaultPayInfoModel) UpdateAllPay(ctx context.Context, OutTradeNo strin
 	_, err := m.conn.ExecCtx(ctx, query, OutTradeNo)
 	return err
 }
+
 func (m *defaultPayInfoModel) tableName() string {
 	return m.table
 }

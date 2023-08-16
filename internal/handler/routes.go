@@ -34,6 +34,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
+				Path:    "/prepareallgoods",
+				Handler: deliver.PrepareallgoodsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/givesf",
 				Handler: deliver.GivesfHandler(serverCtx),
 			},

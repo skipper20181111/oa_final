@@ -23,6 +23,10 @@ service oa-api{
 	@handler preparegoods
 	post /preparegoods (PrepareGoodsRes) returns (PrepareGoodsResp)
 	
+	@doc "将所有已付款订单status改为1001，代表商品正在准备中，且生成快递单号但不展示，后台可看到单号用于发货"
+	@handler prepareallgoods
+	post /prepareallgoods () returns (GiveSFResp)
+	
 	@doc "扫码告诉后端，某个订单已经给了顺丰，更改为已发货状态"
 	@handler givesf
 	post /givesf (GiveSFRes) returns (GiveSFResp)

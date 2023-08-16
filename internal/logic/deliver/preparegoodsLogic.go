@@ -35,14 +35,21 @@ func (l *PreparegoodsLogic) Preparegoods(req *types.PrepareGoodsRes) (resp *type
 		},
 	}
 	for _, orderSn := range req.OrderSns {
-		if l.ChangeOrderStatus(orderSn) {
-			l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 1001, orderSn)
-			resp.Data.SuccessOrderSn = append(resp.Data.SuccessOrderSn, orderSn)
-		} else {
-			resp.Data.FailedOrderSn = append(resp.Data.FailedOrderSn, orderSn)
-		}
+		l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 1001, orderSn)
+		resp.Data.SuccessOrderSn = append(resp.Data.SuccessOrderSn, orderSn)
+		//if l.ChangeOrderStatus(orderSn) {
+		//	l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 1001, orderSn)
+		//	resp.Data.SuccessOrderSn = append(resp.Data.SuccessOrderSn, orderSn)
+		//} else {
+		//	resp.Data.FailedOrderSn = append(resp.Data.FailedOrderSn, orderSn)
+		//}
 	}
 	return resp, nil
+}
+func PrepareAllGoods(svcCtx svc.ServiceContext, OrderSns []string) {
+	for _, orderSn := range OrderSns {
+		svcCtx.Order.UpdateStatusByOrderSn(context.Background(), 1001, orderSn)
+	}
 }
 func (l PreparegoodsLogic) ChangeOrderStatus(OrderSn string) bool {
 	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)

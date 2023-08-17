@@ -24,6 +24,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodPost,
+				Path:    "/stopprepare",
+				Handler: deliver.StopprepareHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/getsfsn",
 				Handler: deliver.GetsfsnHandler(serverCtx),
 			},

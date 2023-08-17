@@ -877,6 +877,10 @@ type (
         Code string `json:"code"`
         Msg string `json:"msg"`
     }
+    NormalResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+    }
     SfOrderInfo {
         OrderSn string `json:"orderSn"`
         SfSn string `json:"sfSn"`

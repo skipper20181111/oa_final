@@ -82,6 +82,7 @@ type ServiceContext struct {
 	RefundInfo        cachemodel.RefundInfoModel
 	SfInfo            cachemodel.SfInfoModel
 	ErrLog            cachemodel.ErrLogModel
+	Configuration     cachemodel.ConfigurationModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -161,6 +162,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		RefundInfo:        cachemodel.NewRefundInfoModel(sqlx.NewMysql(c.DB.DataSource)),
 		SfInfo:            cachemodel.NewSfInfoModel(sqlx.NewMysql(c.DB.DataSource)),
 		ErrLog:            cachemodel.NewErrLogModel(sqlx.NewMysql(c.DB.DataSource)),
+		Configuration:     cachemodel.NewConfigurationModel(sqlx.NewMysql(c.DB.DataSource)),
 		FileClient:        CDNclient,
 	}
 }

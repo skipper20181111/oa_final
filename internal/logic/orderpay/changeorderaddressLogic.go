@@ -53,7 +53,7 @@ func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address string) (
 		return nil, false
 	}
 	if getsha512(Address) == getsha512(sn2order.Address) {
-		return nil, false
+		return OrderDb2info(sn2order), true
 	}
 	go RefundSfOrder(*sn2order)
 	sn2order.Address = Address

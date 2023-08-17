@@ -15,6 +15,10 @@ import "alltype.api"
 	//    middleware : Limit_count
 )
 service oa-api{
+	@doc "停止接单，将现有单子全部下载并打印"
+	@handler stopprepare
+	post /stopprepare () returns (NormalResp)
+	
 	@doc "获取订单号，需要指明获取哪一部分"
 	@handler getsfsn
 	post /getsfsn (GetSfSnRes) returns (GetSfSnResp)

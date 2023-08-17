@@ -848,6 +848,11 @@ type GiveSFResp struct {
 	Msg  string `json:"msg"`
 }
 
+type NormalResp struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
+}
+
 type SfOrderInfo struct {
 	OrderSn     string `json:"orderSn"`
 	SfSn        string `json:"sfSn"`

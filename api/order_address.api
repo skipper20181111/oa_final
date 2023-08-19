@@ -29,7 +29,7 @@ service oa-api{
 	
 	@doc "将所有已付款订单status改为1001，代表商品正在准备中，且生成快递单号但不展示，后台可看到单号用于发货"
 	@handler prepareallgoods
-	post /prepareallgoods () returns (GiveSFResp)
+	post /prepareallgoods (PrepareAllGoodsRes) returns (GiveSFResp)
 	
 	@doc "扫码告诉后端，某个订单已经给了顺丰，更改为已发货状态"
 	@handler givesf
@@ -50,6 +50,10 @@ service oa-api{
 	@doc "通知后台，下载失败"
 	@handler downloadfailed
 	post /downloadfailed (DownLoadedRes) returns ()
+	
+	@doc "通知后台，您有新订单了"
+	@handler youhavenewbill
+	post /youhavenewbill (NewBillRes) returns (NewBillResp)
 	
 	@doc "通知后台，已经成功打印，"
 	@handler printed

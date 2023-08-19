@@ -85,8 +85,12 @@ func IfReceived(ctx *svc.ServiceContext) {
 		for _, OutTradeSn := range OutTradeSnList {
 			status, _ := ctx.Order.FindAllStatusByOutTradeNo(backcontext, OutTradeSn)
 			if len(status) == 1 && status[0] == 3 {
-				ctx.PayInfo.UpdateStatus(backcontext, OutTradeSn, 4)
-				ctx.Order.UpdateStatusByOutTradeSn(backcontext, 4, OutTradeSn)
+				payInfo, _ := ctx.PayInfo.FindOneByOutTradeNo(backcontext, OutTradeSn)
+				if payInfo != nil {
+					ctx.PayInfo.UpdateStatus(backcontext, OutTradeSn, 4)
+					ctx.Order.UpdateStatusByOutTradeSn(backcontext, 4, OutTradeSn)
+					ctx.UserPoints.UpdatePoints(backcontext, payInfo.Phone, payInfo.TotleAmount)
+				}
 			}
 		}
 	}

@@ -851,12 +851,15 @@ type (
 )
 type (
     GetSfSnRes {
-    StatusList []int64 `json:"statusList"`
+        StatusList []int64 `json:"statusList"`
     }
     GetSfSnResp {
         Code string `json:"code"`
         Msg string `json:"msg"`
         Data map[int64][]string `json:"data"`
+    }
+    PrepareAllGoodsRes {
+        MarketID int64 `json:"marketId"`
     }
     PrepareGoodsRes {
         OrderSns []string `json:"orderSns"`
@@ -897,6 +900,15 @@ type (
         PDFList []string `json:"pdfList"`
     }
 )
+
+type (
+    NewBillRes {
+    }
+    NewBillResp {
+        OrderSn string `json:"orderSn"`
+    }
+)
+
 type (
     DownPDFRes {
 

@@ -28,6 +28,7 @@ type (
 		FindOneByPhone(ctx context.Context, phone string) (*UserPoints, error)
 		Update(ctx context.Context, data *UserPoints) error
 		Delete(ctx context.Context, id int64) error
+		UpdatePoints(ctx context.Context, phone string, points int64) error
 	}
 
 	defaultUserPointsModel struct {
@@ -93,6 +94,12 @@ func (m *defaultUserPointsModel) Insert(ctx context.Context, data *UserPoints) (
 func (m *defaultUserPointsModel) Update(ctx context.Context, newData *UserPoints) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userPointsRowsWithPlaceHolder)
 	_, err := m.conn.ExecCtx(ctx, query, newData.HistoryPoints, newData.AvailablePoints, newData.Phone, newData.Id)
+	return err
+}
+
+func (m *defaultUserPointsModel) UpdatePoints(ctx context.Context, phone string, points int64) error {
+	query := fmt.Sprintf("update %s set `history_points`=`history_points`+?,`available_points`=`available_points`+? where `phone` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, points, points, phone)
 	return err
 }
 

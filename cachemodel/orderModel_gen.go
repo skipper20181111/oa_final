@@ -33,7 +33,7 @@ type (
 		Delete(ctx context.Context, id int64) error
 		FindInvoiceByPhone(ctx context.Context, phone string, pagenumber int, InvoiceStatus []int64) ([]*Order, error)
 		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
-		PrepareAllGoods(ctx context.Context) error
+		PrepareAllGoods(ctx context.Context, MarketID int64) error
 		UpdateStatusByDeliverySn(ctx context.Context, Status, OriStatus int64, SfSn string) error
 		UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error
 		RefundCash(ctx context.Context, orderSn string) error
@@ -287,9 +287,9 @@ func (m *defaultOrderModel) UpdateStatusByDeliverySn(ctx context.Context, Status
 	_, err := m.conn.ExecCtx(ctx, query, Status, SfSn, OriStatus)
 	return err
 }
-func (m *defaultOrderModel) PrepareAllGoods(ctx context.Context) error {
-	query := fmt.Sprintf("update %s set `order_status`=1001 where `order_status` in(1,1000)", m.table)
-	_, err := m.conn.ExecCtx(ctx, query)
+func (m *defaultOrderModel) PrepareAllGoods(ctx context.Context, MarketID int64) error {
+	query := fmt.Sprintf("update %s set `order_status`=1001 where `order_status` in(1,1000) and `market_player_id`=?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, MarketID)
 	return err
 }
 func (m *defaultOrderModel) UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error {

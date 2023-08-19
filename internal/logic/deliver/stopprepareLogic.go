@@ -31,7 +31,7 @@ func (l *StopprepareLogic) Stopprepare() (resp *types.NormalResp, err error) {
 		Config:   "false",
 		Describe: time.Now().Format("2006-01-02 15:04:05"),
 	})
-	l.svcCtx.Order.PrepareAllGoods(l.ctx)
+	l.svcCtx.Order.PrepareAllGoods(l.ctx, 0)
 	return &types.NormalResp{
 		Code: "10000",
 		Msg:  "success",

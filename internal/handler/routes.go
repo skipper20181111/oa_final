@@ -69,6 +69,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
+				Path:    "/youhavenewbill",
+				Handler: deliver.YouhavenewbillHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/printed",
 				Handler: deliver.PrintedHandler(serverCtx),
 			},

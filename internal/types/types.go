@@ -824,6 +824,10 @@ type GetSfSnResp struct {
 	Data map[int64][]string `json:"data"`
 }
 
+type PrepareAllGoodsRes struct {
+	MarketID int64 `json:"marketId"`
+}
+
 type PrepareGoodsRes struct {
 	OrderSns []string `json:"orderSns"`
 }
@@ -869,6 +873,13 @@ type DownLoadedRes struct {
 
 type DownLoadedResp struct {
 	PDFList []string `json:"pdfList"`
+}
+
+type NewBillRes struct {
+}
+
+type NewBillResp struct {
+	OrderSn string `json:"orderSn"`
 }
 
 type DownPDFRes struct {

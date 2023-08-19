@@ -31,6 +31,10 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 			OrderInfos: make([]*types.OrderInfo, 0),
 		},
 	}
+	PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, req.OutTradeNo)
+	if PayInfo == nil || PayInfo.Status == 4 {
+		return resp, nil
+	}
 	status, _ := l.svcCtx.Order.FindAllStatusByOutTradeNo(l.ctx, req.OutTradeNo)
 	yes := true
 	for _, sta := range status {
@@ -40,6 +44,7 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 	}
 	if yes {
 		l.svcCtx.PayInfo.UpdateStatus(l.ctx, req.OutTradeNo, 4)
+		l.svcCtx.UserPoints.UpdatePoints(l.ctx, PayInfo.Phone, PayInfo.TotleAmount)
 		l.svcCtx.Order.UpdateStatusByOutTradeSn(l.ctx, 4, req.OutTradeNo)
 	}
 	orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, req.OutTradeNo)

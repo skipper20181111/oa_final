@@ -23,8 +23,8 @@ func NewPrepareallgoodsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *P
 	}
 }
 
-func (l *PrepareallgoodsLogic) Prepareallgoods() (resp *types.GiveSFResp, err error) {
-	l.svcCtx.Order.PrepareAllGoods(l.ctx)
+func (l *PrepareallgoodsLogic) Prepareallgoods(req *types.PrepareAllGoodsRes) (resp *types.GiveSFResp, err error) {
+	l.svcCtx.Order.PrepareAllGoods(l.ctx, req.MarketID)
 	return &types.GiveSFResp{
 		Code: "10000",
 		Msg:  "success",

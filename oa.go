@@ -88,7 +88,7 @@ func IfReceived(ctx *svc.ServiceContext) {
 				payInfo, _ := ctx.PayInfo.FindOneByOutTradeNo(backcontext, OutTradeSn)
 				if payInfo != nil {
 					ctx.PayInfo.UpdateStatus(backcontext, OutTradeSn, 4)
-					ctx.Order.UpdateStatusByOutTradeSn(backcontext, 4, OutTradeSn)
+					ctx.Order.UpdateClosedByOutTradeSn(backcontext, OutTradeSn)
 					ctx.UserPoints.UpdatePoints(backcontext, payInfo.Phone, payInfo.TotleAmount)
 				}
 			}

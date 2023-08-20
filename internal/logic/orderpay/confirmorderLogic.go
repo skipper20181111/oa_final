@@ -45,7 +45,7 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 	if yes {
 		l.svcCtx.PayInfo.UpdateStatus(l.ctx, req.OutTradeNo, 4)
 		l.svcCtx.UserPoints.UpdatePoints(l.ctx, PayInfo.Phone, PayInfo.TotleAmount)
-		l.svcCtx.Order.UpdateStatusByOutTradeSn(l.ctx, 4, req.OutTradeNo)
+		l.svcCtx.Order.UpdateClosedByOutTradeSn(l.ctx, req.OutTradeNo)
 	}
 	orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, req.OutTradeNo)
 	for _, order := range orders {

@@ -33,9 +33,12 @@ type (
 		Delete(ctx context.Context, id int64) error
 		FindInvoiceByPhone(ctx context.Context, phone string, pagenumber int, InvoiceStatus []int64) ([]*Order, error)
 		UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error
+		UpdateReceivedByOrderSn(ctx context.Context, orderSn string) error
+		UpdateClosedByOrderSn(ctx context.Context, orderSn string) error
 		PrepareAllGoods(ctx context.Context, MarketID int64) error
 		UpdateStatusByDeliverySn(ctx context.Context, Status, OriStatus int64, SfSn string) error
 		UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error
+		UpdateClosedByOutTradeSn(ctx context.Context, OutTradeNo string) error
 		RefundCash(ctx context.Context, orderSn string) error
 		RefundWeChat(ctx context.Context, orderSn string) error
 		FindAllByPhone(ctx context.Context, phone string, pagenumber int) ([]*Order, error)
@@ -297,6 +300,17 @@ func (m *defaultOrderModel) UpdateStatusByOrderSn(ctx context.Context, status in
 	_, err := m.conn.ExecCtx(ctx, query, status, orderSn)
 	return err
 }
+func (m *defaultOrderModel) UpdateReceivedByOrderSn(ctx context.Context, orderSn string) error {
+	query := fmt.Sprintf("update %s set `order_status`=3,`receive_time`=?,`close_time`=? where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), time.Now(), orderSn)
+	return err
+}
+func (m *defaultOrderModel) UpdateClosedByOrderSn(ctx context.Context, orderSn string) error {
+	query := fmt.Sprintf("update %s set `order_status`=4,`close_time`=? where `order_sn` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), orderSn)
+	return err
+}
+
 func (m *defaultOrderModel) FindAll1001(ctx context.Context) ([]*Order, error) {
 	query := fmt.Sprintf("select %s from %s where `order_status` = 1001", orderRows, m.table)
 	var resp []*Order
@@ -313,6 +327,12 @@ func (m *defaultOrderModel) FindAll1001(ctx context.Context) ([]*Order, error) {
 func (m *defaultOrderModel) UpdateStatusByOutTradeSn(ctx context.Context, status int64, OutTradeNo string) error {
 	query := fmt.Sprintf("update %s set `order_status`=? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)
+	return err
+}
+
+func (m *defaultOrderModel) UpdateClosedByOutTradeSn(ctx context.Context, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `order_status`=4,`close_time`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OutTradeNo)
 	return err
 }
 

@@ -181,7 +181,7 @@ func (l SfUtilLogic) IfReceived(order *cachemodel.Order) {
 	routelist := GetRoutesList(order.DeliverySn)
 	for _, route := range routelist.Routes {
 		if route.OpCode == "80" || strings.Contains(route.Remark, "已签收") {
-			l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 3, order.OrderSn)
+			l.svcCtx.Order.UpdateReceivedByOrderSn(l.ctx, order.OrderSn)
 		}
 	}
 }

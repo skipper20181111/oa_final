@@ -3,8 +3,10 @@ package coupon
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"oa_final/cachemodel"
+	"oa_final/internal/logic/orderpay"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
 	"strconv"
@@ -46,7 +48,22 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 		couponmap[req.Cid] = make(map[string]*types.CouponStoreInfo)
 		couponmap[req.Cid][strconv.FormatInt(time.Now().UnixNano(), 10)] = &types.CouponStoreInfo{CouponId: req.Cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*couponadd.EfficientPeriod)).Format("2006-01-02 15:04:05")}
 		couponmapstr, _ := json.Marshal(couponmap)
-		l.svcCtx.UserCoupon.Insert(l.ctx, &cachemodel.UserCoupon{Phone: l.ctx.Value("phone").(string), CouponIdMap: string(couponmapstr)})
+		l.svcCtx.UserCoupon.Insert(l.ctx, &cachemodel.UserCoupon{
+			Phone:       l.ctx.Value("phone").(string),
+			CouponIdMap: string(couponmapstr),
+		})
+		userpoints.AvailablePoints = userpoints.AvailablePoints - couponadd.UsePoints
+		l.svcCtx.UserPoints.Update(l.ctx, userpoints)
+		l.svcCtx.PointLog.Insert(l.ctx, &cachemodel.PointLog{Date: time.Now(),
+			OrderType:     "兑换优惠券",
+			OrderSn:       orderpay.GetSha256(fmt.Sprintf("%d%d%s", time.Now().UnixNano(), userpoints.AvailablePoints, couponmapstr)),
+			OrderDescribe: "臻星商城兑换优惠券",
+			Behavior:      "兑换",
+			Phone:         l.phone,
+			Balance:       userpoints.AvailablePoints,
+			ChangeAmount:  couponadd.UsePoints,
+		})
+
 		return &types.StarMallCouponOrderResp{Code: "10000", Msg: "列表如下", Data: &types.GetSmallCouponRp{CouponInfoList: make([]*types.CouponInfo, 0)}}, nil
 	} else if couponbyphone != nil {
 		json.Unmarshal([]byte(couponbyphone.CouponIdMap), &couponmap)
@@ -62,6 +79,15 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 		l.svcCtx.UserCoupon.Update(l.ctx, couponbyphone)
 		userpoints.AvailablePoints = userpoints.AvailablePoints - couponadd.UsePoints
 		l.svcCtx.UserPoints.Update(l.ctx, userpoints)
+		l.svcCtx.PointLog.Insert(l.ctx, &cachemodel.PointLog{Date: time.Now(),
+			OrderType:     "兑换优惠券",
+			OrderSn:       orderpay.GetSha256(fmt.Sprintf("%d%d%s", time.Now().UnixNano(), userpoints.AvailablePoints, couponmapstr)),
+			OrderDescribe: "臻星商城兑换优惠券",
+			Behavior:      "兑换",
+			Phone:         l.phone,
+			Balance:       userpoints.AvailablePoints,
+			ChangeAmount:  couponadd.UsePoints,
+		})
 		infolist := make([]*types.CouponInfo, 0)
 		for cid, uuidmap := range couponmap {
 			for uuid, storeInfo := range uuidmap {

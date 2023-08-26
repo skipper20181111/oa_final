@@ -127,7 +127,7 @@ func (l *WeChatUtilLogic) Weixinpayinit(OutTradeNo string, ammount int64, option
 			Mchid:       core.String(l.svcCtx.Config.WxConf.MchID),
 			Description: core.String("沾还是不沾芥末，这是一个问题"),
 			OutTradeNo:  core.String(OutTradeNo),
-			Attach:      core.String(randStr(16)),
+			Attach:      core.String(RandStr(16)),
 			NotifyUrl:   core.String(l.tellmesodir),
 			Amount: &jsapi.Amount{
 				Total: core.Int64(ammount),
@@ -151,7 +151,7 @@ func (l *WeChatUtilLogic) Weixinpayinit(OutTradeNo string, ammount int64, option
 	signType := *payment.SignType
 	return &types.WeChatPayMsg{PaySign: paySign, NonceStr: nonceStr, TimeStamp: timestampsec, Package: packagestr, SignType: signType}
 }
-func randStr(n int) string {
+func RandStr(n int) string {
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]

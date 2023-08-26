@@ -74,7 +74,7 @@ func (l *CashrechargeLogic) order2db(rproduct *cachemodel.RechargeProduct) *cach
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	db := &cachemodel.RechargeOrder{}
 	db.LogId = l.lid
-	db.OutTradeNo = randStr(32)
+	db.OutTradeNo = RandStr(32)
 	db.Rpid = rproduct.Rpid
 	db.Phone = l.userphone
 	db.CreateOrderTime = time.Now()
@@ -83,6 +83,6 @@ func (l *CashrechargeLogic) order2db(rproduct *cachemodel.RechargeProduct) *cach
 	db.WexinPayAmount = rproduct.Price
 	db.GiftAmount = rproduct.GiftAmount
 	db.Amount = rproduct.Price
-	db.OrderSn = getsha512(db.Phone + db.CreateOrderTime.String() + strconv.FormatInt(db.Rpid, 10))
+	db.OrderSn = Getsha512(db.Phone + db.CreateOrderTime.String() + strconv.FormatInt(db.Rpid, 10))
 	return db
 }

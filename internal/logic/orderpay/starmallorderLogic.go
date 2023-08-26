@@ -73,8 +73,8 @@ func (l StarmallorderLogic) GetOrder(Starmall *cachemodel.StarmallLonglist, Prod
 	order.OrderStatus = 1001
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	order.Phone = l.phone
-	order.OutTradeNo = randStr(64)
-	order.OutRefundNo = randStr(64)
+	order.OutTradeNo = RandStr(64)
+	order.OutRefundNo = RandStr(64)
 	order.CreateOrderTime = time.Now()
 	order.PointsAmount = Starmall.ExchangePoints
 	addr, err := json.Marshal(l.req.Address)
@@ -88,7 +88,7 @@ func (l StarmallorderLogic) GetOrder(Starmall *cachemodel.StarmallLonglist, Prod
 	order.DeliveryTime = inittime
 	order.ReceiveTime = inittime
 	order.CloseTime = inittime
-	order.OrderSn = getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + randStr(64))
+	order.OrderSn = Getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + RandStr(64))
 	order.LogId = time.Now().UnixNano()
 	order.ProductInfo = fmt.Sprintf("%s %s * %d %s", Product.ProductCategoryName, QuantityInfo.Name, 1, "\n")
 	l.svcCtx.Order.Insert(l.ctx, order)

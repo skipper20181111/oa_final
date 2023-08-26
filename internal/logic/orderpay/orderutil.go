@@ -145,7 +145,7 @@ func (l OrderUtilLogic) req2op(req *types.NewOrderRes) ([]*cachemodel.Order, *ty
 	l.ProductTinyList = req.ProductTinyList
 	l.PayInit = &types.PayInit{}
 	l.PayInit.Phone = l.userphone
-	l.PayInit.OutTradeSn = randStr(32)
+	l.PayInit.OutTradeSn = RandStr(32)
 	l.PayInit.NeedCashAccount = l.req.UseCashFirst
 	l.PayInit.ProductTinyList = l.req.ProductTinyList
 	return l.EndPayInit(l.OrderChina()), l.PayInit, true
@@ -289,7 +289,7 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	order.Phone = l.userphone
 	order.OutTradeNo = l.PayInit.OutTradeSn
-	order.OutRefundNo = randStr(64)
+	order.OutRefundNo = RandStr(64)
 	order.CreateOrderTime = time.Now()
 	OrderProductInfo, ok := l.GetOrderProductInfoList(ProductTinyList)
 	if ok {
@@ -309,7 +309,7 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	order.DeliveryTime = inittime
 	order.ReceiveTime = inittime
 	order.CloseTime = inittime
-	order.OrderSn = getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + randStr(64))
+	order.OrderSn = Getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + RandStr(64))
 	order.LogId = time.Now().UnixNano()
 	return order
 }

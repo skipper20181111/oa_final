@@ -119,7 +119,7 @@ func bool2int(yes bool) int64 {
 		return 0
 	}
 }
-func getsha512(message string) string {
+func Getsha512(message string) string {
 	bytes2 := sha512.Sum512([]byte(message))   //计算哈希值，返回一个长度为32的数组
 	hashCode2 := hex.EncodeToString(bytes2[:]) //将数组转换成切片，转换成16进制，返回字符串
 	return hashCode2

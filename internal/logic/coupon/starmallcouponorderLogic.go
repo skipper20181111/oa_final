@@ -63,7 +63,7 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 			Balance:       userpoints.AvailablePoints,
 			ChangeAmount:  couponadd.UsePoints,
 		})
-
+		l.GetOrder(couponadd)
 		return &types.StarMallCouponOrderResp{Code: "10000", Msg: "列表如下", Data: &types.GetSmallCouponRp{CouponInfoList: make([]*types.CouponInfo, 0)}}, nil
 	} else if couponbyphone != nil {
 		json.Unmarshal([]byte(couponbyphone.CouponIdMap), &couponmap)
@@ -88,6 +88,7 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 			Balance:       userpoints.AvailablePoints,
 			ChangeAmount:  couponadd.UsePoints,
 		})
+		l.GetOrder(couponadd)
 		infolist := make([]*types.CouponInfo, 0)
 		for cid, uuidmap := range couponmap {
 			for uuid, storeInfo := range uuidmap {
@@ -100,4 +101,24 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 		return &types.StarMallCouponOrderResp{Code: "10000", Msg: "列表如下", Data: &types.GetSmallCouponRp{CouponInfoList: infolist}}, nil
 	}
 	return &types.StarMallCouponOrderResp{Code: "10000", Msg: "无缓存"}, nil
+}
+func (l StarmallcouponorderLogic) GetOrder(couponinfo *cachemodel.Coupon) {
+	order := &cachemodel.Order{}
+	order.OrderType = 0
+	order.PointsOrder = 1
+	order.PointsAmount = couponinfo.UsePoints
+	order.OrderStatus = 4
+	order.Phone = l.phone
+	order.OutTradeNo = orderpay.RandStr(64)
+	order.OutRefundNo = orderpay.RandStr(64)
+	order.CreateOrderTime = time.Now()
+	order.ModifyTime = order.CreateOrderTime
+	order.PaymentTime = time.Now()
+	order.DeliveryTime = time.Now()
+	order.ReceiveTime = time.Now()
+	order.CloseTime = time.Now()
+	order.OrderSn = orderpay.Getsha512(order.Phone + order.CreateOrderTime.String() + couponinfo.Name + orderpay.RandStr(64))
+	order.LogId = time.Now().UnixNano()
+	order.ProductInfo = fmt.Sprintf("%s %s * %d %s", couponinfo.TypeZh, couponinfo.Name, 1, "\n")
+	l.svcCtx.Order.Insert(l.ctx, order)
 }

@@ -739,6 +739,16 @@ type (
         Msg string `json:"msg"`
         Data map[string][]*PointLogInfo `json:"data"`
     }
+    GetExchangeHistoryRes {
+    }
+    GetExchangeHistoryRp {
+        OrderList []*OrderInfo `json:"orderList"`
+    }
+    GetExchangeHistoryResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetExchangeHistoryRp `json:"data"`
+    }
 )
 type (
     FinishMissionRes {

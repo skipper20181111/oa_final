@@ -730,6 +730,19 @@ type GetPointLogResp struct {
 	Data map[string][]*PointLogInfo `json:"data"`
 }
 
+type GetExchangeHistoryRes struct {
+}
+
+type GetExchangeHistoryRp struct {
+	OrderList []*OrderInfo `json:"orderList"`
+}
+
+type GetExchangeHistoryResp struct {
+	Code string                `json:"code"`
+	Msg  string                `json:"msg"`
+	Data *GetExchangeHistoryRp `json:"data"`
+}
+
 type FinishMissionRes struct {
 	MissionId int64 `json:"missionId"`
 }

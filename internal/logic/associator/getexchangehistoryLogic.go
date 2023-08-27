@@ -34,7 +34,7 @@ func (l *GetexchangehistoryLogic) Getexchangehistory(req *types.GetExchangeHisto
 			OrderList: make([]*types.OrderInfo, 0),
 		},
 	}
-	orders, _ := l.svcCtx.Order.FindAllPointsOrder(l.ctx, l.userphone)
+	orders, _ := l.svcCtx.Order.FindAllPointsCouponOrder(l.ctx, l.userphone)
 	for _, order := range orders {
 		resp.Data.OrderList = append(resp.Data.OrderList, orderpay.OrderDb2info(order))
 	}

@@ -63,6 +63,7 @@ type (
 		FindAllStatusByOutTradeNo(ctx context.Context, OutTradeNo string) ([]int64, error)
 		FindOneBySfSn(ctx context.Context, SfSn string) (*Order, error)
 		UpdateAddress(ctx context.Context, OrderSn, AddressStr string) error
+		FindAllPointsCouponOrder(ctx context.Context, phone string) ([]*Order, error)
 	}
 
 	defaultOrderModel struct {
@@ -162,6 +163,19 @@ func (m *defaultOrderModel) FindAllByPhone(ctx context.Context, phone string, pa
 	query := fmt.Sprintf("select %s from %s where `phone` = ? and `order_status`<99 and `order_status`<>8 and `order_status`<>9 order by create_order_time desc  limit ? OFFSET ?", orderRows, m.table)
 	var resp []*Order
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone, sheetlen, offset)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+func (m *defaultOrderModel) FindAllPointsCouponOrder(ctx context.Context, phone string) ([]*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `phone` = ? and `points_order` in(1,2)  order by `create_order_time` desc limit ?", orderRows, m.table)
+	var resp []*Order
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, phone, 10)
 	switch err {
 	case nil:
 		return resp, nil

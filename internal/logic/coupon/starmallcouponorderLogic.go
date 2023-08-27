@@ -105,7 +105,7 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 func (l StarmallcouponorderLogic) GetOrder(couponinfo *cachemodel.Coupon) {
 	order := &cachemodel.Order{}
 	order.OrderType = 0
-	order.PointsOrder = 1
+	order.PointsOrder = 2
 	order.PointsAmount = couponinfo.UsePoints
 	order.OrderStatus = 4
 	order.Phone = l.phone

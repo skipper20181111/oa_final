@@ -42,6 +42,20 @@ func missiondb2info(db *cachemodel.Mission) *types.Mission {
 	minfo.Describe = describelist
 	return minfo
 }
+func (l RefreshUtilLogic) SfPrice() {
+	sfPrices, _ := l.svcCtx.SfPrice.FindAll(l.ctx)
+	if len(sfPrices) > 30 {
+		SfPriceMap := make(map[string]*types.SfPriceInfo)
+		for _, sfPrice := range sfPrices {
+			SfPriceMap[sfPrice.Province] = &types.SfPriceInfo{
+				Province: sfPrice.Province,
+				FirstKG:  sfPrice.StartKg,
+				PerKG:    sfPrice.PerKg,
+			}
+		}
+		l.svcCtx.LocalCache.Set(svc.SfPrice, SfPriceMap)
+	}
+}
 func (l RefreshUtilLogic) Products() {
 	AllProductsList, _ := l.svcCtx.Product.FindAll(l.ctx)
 	if AllProductsList != nil && len(AllProductsList) > 0 {

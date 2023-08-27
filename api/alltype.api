@@ -843,6 +843,7 @@ type (
         // 市场价格
         Cut int64 `json:"cut"`
         IsDefault bool `json:"isDefault"`
+        WeightKG int64 `json:"weightKg"`
     }
     QuantityInfo {
         Name string `json:"name"`

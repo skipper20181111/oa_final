@@ -47,6 +47,7 @@ const (
 	ProductQuantityInfoDB  = "ProductQuantityInfoDB"
 	QuantityInfoDBList     = "QuantityInfoDBList"
 	TemplateCode           = "fm_76130_standard_SRLZNXTDZ"
+	SfPrice                = "SfPrice"
 )
 
 type ServiceContext struct {
@@ -83,6 +84,7 @@ type ServiceContext struct {
 	SfInfo            cachemodel.SfInfoModel
 	ErrLog            cachemodel.ErrLogModel
 	Configuration     cachemodel.ConfigurationModel
+	SfPrice           cachemodel.SfPriceModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -163,6 +165,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		SfInfo:            cachemodel.NewSfInfoModel(sqlx.NewMysql(c.DB.DataSource)),
 		ErrLog:            cachemodel.NewErrLogModel(sqlx.NewMysql(c.DB.DataSource)),
 		Configuration:     cachemodel.NewConfigurationModel(sqlx.NewMysql(c.DB.DataSource)),
+		SfPrice:           cachemodel.NewSfPriceModel(sqlx.NewMysql(c.DB.DataSource)),
 		FileClient:        CDNclient,
 	}
 }

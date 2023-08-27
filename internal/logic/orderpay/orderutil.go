@@ -29,6 +29,7 @@ type OrderUtilLogic struct {
 	ul                    *UtilLogic
 	ReallyUseCoupon       bool
 	ProductQuantityInfoDB map[int64]map[string]*types.QuantityInfoDB
+	SfPriceMap            map[string]*types.SfPriceInfo
 }
 
 func NewOrderUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *OrderUtilLogic {
@@ -112,7 +113,7 @@ func (l OrderUtilLogic) GetAmount(ProductTinyList []*types.ProductTiny) (Origina
 		return 0, 0
 	}
 	for _, ptlist := range ptlists {
-		originalAmount, promotionAmount, _, _ := l.OriProPrice(ptlist)
+		originalAmount, promotionAmount, _, _, _ := l.OriProPrice(ptlist)
 		OriginalAmount = OriginalAmount + originalAmount
 		PromotionAmount = PromotionAmount + promotionAmount
 	}
@@ -132,6 +133,10 @@ func (l OrderUtilLogic) req2op(req *types.NewOrderRes) ([]*cachemodel.Order, *ty
 	ProductQuantityInfoDB, ok := l.svcCtx.LocalCache.Get(svc.ProductQuantityInfoDB)
 	if ok {
 		l.ProductQuantityInfoDB = ProductQuantityInfoDB.(map[int64]map[string]*types.QuantityInfoDB)
+	}
+	SfPriceMap, ok := l.svcCtx.LocalCache.Get(svc.SfPrice)
+	if ok {
+		l.SfPriceMap = SfPriceMap.(map[string]*types.SfPriceInfo)
 	}
 	if l.req.UseCouponFirst {
 		get, ok := l.svcCtx.LocalCache.Get(svc.CouponMapKey)
@@ -234,17 +239,20 @@ func (l OrderUtilLogic) GetPromotionPrice(Tiny *types.ProductTiny) int64 {
 	}
 	return l.ProductQuantityInfoDB[Tiny.PId][Tiny.QuantityName].PromotionPrice
 }
-func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (OriginalAmount, PromotionAmount, ActualAmount int64, ProductInfoForSf string) {
+func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (OriginalAmount, PromotionAmount, ActualAmount int64, ProductInfoForSf string, FreightAmount int64) {
 	OriginalAmount = int64(0)
 	PromotionAmount = int64(0)
+	FreightAmount = int64(0)
 	ProductInfoForSf = ""
 	for _, tiny := range ProductTinyList {
 		ProductInfoForSf = fmt.Sprintf("%s%s %s * %d %s", ProductInfoForSf, l.ProductsMap[tiny.PId].ProductCategoryName, tiny.QuantityName, tiny.Amount, "\n")
 		OriginalAmount = OriginalAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].OriginalPrice*tiny.Amount
 		PromotionAmount = PromotionAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].PromotionPrice*tiny.Amount
 		ActualAmount = ActualAmount + l.GetPromotionPrice(tiny)*tiny.Amount
+		FreightAmount = FreightAmount + l.GetSfPrice(l.req.Address.Province, l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].WeightKG)
 	}
-	return OriginalAmount, PromotionAmount, ActualAmount, ProductInfoForSf
+
+	return OriginalAmount, PromotionAmount, ActualAmount, ProductInfoForSf, FreightAmount
 }
 func (l OrderUtilLogic) GetOrderProductInfo(tiny *types.ProductTiny) (*types.OrderProductInfo, bool) {
 
@@ -296,7 +304,7 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 		marshal, _ := json.Marshal(OrderProductInfo)
 		order.Pidlist = string(marshal)
 	}
-	order.OriginalAmount, order.PromotionAmount, order.ActualAmount, order.ProductInfo = l.OriProPrice(ProductTinyList)
+	order.OriginalAmount, order.PromotionAmount, order.ActualAmount, order.ProductInfo, order.FreightAmount = l.OriProPrice(ProductTinyList)
 	order.CouponAmount = order.PromotionAmount - order.ActualAmount
 	addr, err := json.Marshal(l.req.Address)
 	if err != nil {
@@ -312,6 +320,32 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	order.OrderSn = Getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + RandStr(64))
 	order.LogId = time.Now().UnixNano()
 	return order
+}
+func (l OrderUtilLogic) GetSfPrice(province string, weight int64) int64 {
+	sfPriceInfo := l.FindSfPrice(province)
+	return sfPriceInfo.FirstKG + (weight-1)*sfPriceInfo.PerKG
+}
+func (l OrderUtilLogic) UpdateSfPrice(key string, sfPrice types.SfPriceInfo) {
+	l.svcCtx.LocalCache.Set(svc.SfPrice+key, sfPrice)
+}
+func (l OrderUtilLogic) FindSfPrice(province string) types.SfPriceInfo {
+	key := svc.SfPrice + province
+	sfPrice, ok := l.svcCtx.LocalCache.Get(key)
+	if ok {
+		return sfPrice.(types.SfPriceInfo)
+	} else {
+		for Province, sfPriceInfo := range l.SfPriceMap {
+			if strings.Contains(province, Province) {
+				l.svcCtx.LocalCache.Set(key, *sfPriceInfo)
+				return *sfPriceInfo
+			}
+		}
+	}
+	return types.SfPriceInfo{
+		Province: "unknown",
+		FirstKG:  23,
+		PerKG:    10,
+	}
 }
 func (l OrderUtilLogic) CountCouponPrice(PromotionPrice int64) (ActualAmount, Cut int64) {
 	if l.coupon != nil && l.ReallyUseCoupon {

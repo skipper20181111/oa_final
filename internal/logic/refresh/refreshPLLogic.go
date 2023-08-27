@@ -26,7 +26,7 @@ func (l *RefreshPLLogic) RefreshPL() (resp *types.RefreshResp, err error) {
 
 	refreshUtil := NewRefreshUtilLogic(l.ctx, l.svcCtx)
 	refreshUtil.Products()
-
+	refreshUtil.SfPrice()
 	refreshUtil.RechargeProduct()
 	refreshUtil.StarMall()
 	refreshUtil.Coupon()

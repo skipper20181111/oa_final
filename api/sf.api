@@ -208,8 +208,13 @@ type (
         //Author        string `json:"author"`
         //Type          int    `json:"type"`
     }
-    RefundMsgData  {
-        OrderId  string `json:"orderId"`
-        DealType int    `json:"dealType"`
+    RefundMsgData {
+        OrderId string `json:"orderId"`
+        DealType int `json:"dealType"`
+    }
+    SfPriceInfo {
+        Province string `json:"province"`
+        FirstKG int64 `json:"firstKg"`
+        PerKG int64 `json:"perKg"`
     }
 )

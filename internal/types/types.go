@@ -815,6 +815,7 @@ type QuantityInfoDB struct {
 	OriginalPrice  int64  `json:"originalPrice"`
 	Cut            int64  `json:"cut"`
 	IsDefault      bool   `json:"isDefault"`
+	WeightKG       int64  `json:"weightKg"`
 }
 
 type QuantityInfo struct {
@@ -1103,4 +1104,10 @@ type UpdateArticle struct {
 type RefundMsgData struct {
 	OrderId  string `json:"orderId"`
 	DealType int    `json:"dealType"`
+}
+
+type SfPriceInfo struct {
+	Province string `json:"province"`
+	FirstKG  int64  `json:"firstKg"`
+	PerKG    int64  `json:"perKg"`
 }

@@ -249,10 +249,10 @@ func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (Origi
 		OriginalAmount = OriginalAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].OriginalPrice*tiny.Amount
 		PromotionAmount = PromotionAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].PromotionPrice*tiny.Amount
 		ActualAmount = ActualAmount + l.GetPromotionPrice(tiny)*tiny.Amount
-		FreightAmount = FreightAmount + l.GetSfPrice(l.req.Address.Province, l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].WeightKG)
+		FreightAmount = FreightAmount + l.GetSfPrice(l.req.Address.Province, l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].WeightKG) - l.GetSfPrice("上海", l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].WeightKG)
 	}
 
-	return OriginalAmount, PromotionAmount, ActualAmount, ProductInfoForSf, FreightAmount
+	return OriginalAmount, PromotionAmount, ActualAmount, ProductInfoForSf, FreightAmount * 100
 }
 func (l OrderUtilLogic) GetOrderProductInfo(tiny *types.ProductTiny) (*types.OrderProductInfo, bool) {
 

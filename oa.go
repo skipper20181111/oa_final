@@ -7,6 +7,7 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpc"
 	"math/rand"
 	"net/http"
+	"oa_final/cachemodel"
 	"oa_final/internal/logic/orderpay"
 	"time"
 
@@ -90,6 +91,16 @@ func IfReceived(ctx *svc.ServiceContext) {
 					ctx.PayInfo.UpdateStatus(backcontext, OutTradeSn, 4)
 					ctx.Order.UpdateClosedByOutTradeSn(backcontext, OutTradeSn)
 					ctx.UserPoints.UpdatePoints(backcontext, payInfo.Phone, payInfo.TotleAmount)
+					userPoints, _ := ctx.UserPoints.FindOneByPhone(backcontext, payInfo.Phone)
+					ctx.PointLog.Insert(backcontext, &cachemodel.PointLog{Date: time.Now(),
+						OrderType:     "正常商品",
+						OrderSn:       payInfo.OutTradeNo,
+						OrderDescribe: "臻星商城兑换商品",
+						Behavior:      "兑换",
+						Phone:         payInfo.Phone,
+						Balance:       userPoints.AvailablePoints,
+						ChangeAmount:  payInfo.TotleAmount/100 + 1,
+					})
 				}
 			}
 		}

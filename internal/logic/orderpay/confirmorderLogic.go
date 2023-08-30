@@ -2,6 +2,8 @@ package orderpay
 
 import (
 	"context"
+	"oa_final/cachemodel"
+	"time"
 
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
@@ -11,15 +13,17 @@ import (
 
 type ConfirmorderLogic struct {
 	logx.Logger
-	ctx    context.Context
-	svcCtx *svc.ServiceContext
+	ctx       context.Context
+	svcCtx    *svc.ServiceContext
+	userphone string
 }
 
 func NewConfirmorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ConfirmorderLogic {
 	return &ConfirmorderLogic{
-		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
-		svcCtx: svcCtx,
+		Logger:    logx.WithContext(ctx),
+		ctx:       ctx,
+		svcCtx:    svcCtx,
+		userphone: ctx.Value("phone").(string),
 	}
 }
 
@@ -46,6 +50,17 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 		l.svcCtx.PayInfo.UpdateStatus(l.ctx, req.OutTradeNo, 4)
 		l.svcCtx.UserPoints.UpdatePoints(l.ctx, PayInfo.Phone, PayInfo.TotleAmount)
 		l.svcCtx.Order.UpdateClosedByOutTradeSn(l.ctx, req.OutTradeNo)
+		userPoints, _ := l.svcCtx.UserPoints.FindOneByPhone(l.ctx, l.userphone)
+		l.svcCtx.PointLog.Insert(l.ctx, &cachemodel.PointLog{Date: time.Now(),
+			OrderType:     "正常商品",
+			OrderSn:       PayInfo.OutTradeNo,
+			OrderDescribe: "臻星商城兑换商品",
+			Behavior:      "兑换",
+			Phone:         l.userphone,
+			Balance:       userPoints.AvailablePoints,
+			ChangeAmount:  PayInfo.TotleAmount/100 + 1,
+		})
+
 	}
 	orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, req.OutTradeNo)
 	for _, order := range orders {

@@ -98,6 +98,7 @@ func (m *defaultUserPointsModel) Update(ctx context.Context, newData *UserPoints
 }
 
 func (m *defaultUserPointsModel) UpdatePoints(ctx context.Context, phone string, points int64) error {
+	points = points/100 + 1
 	query := fmt.Sprintf("update %s set `history_points`=`history_points`+?,`available_points`=`available_points`+? where `phone` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, points, points, phone)
 	return err

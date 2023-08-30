@@ -279,7 +279,7 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.DeliveryCompany = order.DeliveryCompany
 	orderinfo.DeliverySn = order.DeliverySn
 	orderinfo.MarketPlayerId = order.MarketPlayerId
-
+	orderinfo.ProductInfostr = order.ProductInfo
 	address := types.AddressInfo{}
 	json.Unmarshal([]byte(order.Address), &address)
 	orderinfo.Address = &address

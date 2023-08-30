@@ -209,6 +209,7 @@ type OrderInfo struct {
 	InvoiceStatus        int64               `json:"invoiceStatus"`
 	MarketPlayerId       int64               `json:"marketPlayerId"`
 	RouteList            *RouteList          `json:"routeList"`
+	ProductInfostr       string              `json:"productInfostr"`
 }
 
 type Billinfo struct {

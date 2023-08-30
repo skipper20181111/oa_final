@@ -48,11 +48,11 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 	}
 	orderinfo := &types.OrderInfo{}
 	l.req = req
-	order, ok := l.InsertStarDb()
+	order, ok, msg := l.InsertStarDb()
 	if ok {
 		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(order)}, nil
 	}
-	return &types.StarMallOrderResp{Code: "10000", Msg: "failed", Data: orderinfo}, nil
+	return &types.StarMallOrderResp{Code: "10000", Msg: msg, Data: orderinfo}, nil
 }
 func (l *StarmallorderLogic) insertstarTransaction(order *cachemodel.Order) {
 	PayInfo := &cachemodel.PayInfo{}
@@ -94,7 +94,7 @@ func (l StarmallorderLogic) GetOrder(Starmall *cachemodel.StarmallLonglist, Prod
 	l.svcCtx.Order.Insert(l.ctx, order)
 	return order
 }
-func (l *StarmallorderLogic) InsertStarDb() (*cachemodel.Order, bool) {
+func (l *StarmallorderLogic) InsertStarDb() (*cachemodel.Order, bool, string) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -105,7 +105,7 @@ func (l *StarmallorderLogic) InsertStarDb() (*cachemodel.Order, bool) {
 	QuantityInfo := l.ProductQuantityInfoDB[l.req.Pid][Starmall.QuantityName]
 	UserPoints, _ := l.svcCtx.UserPoints.FindOneByPhone(l.ctx, l.phone)
 	if UserPoints == nil || UserPoints.AvailablePoints < Starmall.ExchangePoints {
-		return nil, false
+		return nil, false, "积分不足"
 	} else {
 		UserPoints.AvailablePoints = UserPoints.AvailablePoints - Starmall.ExchangePoints
 		l.svcCtx.UserPoints.Update(l.ctx, UserPoints)
@@ -113,5 +113,5 @@ func (l *StarmallorderLogic) InsertStarDb() (*cachemodel.Order, bool) {
 	order := l.GetOrder(Starmall, Product, QuantityInfo)
 	l.insertstarTransaction(order)
 	l.svcCtx.PointLog.Insert(l.ctx, &cachemodel.PointLog{Date: time.Now(), OrderType: "兑换商品", OrderSn: order.OrderSn, OrderDescribe: "臻星商城兑换商品", Behavior: "兑换", Phone: l.phone, Balance: UserPoints.AvailablePoints, ChangeAmount: Starmall.ExchangePoints})
-	return order, true
+	return order, true, "success"
 }

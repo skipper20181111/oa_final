@@ -68,9 +68,9 @@ func IfReceived(ctx *svc.ServiceContext) {
 		}
 	}()
 	for true {
-		//RefreshGap := time.Minute * time.Duration(rand.Intn(120)+1)
-		//time.Sleep(RefreshGap)
-		time.Sleep(time.Second * 10)
+		RefreshGap := time.Minute * time.Duration(rand.Intn(120)+1)
+		time.Sleep(RefreshGap)
+		//time.Sleep(time.Second * 10)
 		backcontext := context.Background()
 		backcontext = context.WithValue(backcontext, "phone", "17854230845")
 		backcontext = context.WithValue(backcontext, "openid", "17854230845")

@@ -24,20 +24,25 @@ import (
 
 const ()
 const (
-	localCacheExpire       = time.Duration(time.Second * 800)
-	localCacheExpire2      = time.Duration(time.Second * 20)
-	RechargeProductKey     = "RechargeProductKey"
-	ProductsMap            = "ProductsMap"
-	ProductsInfoMap        = "ProductsInfoMap"
-	StarMallMap            = "StarMallMap"
-	CouponMapKey           = "CouponMapKey"
-	CouponInfoMapKey       = "CouponInfoMapKey"
-	Keystr                 = "W3WxhhoA9E9VIteCYbnhUTxDbtk2nP1Z"
-	MissionListKey         = "MissionListKey"
-	ParterID               = "SRLZNXTDZ"
-	CheckCodeSbox          = "Ss4AueE3pQZ9ZXEmJGY1N8Ra1vS5TtG7"
-	MonthlyCard            = "7551234567"
-	SfUrl                  = "https://sfapi-sbox.sf-express.com/std/service"
+	localCacheExpire   = time.Duration(time.Second * 800)
+	localCacheExpire2  = time.Duration(time.Second * 20)
+	RechargeProductKey = "RechargeProductKey"
+	ProductsMap        = "ProductsMap"
+	ProductsInfoMap    = "ProductsInfoMap"
+	StarMallMap        = "StarMallMap"
+	CouponMapKey       = "CouponMapKey"
+	CouponInfoMapKey   = "CouponInfoMapKey"
+	Keystr             = "W3WxhhoA9E9VIteCYbnhUTxDbtk2nP1Z"
+	MissionListKey     = "MissionListKey"
+	ParterID           = "ZYYMKIJW69LH"
+	//测试环境
+	CheckCodeSbox = "v8oHKTufkthd7xCuI9kyX7KDwnGeKFt3"
+	MonthlyCard   = "7551234567"
+	SfUrl         = "https://sfapi-sbox.sf-express.com/std/service"
+	////生产环境
+	//CheckCodeSbox          = "uB6bnfnBaCxGWtzbQj477KpeAbEOdgjs"
+	//MonthlyCard            = "0210927407"
+	//SfUrl                  = "https://bspgw.sf-express.com/std/service"
 	CreateOrderServiceCode = "EXP_RECE_CREATE_ORDER"
 	GetRoutesServiceCode   = "EXP_RECE_SEARCH_ROUTES"
 	QueryOrderServiceCode  = "EXP_RECE_SEARCH_ORDER_RESP"
@@ -46,7 +51,7 @@ const (
 	ProductDbMap           = "ProductDbMap"
 	ProductQuantityInfoDB  = "ProductQuantityInfoDB"
 	QuantityInfoDBList     = "QuantityInfoDBList"
-	TemplateCode           = "fm_76130_standard_SRLZNXTDZ"
+	TemplateCode           = "fm_76130_standard_ZYYMKIJW69LH"
 	SfPrice                = "SfPrice"
 )
 

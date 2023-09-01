@@ -245,7 +245,8 @@ func CreateOrder(order *cachemodel.Order) (status int, SfSn string) {
 	contactinfolist := []*types.ContactInfo{PostInfo, ReceiveInfo}
 	CargoDetailList := []*types.CargoDetail{{Name: "毅明生鲜"}}
 	MsgDataStruct := &types.CreateOrderMsgData{
-		PayMethod: 1, Language: "zh-CN",
+		PayMethod:          1,
+		Language:           "zh-CN",
 		OrderId:            GetSha256(order.OrderSn + order.Address),
 		ContactInfoList:    contactinfolist,
 		MonthlyCard:        svc.MonthlyCard,

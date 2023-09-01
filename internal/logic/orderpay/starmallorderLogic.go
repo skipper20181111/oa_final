@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"oa_final/cachemodel"
+	"strconv"
+	"strings"
 	"time"
 
 	"oa_final/internal/svc"
@@ -91,9 +93,35 @@ func (l StarmallorderLogic) GetOrder(Starmall *cachemodel.StarmallLonglist, Prod
 	order.OrderSn = Getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + RandStr(64))
 	order.LogId = time.Now().UnixNano()
 	order.ProductInfo = fmt.Sprintf("%s %s * %d %s", Product.ProductCategoryName, QuantityInfo.Name, 1, "\n")
+	OrderProductInfo, ok := l.GetOrderProductInfo(Product, QuantityInfo)
+	if ok {
+		marshal, _ := json.Marshal(OrderProductInfo)
+		order.Pidlist = string(marshal)
+	}
 	l.svcCtx.Order.Insert(l.ctx, order)
 	return order
 }
+func (l StarmallorderLogic) GetOrderProductInfo(Product *cachemodel.Product, QuantityInfo *types.QuantityInfoDB) ([]*types.OrderProductInfo, bool) {
+	titleinfo := strings.Split(Product.ProductTitle, "#")
+	OrderProductInfo := &types.OrderProductInfo{
+		PId:             Product.Pid,
+		Amount:          1,
+		PIdQuantity:     strconv.FormatInt(Product.Pid, 10) + QuantityInfo.Name,
+		Picture:         Product.Picture,
+		ProductTitle:    titleinfo[0],
+		ProductStandard: titleinfo[1],
+		QuantityName:    QuantityInfo.Name,
+		PromotionPrice:  float64(QuantityInfo.PromotionPrice) / 100,
+		OriginalPrice:   float64(QuantityInfo.OriginalPrice) / 100,
+		IfCut:           getQuantityBool(QuantityInfo.Cut),
+		Cut:             float64(QuantityInfo.Cut) / 100,
+		SpecialPrice:    float64(QuantityInfo.PromotionPrice-QuantityInfo.Cut) / 100,
+		Description:     Product.Description,
+		IfReserve:       getIfReserve(Product.Status),
+	}
+	return []*types.OrderProductInfo{OrderProductInfo}, true
+}
+
 func (l *StarmallorderLogic) InsertStarDb() (*cachemodel.Order, bool, string) {
 	defer func() {
 		if e := recover(); e != nil {

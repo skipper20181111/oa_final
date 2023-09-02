@@ -319,7 +319,7 @@ func Address2SFAddress(addr *types.AddressInfo) *types.ContactInfo {
 	sf := &types.ContactInfo{}
 	sf.City = addr.City
 	sf.Province = addr.Province
-	sf.Address = addr.City + addr.Province + addr.DetailAddress + addr.DetailName + addr.RoomNumber
+	sf.Address = addr.DetailAddress + addr.DetailName + addr.RoomNumber
 	sf.Contact = addr.Name
 	sf.Mobile = addr.AddressPhone
 	sf.PostCode = addr.PostCode

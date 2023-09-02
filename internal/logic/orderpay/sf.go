@@ -93,7 +93,7 @@ func (l SfUtilLogic) GetPDF(order *cachemodel.Order, sfsn string) {
 	params.Add("timestamp", Timestamp)
 	params.Add("msgDigest", MsgDigest)
 	params.Add("msgData", string(MsgDataByte))
-	urlPath := "https://sfapi-sbox.sf-express.com/std/service"
+	urlPath := svc.SfUrl
 	urlPath = urlPath + "?" + params.Encode()
 	resp, err := httpc.Do(context.Background(), http.MethodPost, urlPath, nil)
 	if err != nil {
@@ -243,7 +243,8 @@ func CreateOrder(order *cachemodel.Order) (status int, SfSn string) {
 	PostInfo := GetPostInfo(order)
 	ReceiveInfo := GetReceiveInfo(order)
 	contactinfolist := []*types.ContactInfo{PostInfo, ReceiveInfo}
-	CargoDetailList := []*types.CargoDetail{{Name: "毅明生鲜"}}
+	//CargoDetailList := []*types.CargoDetail{{Name: "毅明生鲜"}}
+	CargoDetailList := []*types.CargoDetail{{Name: order.ProductInfo}}
 	MsgDataStruct := &types.CreateOrderMsgData{
 		PayMethod:          1,
 		Language:           "zh-CN",
@@ -285,8 +286,8 @@ func CreateOrder(order *cachemodel.Order) (status int, SfSn string) {
 }
 func GetPostInfo(order *cachemodel.Order) *types.ContactInfo {
 	return &types.ContactInfo{
-		Address:     "浦东新区创新中路199弄齐爱家园",
-		Contact:     "宋睿",
+		Address:     "上海市宝山区铁城路1555弄大江杨活鲜区1-008",
+		Contact:     "毅明生鲜",
 		Mobile:      "17854230846",
 		Province:    "上海市",
 		City:        "上海市",
@@ -298,7 +299,7 @@ func GetPostInfo(order *cachemodel.Order) *types.ContactInfo {
 func GetReceiveInfo(order *cachemodel.Order) *types.ContactInfo {
 	orderaddress := &types.AddressInfo{}
 	err := json.Unmarshal([]byte(order.Address), orderaddress)
-	if err == nil {
+	if err != nil {
 		return &types.ContactInfo{
 			Address:     "上海市浦东新区环庆南路508号绿地香港菁舍公寓",
 			Contact:     "宋睿",

@@ -16,6 +16,7 @@ type ConfirmorderLogic struct {
 	ctx       context.Context
 	svcCtx    *svc.ServiceContext
 	userphone string
+	u         *UtilLogic
 }
 
 func NewConfirmorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ConfirmorderLogic {
@@ -24,6 +25,7 @@ func NewConfirmorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Conf
 		ctx:       ctx,
 		svcCtx:    svcCtx,
 		userphone: ctx.Value("phone").(string),
+		u:         NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -64,7 +66,7 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 	}
 	orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, req.OutTradeNo)
 	for _, order := range orders {
-		resp.Data.OrderInfos = append(resp.Data.OrderInfos, OrderDb2info(order))
+		resp.Data.OrderInfos = append(resp.Data.OrderInfos, l.u.OrderDb2info(order))
 	}
 	return resp, nil
 }

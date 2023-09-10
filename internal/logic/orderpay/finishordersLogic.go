@@ -18,6 +18,7 @@ type FinishordersLogic struct {
 	ul        *UtilLogic
 	userphone string
 	oul       *OrderUtilLogic
+	u         *UtilLogic
 }
 
 func NewFinishordersLogic(ctx context.Context, svcCtx *svc.ServiceContext) *FinishordersLogic {
@@ -28,6 +29,7 @@ func NewFinishordersLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Fini
 		ul:        NewUtilLogic(ctx, svcCtx),
 		userphone: ctx.Value("phone").(string),
 		oul:       NewOrderUtilLogic(ctx, svcCtx),
+		u:         NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -79,7 +81,7 @@ func (l *FinishordersLogic) Finishorders(req *types.FinishOrdersRes) (resp *type
 			}
 			orders, _ = l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, PayInfo.OutTradeNo)
 			for _, order := range orders {
-				OrderInfos = append(OrderInfos, OrderDb2info(order))
+				OrderInfos = append(OrderInfos, l.u.OrderDb2info(order))
 			}
 			return &types.FinishOrdersResp{Code: "10000", Msg: "完全成功", Data: OrderInfos}, nil
 		} else {

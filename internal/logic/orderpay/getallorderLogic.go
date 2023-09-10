@@ -14,6 +14,7 @@ type GetallorderLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	col    *CheckOrderLogic
+	u      *UtilLogic
 }
 
 func NewGetallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetallorderLogic {
@@ -22,6 +23,7 @@ func NewGetallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Getal
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		col:    NewCheckOrderLogic(ctx, svcCtx),
+		u:      NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -31,7 +33,7 @@ func (l *GetallorderLogic) Getallorder(req *types.GetAllOrderRes) (resp *types.G
 	if req.IsPointsOrder {
 		orders, _ := l.svcCtx.Order.FindAllPointsOrder(l.ctx, userphone)
 		for _, order := range orders {
-			infos = append(infos, OrderDb2info(order))
+			infos = append(infos, l.u.OrderDb2info(order))
 		}
 		return &types.GetAllOrderResp{Code: "10000", Msg: "success", Data: &types.GetAllOrderRp{OrderInfos: infos}}, nil
 	}
@@ -48,7 +50,7 @@ func (l *GetallorderLogic) Getallorder(req *types.GetAllOrderRes) (resp *types.G
 			sn, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
 			order = l.col.Checkall(order, sn)
 		}
-		infos = append(infos, OrderDb2info(order))
+		infos = append(infos, l.u.OrderDb2info(order))
 	}
 	return &types.GetAllOrderResp{Code: "10000", Msg: "success", Data: &types.GetAllOrderRp{OrderInfos: infos}}, nil
 }

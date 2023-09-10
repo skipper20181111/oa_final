@@ -14,6 +14,7 @@ type ContinuepayLogic struct {
 	svcCtx *svc.ServiceContext
 	pu     *PayUtilLogic
 	ou     *OrderUtilLogic
+	u      *UtilLogic
 }
 
 func NewContinuepayLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ContinuepayLogic {
@@ -23,6 +24,7 @@ func NewContinuepayLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Conti
 		svcCtx: svcCtx,
 		pu:     NewPayUtilLogic(ctx, svcCtx),
 		ou:     NewOrderUtilLogic(ctx, svcCtx),
+		u:      NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -52,7 +54,7 @@ func (l *ContinuepayLogic) Continuepay(req *types.ContinuePayRes) (resp *types.N
 	for _, order := range orders {
 		order.OutTradeNo = payInit.OutTradeSn
 		l.svcCtx.Order.Insert(l.ctx, order)
-		OrderInfos = append(OrderInfos, OrderDb2info(order))
+		OrderInfos = append(OrderInfos, l.u.OrderDb2info(order))
 		if order.UsedCouponinfo != "" {
 			UseCoupon = true
 		}

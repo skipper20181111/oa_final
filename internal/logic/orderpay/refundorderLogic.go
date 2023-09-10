@@ -19,6 +19,8 @@ type RefundorderLogic struct {
 	wcu        *WeChatUtilLogic
 	ul         *UtilLogic
 	oul        *OrderUtilLogic
+	sf         *SfUtilLogic
+	u          *UtilLogic
 }
 
 func NewRefundorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefundorderLogic {
@@ -31,6 +33,8 @@ func NewRefundorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Refun
 		wcu:        NewWeChatUtilLogic(ctx, svcCtx),
 		ul:         NewUtilLogic(ctx, svcCtx),
 		oul:        NewOrderUtilLogic(ctx, svcCtx),
+		sf:         NewSfUtilLogic(ctx, svcCtx),
+		u:          NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -72,7 +76,7 @@ func (l RefundorderLogic) RefundOneOrder(OrderSn string) (*types.OrderInfo, bool
 	if order.OrderStatus != 6 {
 		return nil, false
 	}
-	go RefundSfOrder(*order)
+	go l.sf.RefundSfOrder(*order)
 	// 首先开始退微信支付的钱
 	if order.WexinPayAmount > 0 {
 		l.wcu.CancelOrder(order)
@@ -103,5 +107,5 @@ func (l RefundorderLogic) RefundOneOrder(OrderSn string) (*types.OrderInfo, bool
 
 	}
 	//结束更新现金账户与优惠券账户
-	return OrderDb2info(order), true
+	return l.u.OrderDb2info(order), true
 }

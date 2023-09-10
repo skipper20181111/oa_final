@@ -24,6 +24,7 @@ type StarmallorderLogic struct {
 	StarMallMap           map[int64]*cachemodel.StarmallLonglist
 	req                   *types.StarMallOrderRes
 	phone                 string
+	u                     *UtilLogic
 }
 
 func NewStarmallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *StarmallorderLogic {
@@ -32,6 +33,7 @@ func NewStarmallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Sta
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		phone:  ctx.Value("phone").(string),
+		u:      NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -52,7 +54,7 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 	l.req = req
 	order, ok, msg := l.InsertStarDb()
 	if ok {
-		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: OrderDb2info(order)}, nil
+		return &types.StarMallOrderResp{Code: "10000", Msg: "success", Data: l.u.OrderDb2info(order)}, nil
 	}
 	return &types.StarMallOrderResp{Code: "10000", Msg: msg, Data: orderinfo}, nil
 }

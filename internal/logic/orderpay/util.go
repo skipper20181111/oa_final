@@ -24,6 +24,7 @@ type UtilLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	phone  string
+	sf     *SfUtilLogic
 }
 
 func NewUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UtilLogic {
@@ -32,6 +33,7 @@ func NewUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UtilLogic {
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		phone:  ctx.Value("phone").(string),
+		sf:     NewSfUtilLogic(ctx, svcCtx),
 	}
 }
 func md5V(str string) string {
@@ -238,7 +240,7 @@ func ordercoupondetail(order *cachemodel.Order) (int64, string, *types.CouponSto
 	}
 	return 0, "", nil
 }
-func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
+func (l UtilLogic) OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	FreightAmount := int64(3000)
 	CutFreightAmount := int64(3000)
 	if FreightAmount-order.FreightAmount > 0 {
@@ -291,10 +293,10 @@ func OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.DeliveryTime = order.DeliveryTime.Format("2006-01-02 15:04:05")
 	orderinfo.ReceiveTime = order.ReceiveTime.Format("2006-01-02 15:04:05")
 	if order.OrderStatus == 2 {
-		orderinfo.RouteList = GetRoutesList(order.DeliverySn)
+		orderinfo.RouteList = l.sf.GetRoutesList(order.DeliverySn)
 	}
 	if (order.OrderStatus == 3 || order.OrderStatus == 4) && order.CloseTime.Before(time.Now().Add(time.Hour*24*2)) && order.CloseTime.Add(time.Hour*24*5).After(time.Now()) {
-		orderinfo.RouteList = GetRoutesList(order.DeliverySn)
+		orderinfo.RouteList = l.sf.GetRoutesList(order.DeliverySn)
 	}
 	return orderinfo
 }

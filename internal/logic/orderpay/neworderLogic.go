@@ -14,6 +14,7 @@ type NeworderLogic struct {
 	svcCtx *svc.ServiceContext
 	pu     *PayUtilLogic
 	ou     *OrderUtilLogic
+	u      *UtilLogic
 }
 
 func NewNeworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *NeworderLogic {
@@ -23,6 +24,7 @@ func NewNeworderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Neworder
 		svcCtx: svcCtx,
 		pu:     NewPayUtilLogic(ctx, svcCtx),
 		ou:     NewOrderUtilLogic(ctx, svcCtx),
+		u:      NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -44,7 +46,7 @@ func (l *NeworderLogic) Neworder(req *types.NewOrderRes) (resp *types.NewOrderRe
 	}
 	for _, order := range orders {
 		l.svcCtx.Order.Insert(l.ctx, order)
-		OrderInfos = append(OrderInfos, OrderDb2info(order))
+		OrderInfos = append(OrderInfos, l.u.OrderDb2info(order))
 		if order.UsedCouponinfo != "" {
 			UseCoupon = true
 		}

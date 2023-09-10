@@ -14,6 +14,7 @@ type GetinvoiceorderLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	phone  string
+	u      *UtilLogic
 }
 
 func NewGetinvoiceorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetinvoiceorderLogic {
@@ -22,6 +23,7 @@ func NewGetinvoiceorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		phone:  ctx.Value("phone").(string),
+		u:      NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -37,7 +39,7 @@ func (l *GetinvoiceorderLogic) Getinvoiceorder(req *types.GetInvoiceOrderRes) (r
 	payInfos, _ := l.svcCtx.PayInfo.FindStatus4(l.ctx, req.PageNumber)
 	Orders, _ := l.svcCtx.Order.FindAllByOutTradeNos(l.ctx, userphone, payInfos)
 	for _, order := range Orders {
-		resp.Data.OrderInfos = append(resp.Data.OrderInfos, OrderDb2info(order))
+		resp.Data.OrderInfos = append(resp.Data.OrderInfos, l.u.OrderDb2info(order))
 	}
 	return resp, nil
 }

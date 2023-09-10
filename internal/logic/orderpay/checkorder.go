@@ -15,6 +15,7 @@ type CheckOrderLogic struct {
 	svcCtx    *svc.ServiceContext
 	userphone string
 	wul       *WeChatUtilLogic
+	u         *UtilLogic
 }
 
 func NewCheckOrderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CheckOrderLogic {
@@ -23,6 +24,7 @@ func NewCheckOrderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CheckO
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		wul:    NewWeChatUtilLogic(ctx, svcCtx),
+		u:      NewUtilLogic(ctx, svcCtx),
 	}
 }
 func (l *CheckOrderLogic) MonitorOrderStatus(OutTradeNo string) (*types.GetAllOrderResp, error) {
@@ -37,7 +39,7 @@ func (l *CheckOrderLogic) MonitorOrderStatus(OutTradeNo string) (*types.GetAllOr
 	OrderInfos := make([]*types.OrderInfo, 0)
 	Orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, OutTradeNo)
 	for _, order := range Orders {
-		OrderInfos = append(OrderInfos, OrderDb2info(l.Checkall(order, PayInfo)))
+		OrderInfos = append(OrderInfos, l.u.OrderDb2info(l.Checkall(order, PayInfo)))
 	}
 	return &types.GetAllOrderResp{Code: "10000", Msg: "查询成功", Data: &types.GetAllOrderRp{OrderInfos: OrderInfos}}, nil
 }

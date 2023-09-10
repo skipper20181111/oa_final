@@ -20,6 +20,7 @@ type Config struct {
 	}
 	Cache      cache.CacheConf
 	WxConf     WxConf
+	SfConf     SfConf
 	ServerInfo struct {
 		Url string
 	}

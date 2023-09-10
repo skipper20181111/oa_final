@@ -14,6 +14,8 @@ type ChangeorderaddressLogic struct {
 	ctx       context.Context
 	svcCtx    *svc.ServiceContext
 	userphone string
+	sf        *SfUtilLogic
+	u         *UtilLogic
 }
 
 func NewChangeorderaddressLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ChangeorderaddressLogic {
@@ -22,6 +24,8 @@ func NewChangeorderaddressLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 		ctx:       ctx,
 		svcCtx:    svcCtx,
 		userphone: ctx.Value("phone").(string),
+		sf:        NewSfUtilLogic(ctx, svcCtx),
+		u:         NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -53,14 +57,14 @@ func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address string) (
 		return nil, false
 	}
 	if Getsha512(Address) == Getsha512(sn2order.Address) {
-		return OrderDb2info(sn2order), true
+		return l.u.OrderDb2info(sn2order), true
 	}
-	go RefundSfOrder(*sn2order)
+	go l.sf.RefundSfOrder(*sn2order)
 	sn2order.Address = Address
 	sn2order.DeliverySn = ""
 	err = l.svcCtx.Order.UpdateAddress(l.ctx, OrderSn, Address)
 	if err != nil {
 		return nil, false
 	}
-	return OrderDb2info(sn2order), true
+	return l.u.OrderDb2info(sn2order), true
 }

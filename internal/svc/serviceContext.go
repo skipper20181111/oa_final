@@ -34,11 +34,11 @@ const (
 	CouponInfoMapKey   = "CouponInfoMapKey"
 	Keystr             = "W3WxhhoA9E9VIteCYbnhUTxDbtk2nP1Z"
 	MissionListKey     = "MissionListKey"
-	ParterID           = "ZYYMKIJW69LH"
-	//测试环境
-	CheckCodeSbox = "v8oHKTufkthd7xCuI9kyX7KDwnGeKFt3"
-	MonthlyCard   = "7551234567"
-	SfUrl         = "https://sfapi-sbox.sf-express.com/std/service"
+	//ParterID           = "ZYYMKIJW69LH"
+	////测试环境
+	//CheckCodeSbox = "v8oHKTufkthd7xCuI9kyX7KDwnGeKFt3"
+	//MonthlyCard   = "7551234567"
+	//SfUrl         = "https://sfapi-sbox.sf-express.com/std/service"
 	////生产环境
 	//CheckCodeSbox          = "uB6bnfnBaCxGWtzbQj477KpeAbEOdgjs"
 	//MonthlyCard            = "0210927407"

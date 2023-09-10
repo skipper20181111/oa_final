@@ -32,7 +32,7 @@ func NewSfUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SfUtilLogi
 		svcCtx: svcCtx,
 	}
 }
-func GetRoutesList(SfSn string) *types.RouteList {
+func (l SfUtilLogic) GetRoutesList(SfSn string) *types.RouteList {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -44,17 +44,17 @@ func GetRoutesList(SfSn string) *types.RouteList {
 		TrackingNumber: SfSn,
 	}
 	MsgDataByte, _ := json.Marshal(MsgDataStruct)
-	ToVerifyText := string(MsgDataByte) + Timestamp + svc.CheckCodeSbox
+	ToVerifyText := string(MsgDataByte) + Timestamp + l.svcCtx.Config.SfConf.CheckCode
 	ToVerifyText = url.QueryEscape(ToVerifyText)
 	MsgDigest := md5V(ToVerifyText)
 	params := url.Values{}
 	params.Add("serviceCode", svc.GetRoutesServiceCode)
-	params.Add("partnerID", svc.ParterID)
+	params.Add("partnerID", l.svcCtx.Config.SfConf.PartnerID)
 	params.Add("requestID", strconv.FormatInt(time.Now().UnixNano(), 10))
 	params.Add("timestamp", Timestamp)
 	params.Add("msgDigest", MsgDigest)
 	params.Add("msgData", string(MsgDataByte))
-	urlPath := "https://sfapi-sbox.sf-express.com/std/service"
+	urlPath := l.svcCtx.Config.SfConf.SfUrl
 	urlPath = urlPath + "?" + params.Encode()
 	resp, err := httpc.Do(context.Background(), http.MethodPost, urlPath, nil)
 	if err != nil {
@@ -83,17 +83,17 @@ func (l SfUtilLogic) GetPDF(order *cachemodel.Order, sfsn string) {
 		Sync:         true,
 	}
 	MsgDataByte, _ := json.Marshal(MsgDataStruct)
-	ToVerifyText := string(MsgDataByte) + Timestamp + svc.CheckCodeSbox
+	ToVerifyText := string(MsgDataByte) + Timestamp + l.svcCtx.Config.SfConf.CheckCode
 	ToVerifyText = url.QueryEscape(ToVerifyText)
 	MsgDigest := md5V(ToVerifyText)
 	params := url.Values{}
 	params.Add("serviceCode", svc.DownPDFServiceCode)
-	params.Add("partnerID", svc.ParterID)
+	params.Add("partnerID", l.svcCtx.Config.SfConf.PartnerID)
 	params.Add("requestID", strconv.FormatInt(time.Now().UnixNano(), 10))
 	params.Add("timestamp", Timestamp)
 	params.Add("msgDigest", MsgDigest)
 	params.Add("msgData", string(MsgDataByte))
-	urlPath := svc.SfUrl
+	urlPath := l.svcCtx.Config.SfConf.SfUrl
 	urlPath = urlPath + "?" + params.Encode()
 	resp, err := httpc.Do(context.Background(), http.MethodPost, urlPath, nil)
 	if err != nil {
@@ -116,7 +116,7 @@ func (l SfUtilLogic) GetPDF(order *cachemodel.Order, sfsn string) {
 		//realPictureUrl := "https://img.waterflowfit.top/" + key
 	}
 }
-func RefundSfOrder(order cachemodel.Order) {
+func (l SfUtilLogic) RefundSfOrder(order cachemodel.Order) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -128,17 +128,17 @@ func RefundSfOrder(order cachemodel.Order) {
 		DealType: 2,
 	}
 	MsgDataByte, _ := json.Marshal(MsgDataStruct)
-	ToVerifyText := string(MsgDataByte) + Timestamp + svc.CheckCodeSbox
+	ToVerifyText := string(MsgDataByte) + Timestamp + l.svcCtx.Config.SfConf.CheckCode
 	ToVerifyText = url.QueryEscape(ToVerifyText)
 	MsgDigest := md5V(ToVerifyText)
 	params := url.Values{}
 	params.Add("serviceCode", svc.RefundServiceCode)
-	params.Add("partnerID", svc.ParterID)
+	params.Add("partnerID", l.svcCtx.Config.SfConf.PartnerID)
 	params.Add("requestID", strconv.FormatInt(time.Now().UnixNano(), 10))
 	params.Add("timestamp", Timestamp)
 	params.Add("msgDigest", MsgDigest)
 	params.Add("msgData", string(MsgDataByte))
-	urlPath := "https://sfapi-sbox.sf-express.com/std/service"
+	urlPath := l.svcCtx.Config.SfConf.SfUrl
 	urlPath = urlPath + "?" + params.Encode()
 	resp, _ := httpc.Do(context.Background(), http.MethodPost, urlPath, nil)
 	resp.Body.Close()
@@ -149,12 +149,12 @@ func (l SfUtilLogic) GetSfSn(order *cachemodel.Order) {
 			return
 		}
 	}()
-	_, sfsn := CreateOrder(order)
+	_, sfsn := l.CreateOrder(order)
 	if sfsn != "" {
 		l.svcCtx.Order.UpdateDeliver(l.ctx, sfsn, "顺丰", order.OrderSn)
 		l.GetPDF(order, sfsn)
 	} else {
-		ok, qsfsn := QuerySfSn(order)
+		ok, qsfsn := l.QuerySfSn(order)
 		if ok {
 			sfsn = qsfsn
 			l.svcCtx.Order.UpdateDeliver(l.ctx, sfsn, "顺丰", order.OrderSn)
@@ -169,7 +169,7 @@ func (l SfUtilLogic) GetSfSn(order *cachemodel.Order) {
 	}
 }
 func (l SfUtilLogic) IfDelivering(order *cachemodel.Order) {
-	routelist := GetRoutesList(order.DeliverySn)
+	routelist := l.GetRoutesList(order.DeliverySn)
 	for _, route := range routelist.Routes {
 		if route.OpCode == "50" || route.OpCode == "30" || strings.Contains(route.Remark, "收件") || strings.Contains(route.Remark, "已收取") || strings.Contains(route.Remark, "揽收") || strings.Contains(route.Remark, "已揽收") {
 			l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 2, order.OrderSn)
@@ -178,7 +178,7 @@ func (l SfUtilLogic) IfDelivering(order *cachemodel.Order) {
 }
 
 func (l SfUtilLogic) IfReceived(order *cachemodel.Order) {
-	routelist := GetRoutesList(order.DeliverySn)
+	routelist := l.GetRoutesList(order.DeliverySn)
 	for _, route := range routelist.Routes {
 		if route.OpCode == "80" || strings.Contains(route.Remark, "已签收") {
 			l.svcCtx.Order.UpdateReceivedByOrderSn(l.ctx, order.OrderSn)
@@ -196,7 +196,7 @@ func orderdb2sfinfodb(order *cachemodel.Order, SfSn string) *cachemodel.SfInfo {
 	}
 }
 
-func QuerySfSn(order *cachemodel.Order) (bool, string) {
+func (l SfUtilLogic) QuerySfSn(order *cachemodel.Order) (bool, string) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -208,17 +208,17 @@ func QuerySfSn(order *cachemodel.Order) (bool, string) {
 		OrderId: GetSha256(order.OrderSn + order.Address),
 	}
 	MsgDataByte, _ := json.Marshal(MsgDataStruct)
-	ToVerifyText := string(MsgDataByte) + Timestamp + svc.CheckCodeSbox
+	ToVerifyText := string(MsgDataByte) + Timestamp + l.svcCtx.Config.SfConf.CheckCode
 	ToVerifyText = url.QueryEscape(ToVerifyText)
 	MsgDigest := md5V(ToVerifyText)
 	params := url.Values{}
 	params.Add("serviceCode", svc.QueryOrderServiceCode)
-	params.Add("partnerID", svc.ParterID)
+	params.Add("partnerID", l.svcCtx.Config.SfConf.PartnerID)
 	params.Add("requestID", strconv.FormatInt(time.Now().UnixNano(), 10))
 	params.Add("timestamp", Timestamp)
 	params.Add("msgDigest", MsgDigest)
 	params.Add("msgData", string(MsgDataByte))
-	urlPath := svc.SfUrl
+	urlPath := l.svcCtx.Config.SfConf.SfUrl
 	urlPath = urlPath + "?" + params.Encode()
 	resp, err := httpc.Do(context.Background(), http.MethodPost, urlPath, nil)
 	if err != nil {
@@ -233,7 +233,7 @@ func QuerySfSn(order *cachemodel.Order) (bool, string) {
 	SfSn := ApiResultDatastruct.MsgData.WaybillNoInfoList[0].WaybillNo
 	return true, SfSn
 }
-func CreateOrder(order *cachemodel.Order) (status int, SfSn string) {
+func (l SfUtilLogic) CreateOrder(order *cachemodel.Order) (status int, SfSn string) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -250,23 +250,23 @@ func CreateOrder(order *cachemodel.Order) (status int, SfSn string) {
 		Language:           "zh-CN",
 		OrderId:            GetSha256(order.OrderSn + order.Address),
 		ContactInfoList:    contactinfolist,
-		MonthlyCard:        svc.MonthlyCard,
+		MonthlyCard:        l.svcCtx.Config.SfConf.MonthlyCard,
 		ExpressTypeId:      1,
 		IsReturnRoutelabel: 1,
 		CargoDetails:       CargoDetailList,
 	}
 	MsgDataByte, _ := json.Marshal(MsgDataStruct)
-	ToVerifyText := string(MsgDataByte) + Timestamp + svc.CheckCodeSbox
+	ToVerifyText := string(MsgDataByte) + Timestamp + l.svcCtx.Config.SfConf.CheckCode
 	ToVerifyText = url.QueryEscape(ToVerifyText)
 	MsgDigest := md5V(ToVerifyText)
 	params := url.Values{}
 	params.Add("serviceCode", svc.CreateOrderServiceCode)
-	params.Add("partnerID", svc.ParterID)
+	params.Add("partnerID", l.svcCtx.Config.SfConf.PartnerID)
 	params.Add("requestID", strconv.FormatInt(time.Now().UnixNano()+int64(rand.Intn(2000000000)), 10))
 	params.Add("timestamp", Timestamp)
 	params.Add("msgDigest", MsgDigest)
 	params.Add("msgData", string(MsgDataByte))
-	urlPath := svc.SfUrl
+	urlPath := l.svcCtx.Config.SfConf.SfUrl
 	urlPath = urlPath + "?" + params.Encode()
 	response, _ := httpc.Do(context.Background(), http.MethodPost, urlPath, nil)
 	if response != nil {

@@ -15,6 +15,7 @@ type GetexchangehistoryLogic struct {
 	ctx       context.Context
 	svcCtx    *svc.ServiceContext
 	userphone string
+	u         *orderpay.UtilLogic
 }
 
 func NewGetexchangehistoryLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetexchangehistoryLogic {
@@ -23,6 +24,7 @@ func NewGetexchangehistoryLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 		ctx:       ctx,
 		svcCtx:    svcCtx,
 		userphone: ctx.Value("phone").(string),
+		u:         orderpay.NewUtilLogic(ctx, svcCtx),
 	}
 }
 
@@ -36,7 +38,7 @@ func (l *GetexchangehistoryLogic) Getexchangehistory(req *types.GetExchangeHisto
 	}
 	orders, _ := l.svcCtx.Order.FindAllPointsCouponOrder(l.ctx, l.userphone)
 	for _, order := range orders {
-		resp.Data.OrderList = append(resp.Data.OrderList, orderpay.OrderDb2info(order))
+		resp.Data.OrderList = append(resp.Data.OrderList, l.u.OrderDb2info(order))
 	}
 	return resp, nil
 }

@@ -340,6 +340,20 @@ type GetAllOrderResp struct {
 	Data *GetAllOrderRp `json:"data"`
 }
 
+type GetTransactionIDRes struct {
+	OutTradeNo string `json:"outTradeNo"`
+}
+
+type GetTransactionIDRp struct {
+	TransactionId string `db:"transaction_id"` // 微信支付编号
+}
+
+type GetTransactionIDResp struct {
+	Code string              `json:"code"`
+	Msg  string              `json:"msg"`
+	Data *GetTransactionIDRp `json:"data"`
+}
+
 type GetOrderRes struct {
 	OutTradeNo string `json:"outTradeNo"`
 }

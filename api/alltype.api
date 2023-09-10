@@ -356,6 +356,17 @@ type (
     }
 )
 type (
+    GetTransactionIDRes {
+        OutTradeNo string `json:"outTradeNo"`
+    }
+    GetTransactionIDRp {
+        TransactionId string `db:"transaction_id"`             // 微信支付编号
+    }
+    GetTransactionIDResp {
+        Code string `json:"code"`
+        Msg string `json:"msg"`
+        Data *GetTransactionIDRp `json:"data"`
+    }
     GetOrderRes {
         OutTradeNo string `json:"outTradeNo"`
     }

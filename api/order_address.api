@@ -127,6 +127,11 @@ service oa-api {
 	@doc "获取单个订单"
 	@handler getorder
 	post /getorder (GetOrderRes) returns (GetAllOrderResp)
+	
+	@doc "获取微信支付号"
+	@handler gettransactionid
+	post /gettransactionid (GetTransactionIDRes) returns (GetTransactionIDResp)
+	
 }
 
 @server(

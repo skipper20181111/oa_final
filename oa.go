@@ -7,7 +7,6 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpc"
 	"math/rand"
 	"net/http"
-	"oa_final/cachemodel"
 	"oa_final/internal/logic/orderpay"
 	"time"
 
@@ -82,28 +81,28 @@ func IfReceived(ctx *svc.ServiceContext) {
 				sf.IfReceived(order)
 			}
 		}
-		OutTradeSnList, _ := ctx.Order.FindStatus3(backcontext)
-		for _, OutTradeSn := range OutTradeSnList {
-			status, _ := ctx.Order.FindAllStatusByOutTradeNo(backcontext, OutTradeSn)
-			if len(status) == 1 && status[0] == 3 {
-				payInfo, _ := ctx.PayInfo.FindOneByOutTradeNo(backcontext, OutTradeSn)
-				if payInfo != nil {
-					ctx.PayInfo.UpdateStatus(backcontext, OutTradeSn, 4)
-					ctx.Order.UpdateClosedByOutTradeSn(backcontext, OutTradeSn)
-					ctx.UserPoints.UpdatePoints(backcontext, payInfo.Phone, payInfo.TotleAmount)
-					userPoints, _ := ctx.UserPoints.FindOneByPhone(backcontext, payInfo.Phone)
-					ctx.PointLog.Insert(backcontext, &cachemodel.PointLog{Date: time.Now(),
-						OrderType:     "正常商品",
-						OrderSn:       payInfo.OutTradeNo,
-						OrderDescribe: "正常商品收货获取积分",
-						Behavior:      "获取",
-						Phone:         payInfo.Phone,
-						Balance:       userPoints.AvailablePoints,
-						ChangeAmount:  payInfo.TotleAmount/100 + 1,
-					})
-				}
-			}
-		}
+		//OutTradeSnList, _ := ctx.Order.FindStatus3(backcontext)
+		//for _, OutTradeSn := range OutTradeSnList {
+		//	status, _ := ctx.Order.FindAllStatusByOutTradeNo(backcontext, OutTradeSn)
+		//	if len(status) == 1 && status[0] == 3 {
+		//		payInfo, _ := ctx.PayInfo.FindOneByOutTradeNo(backcontext, OutTradeSn)
+		//		if payInfo != nil {
+		//			ctx.PayInfo.UpdateStatus(backcontext, OutTradeSn, 4)
+		//			ctx.Order.UpdateClosedByOutTradeSn(backcontext, OutTradeSn)
+		//			ctx.UserPoints.UpdatePoints(backcontext, payInfo.Phone, payInfo.TotleAmount)
+		//			userPoints, _ := ctx.UserPoints.FindOneByPhone(backcontext, payInfo.Phone)
+		//			ctx.PointLog.Insert(backcontext, &cachemodel.PointLog{Date: time.Now(),
+		//				OrderType:     "正常商品",
+		//				OrderSn:       payInfo.OutTradeNo,
+		//				OrderDescribe: "正常商品收货获取积分",
+		//				Behavior:      "获取",
+		//				Phone:         payInfo.Phone,
+		//				Balance:       userPoints.AvailablePoints,
+		//				ChangeAmount:  payInfo.TotleAmount/100 + 1,
+		//			})
+		//		}
+		//	}
+		//}
 	}
 }
 func PrepareGoods(SvcCtx *svc.ServiceContext) {

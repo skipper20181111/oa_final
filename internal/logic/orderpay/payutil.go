@@ -77,7 +77,6 @@ func (l *PayUtilLogic) payinfodb2info() *types.PayInfo {
 	payinfo.FinishCashPayTime = l.PayInfo.CashAccountPaymentTime.Format("2006-01-02 15:04:05")
 	payinfo.FinishWeChatPayTime = l.PayInfo.WexinPaymentTime.Format("2006-01-02 15:04:05")
 	payinfo.OutTradeNo = l.PayInfo.OutTradeNo
-	//payinfo.TransactionId=l.PayInfo.TransactionId
 	return payinfo
 }
 func (l *PayUtilLogic) OrdersEnd() bool {

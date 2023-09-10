@@ -39,6 +39,7 @@ func main() {
 	go monitorOrder(ctx)
 	go IfReceived(ctx)
 	go delivering(ctx)
+	go InsertWxDeliver(ctx)
 	server.Start()
 }
 func delivering(ctx *svc.ServiceContext) {
@@ -124,6 +125,24 @@ func PrepareGoods(SvcCtx *svc.ServiceContext) {
 			}
 		}
 	}
+}
+func InsertWxDeliver(svcCtx *svc.ServiceContext) {
+	RefreshGap := time.Second * time.Duration(rand.Intn(100)+1)
+	time.Sleep(RefreshGap)
+	for true {
+		ctx := context.Background()
+		endtime := time.Now()
+		//starttime, _ := time.Parse("2006-01-02", endtime.Format("2006-01-02"))
+		starttime := endtime.Add(-time.Minute * 3)
+		ouTradeSnList, _ := svcCtx.Order.FindDeliveredOuTradeSn(ctx, starttime, endtime)
+		for _, OutTradeSn := range ouTradeSnList {
+			payInfo, _ := svcCtx.PayInfo.FindOneByOutTradeNo(ctx, OutTradeSn)
+			payInfo.Id = 0
+			payInfo.Status = 10000
+			svcCtx.WxDelivery.InsertPayinfo(ctx, payInfo)
+		}
+	}
+
 }
 func monitorOrder(ctx *svc.ServiceContext) {
 	defer func() {

@@ -30,6 +30,7 @@ type (
 		Update(ctx context.Context, data *WxDelivery) error
 		Delete(ctx context.Context, id int64) error
 		UpdateFinished(ctx context.Context, OutTradeSn string) error
+		InsertPayinfo(ctx context.Context, data *PayInfo) (sql.Result, error)
 	}
 
 	defaultWxDeliveryModel struct {
@@ -66,7 +67,11 @@ func newWxDeliveryModel(conn sqlx.SqlConn) *defaultWxDeliveryModel {
 		table: "`wx_delivery`",
 	}
 }
-
+func (m *defaultWxDeliveryModel) InsertPayinfo(ctx context.Context, data *PayInfo) (sql.Result, error) {
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, wxDeliveryRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OutTradeNo, data.TransactionType, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.TotleAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.WexinRefundAmount, data.CashAccountRefundAmount, data.FinishWeixinpay, data.FinishAccountpay, data.Status, data.InvoiceStatus, data.WexinPaymentTime, data.CashAccountPaymentTime, data.LogId)
+	return ret, err
+}
 func (m *defaultWxDeliveryModel) Delete(ctx context.Context, id int64) error {
 	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)

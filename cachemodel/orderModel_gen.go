@@ -64,6 +64,7 @@ type (
 		FindOneBySfSn(ctx context.Context, SfSn string) (*Order, error)
 		UpdateAddress(ctx context.Context, OrderSn, AddressStr string) error
 		FindAllPointsCouponOrder(ctx context.Context, phone string) ([]*Order, error)
+		FindDeliveredOuTradeSn(ctx context.Context, start, end time.Time) ([]string, error)
 	}
 
 	defaultOrderModel struct {
@@ -510,7 +511,20 @@ func (m *defaultOrderModel) Update(ctx context.Context, newData *Order) error {
 	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.OutRefundNo, newData.CreateOrderTime, newData.Pidlist, newData.OrderType, newData.OriginalAmount, newData.PromotionAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.ActualAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.PointsAmount, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.InvoiceStatus, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.MarketPlayerId, newData.LogId, newData.ProductInfo, newData.Id)
 	return err
 }
+func (m *defaultOrderModel) FindDeliveredOuTradeSn(ctx context.Context, start, end time.Time) ([]string, error) {
 
+	var resp []string
+	query := fmt.Sprintf("select distinct `out_trade_no` from %s where `create_order_time`>=? and `create_order_time`<=? and `order_status` in(1001,1002,1003,2,3,4) and `wexin_pay_amount`>0 ", m.table)
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, start, end)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultOrderModel) tableName() string {
 	return m.table
 }

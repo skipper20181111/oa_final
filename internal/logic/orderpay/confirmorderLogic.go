@@ -2,6 +2,11 @@ package orderpay
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/zeromicro/go-zero/rest/httpc"
+	"io/ioutil"
+	"net/http"
 	"oa_final/cachemodel"
 	"time"
 
@@ -48,7 +53,8 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 			yes = false
 		}
 	}
-	if yes {
+	if yes && l.ConfirmMHTshit(l.svcCtx, PayInfo) {
+
 		l.svcCtx.PayInfo.UpdateStatus(l.ctx, req.OutTradeNo, 4)
 		l.svcCtx.UserPoints.UpdatePoints(l.ctx, PayInfo.Phone, PayInfo.TotleAmount)
 		l.svcCtx.Order.UpdateClosedByOutTradeSn(l.ctx, req.OutTradeNo)
@@ -69,4 +75,35 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 		resp.Data.OrderInfos = append(resp.Data.OrderInfos, l.u.OrderDb2info(order))
 	}
 	return resp, nil
+}
+func (l *ConfirmorderLogic) ConfirmMHTshit(svcCtx *svc.ServiceContext, Payinfo *cachemodel.PayInfo) bool {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	ctx := context.Background()
+	accessToken, _ := l.svcCtx.AccessToken.FindOne(ctx, 1)
+	UrlPath := fmt.Sprintf("https://api.weixin.qq.com/wxa/sec/order/get_order?access_token=%s", accessToken.Token)
+	resp, _ := httpc.Do(context.Background(), http.MethodPost, UrlPath, types.MsgDelivering{TransactionId: Payinfo.TransactionId})
+	fmt.Println(resp.Body.Close())
+	res := types.MsgReturn{}
+	body, _ := ioutil.ReadAll(resp.Body)
+	json.Unmarshal(body, &res)
+	if len(res.Order.Openid) > 1 && res.Order.OrderState >= 3 {
+		err := l.svcCtx.WxDelivery.UpdateFinished(ctx, Payinfo.OutTradeNo)
+		if err != nil {
+			l.svcCtx.WxDelivery.Insert(l.ctx, &cachemodel.WxDelivery{
+				OutTradeNo:      Payinfo.OutTradeNo,
+				TransactionId:   Payinfo.TransactionId,
+				CreateOrderTime: Payinfo.CreateOrderTime,
+				Status:          90000,
+			})
+		}
+		wxDelivery, _ := l.svcCtx.WxDelivery.FindOneByOutTradeNo(l.ctx, Payinfo.OutTradeNo)
+		if wxDelivery.Status == 90000 {
+			return true
+		}
+	}
+	return false
 }

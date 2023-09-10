@@ -927,6 +927,25 @@ type ConfirmOrderResp struct {
 	Data *GetAllOrderRp `json:"data"`
 }
 
+type MsgDelivering struct {
+	TransactionId   string `json:"transaction_id"`
+	MerchantId      string `json:"merchant_id"`
+	SubMerchantId   string `json:"sub_merchant_id"`
+	MerchantTradeNo string `json:"merchant_trade_no"`
+}
+
+type MsgReturn struct {
+	Errcode int64  `json:"errcode"`
+	Errmsg  string `json:"errmsg"`
+	Order   *Order `json:"order"`
+}
+
+type Order struct {
+	TransactionId string `json:"transaction_id"`
+	OrderState    int64  `json:"order_state"`
+	Openid        string `json:"openid"`
+}
+
 type CreateOrderMsgData struct {
 	Language           string         `json:"language"`        // 必填
 	OrderId            string         `json:"orderId"`         // 必填

@@ -91,6 +91,7 @@ type ServiceContext struct {
 	Configuration     cachemodel.ConfigurationModel
 	SfPrice           cachemodel.SfPriceModel
 	AccessToken       cachemodel.AccessTokenModel
+	WxDelivery        cachemodel.WxDeliveryModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -173,6 +174,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Configuration:     cachemodel.NewConfigurationModel(sqlx.NewMysql(c.DB.DataSource)),
 		SfPrice:           cachemodel.NewSfPriceModel(sqlx.NewMysql(c.DB.DataSource)),
 		AccessToken:       cachemodel.NewAccessTokenModel(sqlx.NewMysql(c.DB.DataSource)),
+		WxDelivery:        cachemodel.NewWxDeliveryModel(sqlx.NewMysql(c.DB.DataSource)),
 		FileClient:        CDNclient,
 	}
 }

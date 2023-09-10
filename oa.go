@@ -127,8 +127,8 @@ func PrepareGoods(SvcCtx *svc.ServiceContext) {
 	}
 }
 func InsertWxDeliver(svcCtx *svc.ServiceContext) {
+	time.Sleep(time.Second * 3)
 	RefreshGap := time.Second * time.Duration(rand.Intn(100)+1)
-	time.Sleep(RefreshGap)
 	for true {
 		ctx := context.Background()
 		endtime := time.Now()
@@ -141,6 +141,7 @@ func InsertWxDeliver(svcCtx *svc.ServiceContext) {
 			payInfo.Status = 10000
 			svcCtx.WxDelivery.InsertPayinfo(ctx, payInfo)
 		}
+		time.Sleep(RefreshGap)
 	}
 
 }

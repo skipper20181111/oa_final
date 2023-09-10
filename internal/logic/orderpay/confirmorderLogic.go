@@ -53,7 +53,7 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 			yes = false
 		}
 	}
-	if yes && l.ConfirmMHTshit(l.svcCtx, PayInfo) {
+	if yes && (len(PayInfo.TransactionId) < 2 || l.ConfirmMHTshit(l.svcCtx, PayInfo)) {
 
 		l.svcCtx.PayInfo.UpdateStatus(l.ctx, req.OutTradeNo, 4)
 		l.svcCtx.UserPoints.UpdatePoints(l.ctx, PayInfo.Phone, PayInfo.TotleAmount)

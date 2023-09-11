@@ -360,7 +360,7 @@ type (
         OutTradeNo string `json:"outTradeNo"`
     }
     GetTransactionIDRp {
-        TransactionId string `db:"transaction_id"`             // 微信支付编号
+        TransactionId string `json:"transactionId"`           // 微信支付编号
     }
     GetTransactionIDResp {
         Code string `json:"code"`

@@ -514,7 +514,7 @@ func (m *defaultOrderModel) Update(ctx context.Context, newData *Order) error {
 func (m *defaultOrderModel) FindDeliveredOuTradeSn(ctx context.Context, start, end time.Time) ([]string, error) {
 
 	var resp []string
-	query := fmt.Sprintf("select distinct `out_trade_no` from %s where `create_order_time`>=? and `create_order_time`<=? and `order_status` in(1001,1002,1003,2,3,4) and `wexin_pay_amount`>0 ", m.table)
+	query := fmt.Sprintf("select distinct `out_trade_no` from %s where `delivery_time`>=? and `delivery_time`<=? and `order_status` in(1001,1002,1003,2,3,4) and `wexin_pay_amount`>0 ", m.table)
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, start, end)
 	switch err {
 	case nil:

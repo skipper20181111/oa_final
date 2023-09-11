@@ -345,7 +345,7 @@ type GetTransactionIDRes struct {
 }
 
 type GetTransactionIDRp struct {
-	TransactionId string `db:"transaction_id"` // 微信支付编号
+	TransactionId string `json:"transactionId"` // 微信支付编号
 }
 
 type GetTransactionIDResp struct {

@@ -306,8 +306,8 @@ func (m *defaultOrderModel) UpdateStatusByDeliverySn(ctx context.Context, Status
 	return err
 }
 func (m *defaultOrderModel) PrepareAllGoods(ctx context.Context, MarketID int64) error {
-	query := fmt.Sprintf("update %s set `order_status`=1001 where `order_status` in(1,1000) and `market_player_id`=?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, MarketID)
+	query := fmt.Sprintf("update %s set `order_status`=1001,`delivery_time`=? where `order_status` in(1,1000) and `market_player_id`=?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), MarketID)
 	return err
 }
 func (m *defaultOrderModel) UpdateStatusByOrderSn(ctx context.Context, status int64, orderSn string) error {

@@ -383,6 +383,10 @@ type ChangeOrdeRaddressResp struct {
 	Data *ChangeOrdeRaddressRp `json:"data"`
 }
 
+type CancelAllOrderRes struct {
+	OutTradeNo string `json:"outTradeNo"`
+}
+
 type CancelOrderRes struct {
 	OrderSn []string `json:"orderSn"`
 }

@@ -345,6 +345,12 @@ func (m *defaultOrderModel) UpdateStatusByOutTradeSn(ctx context.Context, status
 	return err
 }
 
+func (m *defaultOrderModel) UpdateRefundStatusByOutTradeSn(ctx context.Context, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `order_status`=6 where `out_trade_no` = ? and `order_status` in(1,1000) ", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, OutTradeNo)
+	return err
+}
+
 func (m *defaultOrderModel) UpdateClosedByOutTradeSn(ctx context.Context, OutTradeNo string) error {
 	query := fmt.Sprintf("update %s set `order_status`=4,`close_time`=? where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OutTradeNo)

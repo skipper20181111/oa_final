@@ -10,7 +10,7 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type RefundorderLogic struct {
+type RefundallorderLogic struct {
 	logx.Logger
 	ctx        context.Context
 	svcCtx     *svc.ServiceContext
@@ -23,22 +23,22 @@ type RefundorderLogic struct {
 	u          *UtilLogic
 }
 
-func NewRefundorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefundorderLogic {
-	return &RefundorderLogic{
-		Logger:     logx.WithContext(context.Background()),
-		ctx:        context.Background(),
+func NewRefundallorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefundallorderLogic {
+	return &RefundallorderLogic{
+		Logger:     logx.WithContext(ctx),
+		ctx:        ctx,
 		svcCtx:     svcCtx,
 		userphone:  ctx.Value("phone").(string),
 		useropenid: ctx.Value("openid").(string),
-		wcu:        NewWeChatUtilLogic(context.Background(), svcCtx),
-		ul:         NewUtilLogic(context.Background(), svcCtx),
-		oul:        NewOrderUtilLogic(context.Background(), svcCtx),
-		sf:         NewSfUtilLogic(context.Background(), svcCtx),
-		u:          NewUtilLogic(context.Background(), svcCtx),
+		wcu:        NewWeChatUtilLogic(ctx, svcCtx),
+		ul:         NewUtilLogic(ctx, svcCtx),
+		oul:        NewOrderUtilLogic(ctx, svcCtx),
+		sf:         NewSfUtilLogic(ctx, svcCtx),
+		u:          NewUtilLogic(ctx, svcCtx),
 	}
 }
 
-func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.CancelOrderResp, err error) {
+func (l *RefundallorderLogic) Refundallorder(req *types.CancelAllOrderRes) (resp *types.CancelOrderResp, err error) {
 	resp = &types.CancelOrderResp{Code: "10000",
 		Msg: "Success",
 		Data: &types.CancelOrderRp{
@@ -46,18 +46,18 @@ func (l *RefundorderLogic) Refundorder(req *types.CancelOrderRes) (resp *types.C
 			FailedOrderInfos:  make([]string, 0),
 		},
 	}
-
-	for _, OrderSn := range req.OrderSn {
-		orderInfo, ok := l.RefundOneOrder(OrderSn)
+	orders, _ := l.svcCtx.Order.FindAllByOutTradeNo(l.ctx, req.OutTradeNo)
+	for _, order := range orders {
+		orderInfo, ok := l.RefundOneOrder(order.OrderSn)
 		if !ok {
-			resp.Data.FailedOrderInfos = append(resp.Data.FailedOrderInfos, OrderSn)
+			resp.Data.FailedOrderInfos = append(resp.Data.FailedOrderInfos, order.OrderSn)
 		} else {
 			resp.Data.SuccessOrderInfos = append(resp.Data.SuccessOrderInfos, orderInfo)
 		}
 	}
 	return resp, nil
 }
-func (l RefundorderLogic) RefundOneOrder(OrderSn string) (*types.OrderInfo, bool) {
+func (l RefundallorderLogic) RefundOneOrder(OrderSn string) (*types.OrderInfo, bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			return

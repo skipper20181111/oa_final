@@ -96,6 +96,10 @@ service oa-api {
 	@handler refundorder
 	post /refundorder (CancelOrderRes) returns (CancelOrderResp)
 	
+	@doc "取消订单(支付链路)"
+	@handler refundallorder
+	post /refundallorder (CancelAllOrderRes) returns (CancelOrderResp)
+	
 	@doc "删除订单"
 	@handler deleteorder
 	post /deleteorder (DeletOrderRes) returns (DeletOrderResp)

@@ -121,6 +121,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
+				Path:    "/refundallorder",
+				Handler: orderpay.RefundallorderHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/deleteorder",
 				Handler: orderpay.DeleteorderHandler(serverCtx),
 			},

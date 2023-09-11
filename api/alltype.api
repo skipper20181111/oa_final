@@ -394,6 +394,9 @@ type (
     }
 )
 type (
+    CancelAllOrderRes {
+        OutTradeNo string `json:"outTradeNo"`
+    }
     CancelOrderRes {
         OrderSn []string `json:"orderSn"`
     }

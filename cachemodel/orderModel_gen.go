@@ -65,6 +65,7 @@ type (
 		UpdateAddress(ctx context.Context, OrderSn, AddressStr string) error
 		FindAllPointsCouponOrder(ctx context.Context, phone string) ([]*Order, error)
 		FindDeliveredOuTradeSn(ctx context.Context, start, end time.Time) ([]string, error)
+		UpdateWeChatDeliveredByOutTradeSn(ctx context.Context, OutTradeNo string) error
 	}
 
 	defaultOrderModel struct {
@@ -80,7 +81,7 @@ type (
 		OutRefundNo          string    `db:"out_refund_no"`           // 微信退款编号
 		CreateOrderTime      time.Time `db:"create_order_time"`       // 订单产生时间
 		Pidlist              string    `db:"pidlist"`                 // 订单商品列表
-		OrderType            int64     `db:"order_type"`              // 订单类型
+		OrderType            int64     `db:"order_type"`              // 订单类型 0->starmall;1->正常;2->预售;3->打折;4->预售且打折;
 		OriginalAmount       int64     `db:"original_amount"`         // 原始金额
 		PromotionAmount      int64     `db:"promotion_amount"`        // 实际总金额金额
 		CouponAmount         int64     `db:"coupon_amount"`           // 优惠券抵扣金额
@@ -95,12 +96,14 @@ type (
 		FinishAccountpay     int64     `db:"finish_accountpay"`       // 是否完成账户支付
 		PointsOrder          int64     `db:"points_order"`            // 是否为积分兑换订单
 		PointsAmount         int64     `db:"points_amount"`           // 使用积分额度
-		OrderStatus          int64     `db:"order_status"`            // 订单状态：0->待付款；1->待发货；2->已发货；3->已完成；4->已关闭；5->无效订单；6->已退货未退钱；7->已退货已退钱; 99->待复核
+		OrderStatus          int64     `db:"order_status"`            // 订单状态：0->待付款；1->已付款；2->已发货；3->已完成；4->已关闭；5->无效订单；6->已退货未退钱；7->已退货已退钱;8->超时;9->已删除; 99->待复核,1001->仓库备货中不可退款;
+		WexinDeliveryStatus  int64     `db:"wexin_delivery_status"`   // 0->未发货，(1) 待发货；(2) 已发货；(3) 确认收货；(4) 交易完成；(5) 已退款。
+		WexinDeliveryTime    time.Time `db:"wexin_delivery_time"`     // 微信支付时间
 		DeliveryCompany      string    `db:"delivery_company"`        // 物流公司(配送方式)
 		DeliverySn           string    `db:"delivery_sn"`             // 物流单号
 		AutoConfirmDay       int64     `db:"auto_confirm_day"`        // 自动确认时间（天）
 		Growth               int64     `db:"growth"`                  // 可以活动的成长值，等于消费额
-		InvoiceStatus        int64     `db:"invoice_status"`          // 发票类型：0->未开票；1->开票中；2->已开发票；3->开票失败
+		InvoiceStatus        int64     `db:"invoice_status"`          // 处理：0->待付款；1->已填信息预开票状态；2->开票中；3->开票完成；4->开票失败
 		ConfirmStatus        int64     `db:"confirm_status"`          // 确认收货状态：0->未确认；1->已确认
 		DeleteStatus         int64     `db:"delete_status"`           // 删除状态：0->未删除；1->已删除
 		PaymentTime          time.Time `db:"payment_time"`            // 支付时间
@@ -120,17 +123,72 @@ func newOrderModel(conn sqlx.SqlConn) *defaultOrderModel {
 		table: "`order`",
 	}
 }
-func (m *defaultOrderModel) DeleteByOutTradeSn(ctx context.Context, OutTradeSn string) error {
-	query := fmt.Sprintf("delete from %s where `out_trade_no` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, OutTradeSn)
-	return err
-}
+
 func (m *defaultOrderModel) Delete(ctx context.Context, id int64) error {
 	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
+func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, error) {
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", orderRows, m.table)
+	var resp Order
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultOrderModel) FindOneByOrderSn(ctx context.Context, orderSn string) (*Order, error) {
+	var resp Order
+	query := fmt.Sprintf("select %s from %s where `order_sn` = ? limit 1", orderRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, orderSn)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultOrderModel) FindOneByOutRefundNo(ctx context.Context, outRefundNo string) (*Order, error) {
+	var resp Order
+	query := fmt.Sprintf("select %s from %s where `out_refund_no` = ? limit 1", orderRows, m.table)
+	err := m.conn.QueryRowCtx(ctx, &resp, query, outRefundNo)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultOrderModel) Insert(ctx context.Context, data *Order) (sql.Result, error) {
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, orderRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.OutRefundNo, data.CreateOrderTime, data.Pidlist, data.OrderType, data.OriginalAmount, data.PromotionAmount, data.CouponAmount, data.UsedCouponinfo, data.ActualAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.FinishWeixinpay, data.FinishAccountpay, data.PointsOrder, data.PointsAmount, data.OrderStatus, data.WexinDeliveryStatus, data.WexinDeliveryTime, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.InvoiceStatus, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.MarketPlayerId, data.LogId, data.ProductInfo)
+	return ret, err
+}
+
+func (m *defaultOrderModel) Update(ctx context.Context, newData *Order) error {
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, orderRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.OutRefundNo, newData.CreateOrderTime, newData.Pidlist, newData.OrderType, newData.OriginalAmount, newData.PromotionAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.ActualAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.PointsAmount, newData.OrderStatus, newData.WexinDeliveryStatus, newData.WexinDeliveryTime, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.InvoiceStatus, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.MarketPlayerId, newData.LogId, newData.ProductInfo, newData.Id)
+	return err
+}
+
+func (m *defaultOrderModel) DeleteByOutTradeSn(ctx context.Context, OutTradeSn string) error {
+	query := fmt.Sprintf("delete from %s where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, OutTradeSn)
+	return err
+}
 func (m *defaultOrderModel) FindInvoiceByPhone(ctx context.Context, phone string, pagenumber int, InvoiceStatus []int64) ([]*Order, error) {
 	if pagenumber <= 0 || pagenumber > 10 {
 		return make([]*Order, 0), nil
@@ -400,6 +458,7 @@ func (m *defaultOrderModel) FindDelivering(ctx context.Context) ([]*Order, error
 		return nil, err
 	}
 }
+
 func (m *defaultOrderModel) FindStatus3(ctx context.Context) ([]string, error) {
 	query := fmt.Sprintf("select distinct `out_trade_no` from %s where `order_status` =3", m.table)
 	var resp []string
@@ -452,19 +511,7 @@ func (m *defaultOrderModel) FindStatusBiggerThan1(ctx context.Context) ([]*Order
 		return nil, err
 	}
 }
-func (m *defaultOrderModel) FindOne(ctx context.Context, id int64) (*Order, error) {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", orderRows, m.table)
-	var resp Order
-	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
+
 func (m *defaultOrderModel) FindOneBySfSn(ctx context.Context, SfSn string) (*Order, error) {
 	var resp Order
 	query := fmt.Sprintf("select %s from %s where `delivery_sn` = ? limit 1", orderRows, m.table)
@@ -478,49 +525,11 @@ func (m *defaultOrderModel) FindOneBySfSn(ctx context.Context, SfSn string) (*Or
 		return nil, err
 	}
 }
-func (m *defaultOrderModel) FindOneByOrderSn(ctx context.Context, orderSn string) (*Order, error) {
-	var resp Order
-	query := fmt.Sprintf("select %s from %s where `order_sn` = ? limit 1", orderRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, orderSn)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
 
-func (m *defaultOrderModel) FindOneByOutRefundNo(ctx context.Context, outRefundNo string) (*Order, error) {
-	var resp Order
-	query := fmt.Sprintf("select %s from %s where `out_refund_no` = ? limit 1", orderRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, outRefundNo)
-	switch err {
-	case nil:
-		return &resp, nil
-	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
-}
-
-func (m *defaultOrderModel) Insert(ctx context.Context, data *Order) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, orderRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OrderSn, data.OutTradeNo, data.OutRefundNo, data.CreateOrderTime, data.Pidlist, data.OrderType, data.OriginalAmount, data.PromotionAmount, data.CouponAmount, data.UsedCouponinfo, data.ActualAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.FreightAmount, data.Address, data.OrderNote, data.FinishWeixinpay, data.FinishAccountpay, data.PointsOrder, data.PointsAmount, data.OrderStatus, data.DeliveryCompany, data.DeliverySn, data.AutoConfirmDay, data.Growth, data.InvoiceStatus, data.ConfirmStatus, data.DeleteStatus, data.PaymentTime, data.DeliveryTime, data.ReceiveTime, data.CloseTime, data.ModifyTime, data.MarketPlayerId, data.LogId, data.ProductInfo)
-	return ret, err
-}
-
-func (m *defaultOrderModel) Update(ctx context.Context, newData *Order) error {
-	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, orderRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OrderSn, newData.OutTradeNo, newData.OutRefundNo, newData.CreateOrderTime, newData.Pidlist, newData.OrderType, newData.OriginalAmount, newData.PromotionAmount, newData.CouponAmount, newData.UsedCouponinfo, newData.ActualAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.FreightAmount, newData.Address, newData.OrderNote, newData.FinishWeixinpay, newData.FinishAccountpay, newData.PointsOrder, newData.PointsAmount, newData.OrderStatus, newData.DeliveryCompany, newData.DeliverySn, newData.AutoConfirmDay, newData.Growth, newData.InvoiceStatus, newData.ConfirmStatus, newData.DeleteStatus, newData.PaymentTime, newData.DeliveryTime, newData.ReceiveTime, newData.CloseTime, newData.ModifyTime, newData.MarketPlayerId, newData.LogId, newData.ProductInfo, newData.Id)
-	return err
-}
 func (m *defaultOrderModel) FindDeliveredOuTradeSn(ctx context.Context, start, end time.Time) ([]string, error) {
 
 	var resp []string
-	query := fmt.Sprintf("select distinct `out_trade_no` from %s where `delivery_time`>=? and `delivery_time`<=? and `order_status` in(1001,1002,1003,2,3,4) and `wexin_pay_amount`>0 ", m.table)
+	query := fmt.Sprintf("select distinct `out_trade_no` from %s where  `wexin_delivery_status`==0 `delivery_time`>=? and `delivery_time`<=? and `order_status` in(1001,1002,1003,2,3,4) and `wexin_pay_amount`>0 ", m.table)
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, start, end)
 	switch err {
 	case nil:
@@ -530,6 +539,11 @@ func (m *defaultOrderModel) FindDeliveredOuTradeSn(ctx context.Context, start, e
 	default:
 		return nil, err
 	}
+}
+func (m *defaultOrderModel) UpdateWeChatDeliveredByOutTradeSn(ctx context.Context, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `wexin_delivery_status`=2,`wexin_delivery_time`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OutTradeNo)
+	return err
 }
 func (m *defaultOrderModel) tableName() string {
 	return m.table

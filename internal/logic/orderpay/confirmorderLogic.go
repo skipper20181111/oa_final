@@ -91,17 +91,9 @@ func (l *ConfirmorderLogic) ConfirmMHTshit(svcCtx *svc.ServiceContext, Payinfo *
 	body, _ := ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &res)
 	if len(res.Order.Openid) > 1 && res.Order.OrderState >= 3 {
-		err := l.svcCtx.WxDelivery.UpdateFinished(ctx, Payinfo.OutTradeNo)
-		if err != nil {
-			l.svcCtx.WxDelivery.Insert(l.ctx, &cachemodel.WxDelivery{
-				OutTradeNo:      Payinfo.OutTradeNo,
-				TransactionId:   Payinfo.TransactionId,
-				CreateOrderTime: Payinfo.CreateOrderTime,
-				Status:          90000,
-			})
-		}
-		wxDelivery, _ := l.svcCtx.WxDelivery.FindOneByOutTradeNo(l.ctx, Payinfo.OutTradeNo)
-		if wxDelivery.Status == 90000 {
+		l.svcCtx.PayInfo.UpdateWeChatDelivered(l.ctx, Payinfo.OutTradeNo)
+		newPayinfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, Payinfo.OutTradeNo)
+		if newPayinfo.WexinDeliveryStatus == 3 {
 			return true
 		}
 	}

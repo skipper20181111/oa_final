@@ -40,6 +40,8 @@ type (
 		FindStatus1(ctx context.Context) ([]*PayInfo, error)
 		FindStatus4(ctx context.Context, pagenumber int) ([]*PayInfo, error)
 		UpdateInvoiceStatus(ctx context.Context, OutTradeNo string, Status int64) error
+		UpdateWeChatDelivered(ctx context.Context, OutTradeNo string) error
+		UpdateWeChatDelivering(ctx context.Context, OutTradeNo string) error
 	}
 
 	defaultPayInfoModel struct {
@@ -67,6 +69,8 @@ type (
 		WexinPaymentTime        time.Time `db:"wexin_payment_time"`         // 微信支付时间
 		CashAccountPaymentTime  time.Time `db:"cash_account_payment_time"`  // 现金账户支付时间
 		LogId                   int64     `db:"log_id"`
+		WexinDeliveryStatus     int64     `db:"wexin_delivery_status"` // 0->未发货，(1) 待发货；(2) 已发货；(3) 确认收货；(4) 交易完成；(5) 已退款。
+		WexinDeliveryTime       time.Time `db:"wexin_delivery_time"`   // 微信支付时间
 	}
 )
 
@@ -112,14 +116,14 @@ func (m *defaultPayInfoModel) FindOneByOutTradeNo(ctx context.Context, outTradeN
 }
 
 func (m *defaultPayInfoModel) Insert(ctx context.Context, data *PayInfo) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, payInfoRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OutTradeNo, data.TransactionType, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.TotleAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.WexinRefundAmount, data.CashAccountRefundAmount, data.FinishWeixinpay, data.FinishAccountpay, data.Status, data.InvoiceStatus, data.WexinPaymentTime, data.CashAccountPaymentTime, data.LogId)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, payInfoRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Phone, data.OutTradeNo, data.TransactionType, data.TransactionId, data.CreateOrderTime, data.Pidlist, data.TotleAmount, data.WexinPayAmount, data.CashAccountPayAmount, data.WexinRefundAmount, data.CashAccountRefundAmount, data.FinishWeixinpay, data.FinishAccountpay, data.Status, data.InvoiceStatus, data.WexinPaymentTime, data.CashAccountPaymentTime, data.LogId, data.WexinDeliveryStatus, data.WexinDeliveryTime)
 	return ret, err
 }
 
 func (m *defaultPayInfoModel) Update(ctx context.Context, newData *PayInfo) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, payInfoRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OutTradeNo, newData.TransactionType, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.TotleAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.WexinRefundAmount, newData.CashAccountRefundAmount, newData.FinishWeixinpay, newData.FinishAccountpay, newData.Status, newData.InvoiceStatus, newData.WexinPaymentTime, newData.CashAccountPaymentTime, newData.LogId, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Phone, newData.OutTradeNo, newData.TransactionType, newData.TransactionId, newData.CreateOrderTime, newData.Pidlist, newData.TotleAmount, newData.WexinPayAmount, newData.CashAccountPayAmount, newData.WexinRefundAmount, newData.CashAccountRefundAmount, newData.FinishWeixinpay, newData.FinishAccountpay, newData.Status, newData.InvoiceStatus, newData.WexinPaymentTime, newData.CashAccountPaymentTime, newData.LogId, newData.WexinDeliveryStatus, newData.WexinDeliveryTime, newData.Id)
 	return err
 }
 
@@ -221,6 +225,18 @@ func (m *defaultPayInfoModel) UpdateCashPay(ctx context.Context, OutTradeNo stri
 func (m *defaultPayInfoModel) UpdateAllPay(ctx context.Context, OutTradeNo string) error {
 	query := fmt.Sprintf("update %s set `status`=1 where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, OutTradeNo)
+	return err
+}
+
+func (m *defaultPayInfoModel) UpdateWeChatDelivering(ctx context.Context, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `wexin_delivery_status`=2,`wexin_delivery_time`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OutTradeNo)
+	return err
+}
+
+func (m *defaultPayInfoModel) UpdateWeChatDelivered(ctx context.Context, OutTradeNo string) error {
+	query := fmt.Sprintf("update %s set `wexin_delivery_status`=3,`wexin_delivery_time`=?  where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OutTradeNo)
 	return err
 }
 

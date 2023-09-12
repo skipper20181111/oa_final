@@ -2,12 +2,16 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/zeromicro/go-zero/rest/httpc"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"oa_final/cachemodel"
 	"oa_final/internal/logic/orderpay"
+	"oa_final/internal/types"
 	"time"
 
 	"oa_final/internal/config"
@@ -39,7 +43,7 @@ func main() {
 	go monitorOrder(ctx)
 	go IfReceived(ctx)
 	go delivering(ctx)
-	go InsertWxDeliver(ctx)
+	go wxnmsl(ctx)
 	server.Start()
 }
 func delivering(ctx *svc.ServiceContext) {
@@ -126,25 +130,7 @@ func PrepareGoods(SvcCtx *svc.ServiceContext) {
 		}
 	}
 }
-func InsertWxDeliver(svcCtx *svc.ServiceContext) {
-	time.Sleep(time.Second * 3)
-	RefreshGap := time.Second * time.Duration(rand.Intn(100)+1)
-	for true {
-		ctx := context.Background()
-		endtime := time.Now()
-		//starttime, _ := time.Parse("2006-01-02", endtime.Format("2006-01-02"))
-		starttime := endtime.Add(-time.Minute * 3)
-		ouTradeSnList, _ := svcCtx.Order.FindDeliveredOuTradeSn(ctx, starttime, endtime)
-		for _, OutTradeSn := range ouTradeSnList {
-			payInfo, _ := svcCtx.PayInfo.FindOneByOutTradeNo(ctx, OutTradeSn)
-			payInfo.Id = 0
-			payInfo.Status = 10000
-			svcCtx.WxDelivery.InsertPayinfo(ctx, payInfo)
-		}
-		time.Sleep(RefreshGap)
-	}
 
-}
 func monitorOrder(ctx *svc.ServiceContext) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -197,4 +183,88 @@ func refresscache() {
 			time.Sleep(time.Second * 50)
 		}
 	}
+}
+
+func wxnmsl(svcCtx *svc.ServiceContext) {
+	for true {
+		RefreshGap := time.Minute * time.Duration(rand.Intn(7)+1)
+		time.Sleep(RefreshGap)
+		endtimestamp := time.Now()
+		starttimestamp := endtimestamp.Add(time.Minute - 10)
+		OuTradeSnList, _ := svcCtx.Order.FindDeliveredOuTradeSn(context.Background(), starttimestamp, endtimestamp)
+		for _, OutTradeSn := range OuTradeSnList {
+			PayInfo, _ := svcCtx.PayInfo.FindOneByOutTradeNo(context.Background(), OutTradeSn)
+			giveMHTshit(svcCtx, PayInfo)
+			ConfirmMHTshit(svcCtx, PayInfo)
+		}
+	}
+}
+func ConfirmMHTshit(svcCtx *svc.ServiceContext, PayInfo *cachemodel.PayInfo) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	ctx := context.Background()
+	accessToken, _ := svcCtx.AccessToken.FindOne(ctx, 1)
+	UrlPath := fmt.Sprintf("https://api.weixin.qq.com/wxa/sec/order/get_order?access_token=%s", accessToken.Token)
+	resp, _ := httpc.Do(context.Background(), http.MethodPost, UrlPath, types.MsgDelivering{TransactionId: PayInfo.TransactionId})
+	res := types.MsgReturn{}
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(resp.Body.Close())
+	json.Unmarshal(body, &res)
+	switch res.Order.OrderState {
+	case 2:
+		svcCtx.PayInfo.UpdateWeChatDelivering(ctx, PayInfo.OutTradeNo)
+		svcCtx.Order.UpdateWeChatDeliveredByOutTradeSn(ctx, PayInfo.OutTradeNo)
+	case 3, 4:
+		svcCtx.PayInfo.UpdateWeChatDelivered(ctx, PayInfo.OutTradeNo)
+		svcCtx.Order.UpdateWeChatDeliveredByOutTradeSn(ctx, PayInfo.OutTradeNo)
+	}
+}
+func giveMHTshit(svcCtx *svc.ServiceContext, PayInfo *cachemodel.PayInfo) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	ctx := context.Background()
+
+	orders, _ := svcCtx.Order.FindAllByOutTradeNo(ctx, PayInfo.OutTradeNo)
+	userinfos, _ := svcCtx.UserModel.FindOneByPhone(ctx, PayInfo.Phone)
+	if len(orders) > 10 {
+		orders = orders[:10]
+	}
+	shippinginfo := make([]*types.ShippingList, 0)
+	for _, order := range orders {
+		shippinginfo = append(shippinginfo, &types.ShippingList{
+			TrackingNo:     order.DeliverySn,
+			ExpressCompany: "SF",
+			ItemDesc:       order.ProductInfo,
+			Contact: &types.Contact{
+				ConsignorContact: "178****0845",
+			},
+		})
+	}
+	DataMsg := types.MsgData{
+		OrderKey: &types.OrderKey{
+			OrderNumberType: 2,
+			TransactionId:   PayInfo.TransactionId,
+			//Mchid:           "1652716843",
+			//OutTradeNo:      "lt9i1DBXoZiefJD5pfPyS8zMV1P2i7GL",
+		},
+		LogisticsType:  1,
+		DeliveryMode:   2,
+		IsAllDelivered: true,
+		ShippingList:   shippinginfo,
+		UploadTime:     time.Now().Format("2006-01-02T15:04:05.000+08:00"),
+		Payer: &types.Payer{
+			Openid: userinfos.Openid,
+		},
+	}
+	accessToken, _ := svcCtx.AccessToken.FindOne(ctx, 1)
+	UrlPath := fmt.Sprintf("https://api.weixin.qq.com/wxa/sec/order/upload_shipping_info?access_token=%s", accessToken.Token)
+	resp, _ := httpc.Do(context.Background(), http.MethodPost, UrlPath, DataMsg)
+	fmt.Println(resp.Body.Close())
+
 }

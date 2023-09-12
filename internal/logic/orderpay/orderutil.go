@@ -317,6 +317,7 @@ func (l OrderUtilLogic) PidList2Order(ProductTinyList []*types.ProductTiny) *cac
 	order.DeliveryTime = inittime
 	order.ReceiveTime = inittime
 	order.CloseTime = inittime
+	order.WexinDeliveryTime = inittime
 	order.OrderSn = Getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + RandStr(64))
 	order.LogId = time.Now().UnixNano()
 	return order

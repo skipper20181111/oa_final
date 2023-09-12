@@ -122,6 +122,7 @@ func (l *PayUtilLogic) payinfoinit() {
 	l.PayInfo.CreateOrderTime = time.Now()
 	l.PayInfo.CashAccountPaymentTime = inittime
 	l.PayInfo.WexinPaymentTime = inittime
+	l.PayInfo.WexinDeliveryTime = inittime
 	l.PayInfo.LogId = time.Now().UnixNano()
 	marshal, _ := json.Marshal(l.PayInit.ProductTinyList)
 	l.PayInfo.Pidlist = string(marshal)

@@ -26,7 +26,7 @@ type RefundorderLogic struct {
 func NewRefundorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefundorderLogic {
 	return &RefundorderLogic{
 		Logger:     logx.WithContext(ctx),
-		ctx:        context.Background(),
+		ctx:        ctx,
 		svcCtx:     svcCtx,
 		userphone:  ctx.Value("phone").(string),
 		useropenid: ctx.Value("openid").(string),

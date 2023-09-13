@@ -237,14 +237,18 @@ func giveMHTshit(svcCtx *svc.ServiceContext, PayInfo *cachemodel.PayInfo) {
 	}
 	shippinginfo := make([]*types.ShippingList, 0)
 	for _, order := range orders {
-		shippinginfo = append(shippinginfo, &types.ShippingList{
-			TrackingNo:     order.DeliverySn,
-			ExpressCompany: "SF",
-			ItemDesc:       order.ProductInfo,
-			Contact: &types.Contact{
-				ConsignorContact: "178****0845",
-			},
-		})
+		switch order.OrderStatus {
+		case 1001, 1002, 1003, 2, 3, 4:
+			shippinginfo = append(shippinginfo, &types.ShippingList{
+				TrackingNo:     order.DeliverySn,
+				ExpressCompany: "SF",
+				ItemDesc:       order.ProductInfo,
+				Contact: &types.Contact{
+					ConsignorContact: "178****0845",
+				},
+			})
+		}
+
 	}
 	DataMsg := types.MsgData{
 		OrderKey: &types.OrderKey{

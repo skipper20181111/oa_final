@@ -1,7 +1,9 @@
 package orderpay
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
 	"oa_final/internal/logic/orderpay"
@@ -16,8 +18,8 @@ func RefundallorderHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			httpx.Error(w, err)
 			return
 		}
-
-		l := orderpay.NewRefundallorderLogic(r.Context(), svcCtx)
+		NewCtx, _ := context.WithTimeout(r.Context(), time.Second*20)
+		l := orderpay.NewRefundallorderLogic(NewCtx, svcCtx)
 		resp, err := l.Refundallorder(&req)
 		if err != nil {
 			httpx.Error(w, err)

@@ -35,6 +35,7 @@ func NewConfirmorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Conf
 }
 
 func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *types.ConfirmOrderResp, err error) {
+	l.userphone = "13918539500"
 	resp = &types.ConfirmOrderResp{
 		Code: "10000",
 		Msg:  "success",
@@ -49,11 +50,14 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 	status, _ := l.svcCtx.Order.FindAllStatusByOutTradeNo(l.ctx, req.OutTradeNo)
 	yes := true
 	for _, sta := range status {
-		if sta != 2 && sta != 3 && sta != 4 {
+		switch sta {
+		case 2, 3, 4:
+			continue
+		default:
 			yes = false
 		}
 	}
-	if yes && (len(PayInfo.TransactionId) < 2 || l.ConfirmMHTshit(l.svcCtx, PayInfo)) {
+	if yes && (len(PayInfo.TransactionId) < 2 || l.ConfirmMHTshit(PayInfo)) {
 
 		l.svcCtx.PayInfo.UpdateStatus(l.ctx, req.OutTradeNo, 4)
 		l.svcCtx.UserPoints.UpdatePoints(l.ctx, PayInfo.Phone, PayInfo.TotleAmount)
@@ -76,7 +80,7 @@ func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *type
 	}
 	return resp, nil
 }
-func (l *ConfirmorderLogic) ConfirmMHTshit(svcCtx *svc.ServiceContext, Payinfo *cachemodel.PayInfo) bool {
+func (l *ConfirmorderLogic) ConfirmMHTshit(Payinfo *cachemodel.PayInfo) bool {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -86,9 +90,9 @@ func (l *ConfirmorderLogic) ConfirmMHTshit(svcCtx *svc.ServiceContext, Payinfo *
 	accessToken, _ := l.svcCtx.AccessToken.FindOne(ctx, 1)
 	UrlPath := fmt.Sprintf("https://api.weixin.qq.com/wxa/sec/order/get_order?access_token=%s", accessToken.Token)
 	resp, _ := httpc.Do(context.Background(), http.MethodPost, UrlPath, types.MsgDelivering{TransactionId: Payinfo.TransactionId})
-	fmt.Println(resp.Body.Close())
 	res := types.MsgReturn{}
 	body, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
 	json.Unmarshal(body, &res)
 	if len(res.Order.Openid) > 1 && res.Order.OrderState >= 3 {
 		l.svcCtx.PayInfo.UpdateWeChatDelivered(l.ctx, Payinfo.OutTradeNo)

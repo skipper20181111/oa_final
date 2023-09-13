@@ -25,16 +25,16 @@ type RefundorderLogic struct {
 
 func NewRefundorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefundorderLogic {
 	return &RefundorderLogic{
-		Logger:     logx.WithContext(context.Background()),
+		Logger:     logx.WithContext(ctx),
 		ctx:        context.Background(),
 		svcCtx:     svcCtx,
 		userphone:  ctx.Value("phone").(string),
 		useropenid: ctx.Value("openid").(string),
-		wcu:        NewWeChatUtilLogic(context.Background(), svcCtx),
-		ul:         NewUtilLogic(context.Background(), svcCtx),
-		oul:        NewOrderUtilLogic(context.Background(), svcCtx),
-		sf:         NewSfUtilLogic(context.Background(), svcCtx),
-		u:          NewUtilLogic(context.Background(), svcCtx),
+		wcu:        NewWeChatUtilLogic(ctx, svcCtx),
+		ul:         NewUtilLogic(ctx, svcCtx),
+		oul:        NewOrderUtilLogic(ctx, svcCtx),
+		sf:         NewSfUtilLogic(ctx, svcCtx),
+		u:          NewUtilLogic(ctx, svcCtx),
 	}
 }
 

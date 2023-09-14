@@ -59,6 +59,7 @@ func (l *StarmallorderLogic) Starmallorder(req *types.StarMallOrderRes) (resp *t
 	return &types.StarMallOrderResp{Code: "10000", Msg: msg, Data: orderinfo}, nil
 }
 func (l *StarmallorderLogic) insertstarTransaction(order *cachemodel.Order) {
+	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	PayInfo := &cachemodel.PayInfo{}
 	PayInfo.OutTradeNo = order.OutTradeNo
 	PayInfo.Phone = order.Phone
@@ -68,6 +69,8 @@ func (l *StarmallorderLogic) insertstarTransaction(order *cachemodel.Order) {
 	PayInfo.CashAccountPaymentTime = PayInfo.CreateOrderTime
 	PayInfo.WexinPaymentTime = PayInfo.CreateOrderTime
 	PayInfo.LogId = PayInfo.CreateOrderTime.UnixNano()
+
+	PayInfo.WexinDeliveryTime = inittime
 	l.svcCtx.PayInfo.Insert(l.ctx, PayInfo)
 }
 func (l StarmallorderLogic) GetOrder(Starmall *cachemodel.StarmallLonglist, Product *cachemodel.Product, QuantityInfo *types.QuantityInfoDB) *cachemodel.Order {
@@ -92,6 +95,7 @@ func (l StarmallorderLogic) GetOrder(Starmall *cachemodel.StarmallLonglist, Prod
 	order.DeliveryTime = inittime
 	order.ReceiveTime = inittime
 	order.CloseTime = inittime
+	order.WexinDeliveryTime = inittime
 	order.OrderSn = Getsha512(order.Phone + order.CreateOrderTime.String() + order.Pidlist + RandStr(64))
 	order.LogId = time.Now().UnixNano()
 	order.ProductInfo = fmt.Sprintf("%s %s * %d %s", Product.ProductCategoryName, QuantityInfo.Name, 1, "\n")

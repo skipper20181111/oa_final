@@ -103,6 +103,7 @@ func (l *StarmallcouponorderLogic) Starmallcouponorder(req *types.StarMallCoupon
 	return &types.StarMallCouponOrderResp{Code: "10000", Msg: "无缓存"}, nil
 }
 func (l StarmallcouponorderLogic) GetOrder(couponinfo *cachemodel.Coupon) {
+	inittime := time.Now()
 	order := &cachemodel.Order{}
 	order.OrderType = 0
 	order.PointsOrder = 2
@@ -111,12 +112,13 @@ func (l StarmallcouponorderLogic) GetOrder(couponinfo *cachemodel.Coupon) {
 	order.Phone = l.phone
 	order.OutTradeNo = orderpay.RandStr(64)
 	order.OutRefundNo = orderpay.RandStr(64)
-	order.CreateOrderTime = time.Now()
+	order.CreateOrderTime = inittime
 	order.ModifyTime = order.CreateOrderTime
-	order.PaymentTime = time.Now()
-	order.DeliveryTime = time.Now()
-	order.ReceiveTime = time.Now()
-	order.CloseTime = time.Now()
+	order.PaymentTime = inittime
+	order.DeliveryTime = inittime
+	order.ReceiveTime = inittime
+	order.CloseTime = inittime
+	order.WexinDeliveryTime = inittime
 	order.OrderSn = orderpay.Getsha512(order.Phone + order.CreateOrderTime.String() + couponinfo.Name + orderpay.RandStr(64))
 	order.LogId = time.Now().UnixNano()
 	order.ProductInfo = fmt.Sprintf("%s %s * %d %s", couponinfo.TypeZh, couponinfo.Name, 1, "\n")

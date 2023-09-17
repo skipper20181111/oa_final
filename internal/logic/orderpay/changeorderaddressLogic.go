@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
+	"strings"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -37,16 +38,15 @@ func (l *ChangeorderaddressLogic) Changeorderaddress(req *types.ChangeOrdeRaddre
 			OrderInfoList: make([]*types.OrderInfo, 0),
 		},
 	}
-	addr, _ := json.Marshal(req.Address)
 	for _, OrderSn := range req.OrderSnList {
-		Order, ok := l.ChangeAddress(OrderSn, string(addr))
+		Order, ok := l.ChangeAddress(OrderSn, req.Address)
 		if ok {
 			resp.Data.OrderInfoList = append(resp.Data.OrderInfoList, Order)
 		}
 	}
 	return resp, nil
 }
-func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address string) (*types.OrderInfo, bool) {
+func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address *types.AddressInfo) (*types.OrderInfo, bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -56,13 +56,15 @@ func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address string) (
 	if sn2order == nil || sn2order.Phone != l.userphone || (sn2order.OrderStatus != 0 && sn2order.OrderStatus != 1 && sn2order.OrderStatus != 1000) {
 		return nil, false
 	}
-	if Getsha512(Address) == Getsha512(sn2order.Address) {
+	Addressbytes, _ := json.Marshal(Address)
+	if Getsha512(string(Addressbytes)) == Getsha512(sn2order.Address) || strings.Contains(sn2order.Address, Address.Province) {
 		return l.u.OrderDb2info(sn2order), true
 	}
 	go l.sf.RefundSfOrder(*sn2order)
-	sn2order.Address = Address
+	sn2order.Address = string(Addressbytes)
 	sn2order.DeliverySn = ""
-	err = l.svcCtx.Order.UpdateAddress(l.ctx, OrderSn, Address)
+	sn2order.OrderStatus = 1
+	err = l.svcCtx.Order.UpdateAddress(l.ctx, OrderSn, string(Addressbytes))
 	if err != nil {
 		return nil, false
 	}

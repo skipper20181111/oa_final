@@ -461,6 +461,7 @@ type CashRechargeResp struct {
 type ApplyInvoiceRes struct {
 	OrderType    int64        `json:"orderType"`
 	OutTradeSn   string       `json:"outTradeSn"`
+	Email        string       `json:"email"`
 	PostAddress  *AddressInfo `json:"postAddress"`
 	InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
 }
@@ -487,6 +488,7 @@ type InvoiceRp struct {
 	ApplyTime    string       `json:"applyTime"`
 	Status       int64        `json:"status"`
 	FinishTime   string       `json:"finishTime"`
+	Email        string       `json:"email"`
 }
 
 type ApplyInvoiceResp struct {

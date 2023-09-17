@@ -40,12 +40,12 @@ func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *type
 		if invoice.Status > 1 {
 			return &types.ApplyInvoiceResp{Code: "10000", Msg: "此订单已经开过发票或开票失败"}, nil
 		} else {
-			newsn := l.req2db(req)
+			newsn := l.req2db(req, payInfo)
 			newsn.Id = invoice.Id
 			l.svcCtx.Invoice.Update(l.ctx, newsn)
 		}
 	} else {
-		l.svcCtx.Invoice.Insert(l.ctx, l.req2db(req))
+		l.svcCtx.Invoice.Insert(l.ctx, l.req2db(req, payInfo))
 		l.svcCtx.Order.UpdateInvoice(l.ctx, req.OutTradeSn, 1)
 	}
 	InvoiceByOTS, _ = l.svcCtx.Invoice.FindOneByOutTradeNo(l.ctx, req.OutTradeSn)
@@ -78,7 +78,7 @@ func db2info(db *cachemodel.Invoice) *types.InvoiceRp {
 	return info
 
 }
-func (l *ApplyinvoiceLogic) req2db(req *types.ApplyInvoiceRes) *cachemodel.Invoice {
+func (l *ApplyinvoiceLogic) req2db(req *types.ApplyInvoiceRes, payInfo *cachemodel.PayInfo) *cachemodel.Invoice {
 	inittime, _ := time.Parse("2006-01-02 15:04:05", "2099-01-01 00:00:00")
 	db := &cachemodel.Invoice{}
 	db.OutTradeNo = req.OutTradeSn
@@ -93,12 +93,13 @@ func (l *ApplyinvoiceLogic) req2db(req *types.ApplyInvoiceRes) *cachemodel.Invoi
 	db.PostAddress = string(postaddress)
 	db.InvoiceType = req.InvoinceInfo.InvoiceType
 	db.Target = req.InvoinceInfo.TargetType
-	db.Money = l.order.WexinPayAmount
+	db.Money = payInfo.WexinPayAmount
 	db.InvoiceTitle = req.InvoinceInfo.InvoiceTitle
 	db.CompanyAddress = req.InvoinceInfo.CompanyAddress
 	db.CompanyPhone = req.InvoinceInfo.CompanyPhone
 	db.TaxId = req.InvoinceInfo.TaxId
 	db.BankAccount = req.InvoinceInfo.BankAccount
 	db.OpeningBank = req.InvoinceInfo.OpeningBank
+	db.Email = req.Email
 	return db
 }

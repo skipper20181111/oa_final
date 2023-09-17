@@ -468,6 +468,7 @@ type (
         OrderType int64 `json:"orderType"`
         // 订单类型 0代表order 1代表充值
         OutTradeSn string `json:"outTradeSn"`
+        Email string `json:"email"`
         PostAddress *AddressInfo `json:"postAddress"`
         InvoinceInfo *InvoiceInfo `json:"invoinceInfo"`
     }
@@ -503,6 +504,7 @@ type (
         // 开发票的状态
         FinishTime string `json:"finishTime"`
         // 开票完成的时间
+        Email string `json:"email"`
     }
     ApplyInvoiceResp {
         Code string `json:"code"`

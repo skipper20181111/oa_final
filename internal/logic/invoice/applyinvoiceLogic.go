@@ -32,7 +32,7 @@ func NewApplyinvoiceLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Appl
 func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *types.ApplyInvoiceResp, err error) {
 	invoice, _ := l.svcCtx.Invoice.FindOneByOutTradeNo(l.ctx, req.OutTradeSn)
 	payInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, req.OutTradeSn)
-	if payInfo == nil || payInfo.Status != 4 {
+	if payInfo == nil || payInfo.Status != 4 || payInfo.Phone != l.userphone {
 		return &types.ApplyInvoiceResp{Code: "10000", Msg: "此订单号不可开发票（无此订单或订单未完成）"}, nil
 	}
 	InvoiceByOTS := &cachemodel.Invoice{}

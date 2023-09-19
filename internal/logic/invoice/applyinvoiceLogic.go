@@ -63,7 +63,7 @@ func db2info(db *cachemodel.Invoice) *types.InvoiceRp {
 	info.InvoinceInfo.BankAccount = db.BankAccount
 	info.InvoinceInfo.CompanyAddress = db.CompanyAddress
 	info.InvoinceInfo.CompanyPhone = db.CompanyPhone
-
+	info.Email = db.Email
 	addressinfo := &types.AddressInfo{}
 	json.Unmarshal([]byte(db.PostAddress), addressinfo)
 	info.PostAddress = addressinfo

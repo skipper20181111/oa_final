@@ -42,6 +42,8 @@ type (
 		UpdateInvoiceStatus(ctx context.Context, OutTradeNo string, Status int64) error
 		UpdateWeChatDelivered(ctx context.Context, OutTradeNo string) error
 		UpdateWeChatDelivering(ctx context.Context, OutTradeNo string) error
+		UpdateInvoice(ctx context.Context, OutTradeNo string, status int64) error
+		FindStatus4Invoice(ctx context.Context, pagenumber int) ([]*PayInfo, error)
 	}
 
 	defaultPayInfoModel struct {
@@ -145,7 +147,24 @@ func (m *defaultPayInfoModel) FindAllByPhone(ctx context.Context, phone string, 
 		return nil, err
 	}
 }
-
+func (m *defaultPayInfoModel) FindStatus4Invoice(ctx context.Context, pagenumber int) ([]*PayInfo, error) {
+	if pagenumber <= 0 || pagenumber > 7 {
+		return make([]*PayInfo, 0), nil
+	}
+	sheetlen := 5
+	offset := sheetlen * (pagenumber - 1)
+	var resp []*PayInfo
+	query := fmt.Sprintf("select %s from %s where `status` = 4 and `invoice_status`=0 order by `create_order_time` desc  limit ? OFFSET ?", payInfoRows, m.table)
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, sheetlen, offset)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
 func (m *defaultPayInfoModel) FindStatus4(ctx context.Context, pagenumber int) ([]*PayInfo, error) {
 	if pagenumber <= 0 || pagenumber > 7 {
 		return make([]*PayInfo, 0), nil
@@ -237,6 +256,11 @@ func (m *defaultPayInfoModel) UpdateWeChatDelivering(ctx context.Context, OutTra
 func (m *defaultPayInfoModel) UpdateWeChatDelivered(ctx context.Context, OutTradeNo string) error {
 	query := fmt.Sprintf("update %s set `wexin_delivery_status`=3,`wexin_delivery_time`=?  where `out_trade_no` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, time.Now(), OutTradeNo)
+	return err
+}
+func (m *defaultPayInfoModel) UpdateInvoice(ctx context.Context, OutTradeNo string, status int64) error {
+	query := fmt.Sprintf("update %s set `invoice_status`=? where `out_trade_no` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, status, OutTradeNo)
 	return err
 }
 

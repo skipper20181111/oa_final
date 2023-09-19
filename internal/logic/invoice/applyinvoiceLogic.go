@@ -47,6 +47,7 @@ func (l *ApplyinvoiceLogic) Applyinvoice(req *types.ApplyInvoiceRes) (resp *type
 	} else {
 		l.svcCtx.Invoice.Insert(l.ctx, l.req2db(req, payInfo))
 		l.svcCtx.Order.UpdateInvoice(l.ctx, req.OutTradeSn, 1)
+		l.svcCtx.PayInfo.UpdateInvoice(l.ctx, req.OutTradeSn, 1)
 	}
 	InvoiceByOTS, _ = l.svcCtx.Invoice.FindOneByOutTradeNo(l.ctx, req.OutTradeSn)
 	return &types.ApplyInvoiceResp{Code: "10000", Msg: "success", Data: db2info(InvoiceByOTS)}, nil

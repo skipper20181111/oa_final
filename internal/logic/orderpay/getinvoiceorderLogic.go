@@ -36,7 +36,7 @@ func (l *GetinvoiceorderLogic) Getinvoiceorder(req *types.GetInvoiceOrderRes) (r
 			OrderInfos: make([]*types.OrderInfo, 0),
 		},
 	}
-	payInfos, _ := l.svcCtx.PayInfo.FindStatus4(l.ctx, req.PageNumber)
+	payInfos, _ := l.svcCtx.PayInfo.FindStatus4Invoice(l.ctx, req.PageNumber)
 	Orders, _ := l.svcCtx.Order.FindAllByOutTradeNos(l.ctx, userphone, payInfos)
 	for _, order := range Orders {
 		resp.Data.OrderInfos = append(resp.Data.OrderInfos, l.u.OrderDb2info(order))

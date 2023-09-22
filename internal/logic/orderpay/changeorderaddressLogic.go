@@ -57,7 +57,7 @@ func (l ChangeorderaddressLogic) ChangeAddress(OrderSn string, Address *types.Ad
 		return nil, false
 	}
 	Addressbytes, _ := json.Marshal(Address)
-	if Getsha512(string(Addressbytes)) == Getsha512(sn2order.Address) || strings.Contains(sn2order.Address, Address.Province) {
+	if Getsha512(string(Addressbytes)) == Getsha512(sn2order.Address) || !strings.Contains(sn2order.Address, Address.Province) {
 		return l.u.OrderDb2info(sn2order), true
 	}
 	go l.sf.RefundSfOrder(*sn2order)

@@ -98,6 +98,7 @@ type (
         PromotionPrice float64 `json:"promotionPrice"`
         // 出售价格
         OriginalPrice float64 `json:"originalPrice"`
+        SupplierCost int64 `json:"supplierCost"`
         // 市场价格
         IfCut bool `json:"ifCut"`
         // 是否满减
@@ -859,6 +860,7 @@ type (
         OriginalPrice int64 `json:"originalPrice"`
         // 市场价格
         Cut int64 `json:"cut"`
+        SupplierCost int64 `json:"supplierCost"`
         IsDefault bool `json:"isDefault"`
         WeightKG int64 `json:"weightKg"`
     }

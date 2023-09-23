@@ -88,6 +88,7 @@ type OrderProductInfo struct {
 	QuantityName    string  `json:"quantityName"`
 	PromotionPrice  float64 `json:"promotionPrice"`
 	OriginalPrice   float64 `json:"originalPrice"`
+	SupplierCost    int64   `json:"supplierCost"`
 	IfCut           bool    `json:"ifCut"`
 	IfReserve       bool    `json:"ifReserve"`
 	Description     string  `json:"description"`
@@ -835,6 +836,7 @@ type QuantityInfoDB struct {
 	PromotionPrice int64  `json:"promotionPrice"`
 	OriginalPrice  int64  `json:"originalPrice"`
 	Cut            int64  `json:"cut"`
+	SupplierCost   int64  `json:"supplierCost"`
 	IsDefault      bool   `json:"isDefault"`
 	WeightKG       int64  `json:"weightKg"`
 }

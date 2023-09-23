@@ -268,6 +268,7 @@ func (l OrderUtilLogic) GetOrderProductInfo(tiny *types.ProductTiny) (*types.Ord
 		ProductTitle:    titleinfo[0],
 		ProductStandard: titleinfo[1],
 		QuantityName:    infoDB.Name,
+		SupplierCost:    infoDB.SupplierCost,
 		PromotionPrice:  float64(infoDB.PromotionPrice) / 100,
 		OriginalPrice:   float64(infoDB.OriginalPrice) / 100,
 		IfCut:           getQuantityBool(infoDB.Cut),

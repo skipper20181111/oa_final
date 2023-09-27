@@ -79,8 +79,9 @@ func (l SfUtilLogic) GetPDF(order *cachemodel.Order, sfsn string) {
 	MsgDataStruct := &types.WayBillsSheetMsgData{
 		TemplateCode: svc.TemplateCode,
 		Documents:    []*types.WayBillInfo{{MasterWaybillNo: order.DeliverySn, Remark: order.ProductInfo}},
-		Version:      "2.0",
-		Sync:         true,
+		//Documents: []*types.WayBillInfo{{MasterWaybillNo: order.DeliverySn, Remark: "3.5母*2只，2母*2只"}},
+		Version: "2.0",
+		Sync:    true,
 	}
 	MsgDataByte, _ := json.Marshal(MsgDataStruct)
 	ToVerifyText := string(MsgDataByte) + Timestamp + l.svcCtx.Config.SfConf.CheckCode
@@ -245,6 +246,7 @@ func (l SfUtilLogic) CreateOrder(order *cachemodel.Order) (status int, SfSn stri
 	contactinfolist := []*types.ContactInfo{PostInfo, ReceiveInfo}
 	//CargoDetailList := []*types.CargoDetail{{Name: "毅明生鲜"}}
 	CargoDetailList := []*types.CargoDetail{{Name: order.ProductInfo}}
+	//CargoDetailList := []*types.CargoDetail{{Name: "3.5母*2只，2母*2只"}}
 	MsgDataStruct := &types.CreateOrderMsgData{
 		PayMethod:          1,
 		Language:           "zh-CN",
@@ -288,7 +290,7 @@ func GetPostInfo(order *cachemodel.Order) *types.ContactInfo {
 	return &types.ContactInfo{
 		Address:     "上海市宝山区铁城路1555弄大江杨活鲜区1-008",
 		Contact:     "毅明生鲜",
-		Mobile:      "17854230846",
+		Mobile:      "17854230845",
 		Province:    "上海市",
 		City:        "上海市",
 		ContactType: 1,

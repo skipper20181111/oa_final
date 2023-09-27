@@ -65,6 +65,7 @@ func (l RefundorderLogic) RefundOneOrder(OrderSn string) (*types.OrderInfo, bool
 	}()
 	//必须注意，这个接口是发起退款接口，不参与判定是否退款成功
 	order, _ := l.svcCtx.Order.FindOneByOrderSn(l.ctx, OrderSn)
+	//go l.sf.RefundSfOrder(*order)
 	PayInfo, _ := l.svcCtx.PayInfo.FindOneByOutTradeNo(l.ctx, order.OutTradeNo)
 	if (order.OrderStatus != 1 && order.OrderStatus != 1000) || PayInfo.Status != 1 {
 		return nil, false

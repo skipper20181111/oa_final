@@ -7,6 +7,7 @@ import (
 	"crypto/cipher"
 	CRand "crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"github.com/zeromicro/go-zero/core/logx"
 	"io"
@@ -36,6 +37,51 @@ func NewVoucherUtileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Vouc
 		lu:     orderpay.NewUtilLogic(ctx, svcCtx),
 		Phone:  ctx.Value("phone").(string),
 	}
+}
+func (l VoucherUtileLogic) CouponBindByCid(QrMsg *types.QrCode) (bool, string) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	get, ok := l.svcCtx.LocalCache.Get(svc.CouponInfoMapKey)
+	if !ok {
+		return false, "no"
+	}
+	couponinfomap := get.(map[int64]*types.CouponInfo)
+	couponbyphone, _ := l.svcCtx.UserCoupon.FindOneByPhone(l.ctx, l.Phone)
+	couponmap := make(map[int64]map[string]*types.CouponStoreInfo)
+	Cid, _ := strconv.ParseInt(QrMsg.Parameter1, 10, 64)
+	json.Unmarshal([]byte(couponbyphone.CouponIdMap), &couponmap)
+	singleCouponInfo, ok := couponinfomap[Cid]
+	if ok {
+		_, ok := couponmap[Cid]
+		if ok {
+			couponmap[Cid][strconv.FormatInt(time.Now().UnixNano()+rand.Int63n(10000), 10)] = &types.CouponStoreInfo{CouponId: Cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*singleCouponInfo.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+		} else {
+			couponmap[Cid] = make(map[string]*types.CouponStoreInfo)
+			couponmap[Cid][strconv.FormatInt(time.Now().UnixNano()+rand.Int63n(10000), 10)] = &types.CouponStoreInfo{CouponId: Cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*singleCouponInfo.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+		}
+	}
+	couponmapbyte, err := json.Marshal(couponmap)
+	if err != nil {
+		return false, "nonono"
+	} else {
+		couponbyphone.CouponIdMap = string(couponmapbyte)
+		l.svcCtx.UserCoupon.Update(l.ctx, couponbyphone)
+	}
+	return true, "yes"
+}
+func insertCoupon(couponmap map[int64]map[string]*types.CouponStoreInfo, couponinfomap map[int64]*types.CouponInfo) map[int64]map[string]*types.CouponStoreInfo {
+	newusercouponid := []int64{10000}
+	for _, cid := range newusercouponid {
+		info, ok := couponinfomap[cid]
+		if ok {
+			couponmap[cid] = make(map[string]*types.CouponStoreInfo)
+			couponmap[cid][strconv.FormatInt(time.Now().UnixNano()+rand.Int63n(10000), 10)] = &types.CouponStoreInfo{CouponId: cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*info.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+		}
+	}
+	return couponmap
 }
 func (l VoucherUtileLogic) VoucherbindByVid(QrMsg *types.QrCode) (bool, string) {
 	vid, _ := strconv.ParseInt(QrMsg.Parameter1, 10, 64)

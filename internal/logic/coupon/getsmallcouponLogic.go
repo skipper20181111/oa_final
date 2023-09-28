@@ -56,12 +56,14 @@ func (l *GetsmallcouponLogic) Getsmallcoupon(req *types.GetSmallCouponRes) (resp
 	return &types.GetSmallCouponResp{Code: "4004", Msg: "无"}, nil
 }
 func getnewcoupon(couponmap map[int64]map[string]*types.CouponStoreInfo, couponinfomap map[int64]*types.CouponInfo) map[int64]map[string]*types.CouponStoreInfo {
-	newusercouponid := []int64{10000}
+	newusercouponid := []int64{10000, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, 10010}
 	for _, cid := range newusercouponid {
 		info, ok := couponinfomap[cid]
 		if ok {
 			couponmap[cid] = make(map[string]*types.CouponStoreInfo)
 			couponmap[cid][strconv.FormatInt(time.Now().UnixNano()+rand.Int63n(10000), 10)] = &types.CouponStoreInfo{CouponId: cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*info.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+		} else {
+			return couponmap
 		}
 	}
 	return couponmap

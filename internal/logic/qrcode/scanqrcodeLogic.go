@@ -46,6 +46,12 @@ func (l *ScanqrcodeLogic) Scanqrcode(req *types.ScanQRcodeRes) (resp *types.Scan
 			successdata.Success = true
 		}
 		return &types.ScanQRcodeResp{Code: "10000", Msg: msg, Data: successdata}, nil
+	case "coupon":
+		ok, msg := l.vu.CouponBindByCid(QRCodeMsg)
+		if ok {
+			successdata.Success = true
+		}
+		return &types.ScanQRcodeResp{Code: "10000", Msg: msg, Data: successdata}, nil
 	}
 	return &types.ScanQRcodeResp{Code: "10000", Msg: "请检查二维码", Data: successdata}, nil
 }

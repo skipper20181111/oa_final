@@ -172,7 +172,7 @@ func (l SfUtilLogic) GetSfSn(order *cachemodel.Order) {
 func (l SfUtilLogic) IfDelivering(order *cachemodel.Order) {
 	routelist := l.GetRoutesList(order)
 	for _, route := range routelist.Routes {
-		if route.OpCode == "50" || route.OpCode == "30" || strings.Contains(route.Remark, "收件") || strings.Contains(route.Remark, "已收取") || strings.Contains(route.Remark, "揽收") || strings.Contains(route.Remark, "已揽收") {
+		if route.OpCode == "54" || route.OpCode == "50" || route.OpCode == "30" || strings.Contains(route.Remark, "收件") || strings.Contains(route.Remark, "收取") || strings.Contains(route.Remark, "揽收") || strings.Contains(route.Remark, "已揽收") {
 			l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 2, order.OrderSn)
 		}
 	}
@@ -181,7 +181,7 @@ func (l SfUtilLogic) IfDelivering(order *cachemodel.Order) {
 func (l SfUtilLogic) IfReceived(order *cachemodel.Order) {
 	routelist := l.GetRoutesList(order)
 	for _, route := range routelist.Routes {
-		if route.OpCode == "80" || strings.Contains(route.Remark, "已签收") {
+		if route.OpCode == "8000" || route.OpCode == "80" || strings.Contains(route.Remark, "签收") {
 			l.svcCtx.Order.UpdateReceivedByOrderSn(l.ctx, order.OrderSn)
 		}
 	}

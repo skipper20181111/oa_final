@@ -117,7 +117,7 @@ type (
     RouteMsgData {
         TrackingType int `json:"trackingType"`
         //  1 顺丰单号，2 订单号
-        TrackingNumber string `json:"trackingNumber"`
+        TrackingNumber []string `json:"trackingNumber"`
     }
     RouteResponse {
         Success bool `json:"success"`

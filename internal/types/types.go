@@ -1087,8 +1087,8 @@ type CargoDetail struct {
 }
 
 type RouteMsgData struct {
-	TrackingType   int    `json:"trackingType"`
-	TrackingNumber string `json:"trackingNumber"`
+	TrackingType   int      `json:"trackingType"`
+	TrackingNumber []string `json:"trackingNumber"`
 }
 
 type RouteResponse struct {

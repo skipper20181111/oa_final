@@ -293,10 +293,10 @@ func (l UtilLogic) OrderDb2info(order *cachemodel.Order) *types.OrderInfo {
 	orderinfo.DeliveryTime = order.DeliveryTime.Format("2006-01-02 15:04:05")
 	orderinfo.ReceiveTime = order.ReceiveTime.Format("2006-01-02 15:04:05")
 	if order.OrderStatus == 2 {
-		orderinfo.RouteList = l.sf.GetRoutesList(order.DeliverySn)
+		orderinfo.RouteList = l.sf.GetRoutesList(order)
 	}
 	if (order.OrderStatus == 3 || order.OrderStatus == 4) && order.CloseTime.Before(time.Now().Add(time.Hour*24*2)) && order.CloseTime.Add(time.Hour*24*5).After(time.Now()) {
-		orderinfo.RouteList = l.sf.GetRoutesList(order.DeliverySn)
+		orderinfo.RouteList = l.sf.GetRoutesList(order)
 	}
 	return orderinfo
 }

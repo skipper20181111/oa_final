@@ -32,7 +32,7 @@ func NewSfUtilLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SfUtilLogi
 		svcCtx: svcCtx,
 	}
 }
-func (l SfUtilLogic) GetRoutesList(SfSn string) *types.RouteList {
+func (l SfUtilLogic) GetRoutesList(order *cachemodel.Order) *types.RouteList {
 	defer func() {
 		if e := recover(); e != nil {
 			return
@@ -40,8 +40,8 @@ func (l SfUtilLogic) GetRoutesList(SfSn string) *types.RouteList {
 	}()
 	Timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	MsgDataStruct := &types.RouteMsgData{
-		TrackingType:   1,
-		TrackingNumber: SfSn,
+		TrackingType:   2,
+		TrackingNumber: []string{GetSha256(order.OrderSn + order.Address)},
 	}
 	MsgDataByte, _ := json.Marshal(MsgDataStruct)
 	ToVerifyText := string(MsgDataByte) + Timestamp + l.svcCtx.Config.SfConf.CheckCode
@@ -170,7 +170,7 @@ func (l SfUtilLogic) GetSfSn(order *cachemodel.Order) {
 	}
 }
 func (l SfUtilLogic) IfDelivering(order *cachemodel.Order) {
-	routelist := l.GetRoutesList(order.DeliverySn)
+	routelist := l.GetRoutesList(order)
 	for _, route := range routelist.Routes {
 		if route.OpCode == "50" || route.OpCode == "30" || strings.Contains(route.Remark, "收件") || strings.Contains(route.Remark, "已收取") || strings.Contains(route.Remark, "揽收") || strings.Contains(route.Remark, "已揽收") {
 			l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 2, order.OrderSn)
@@ -179,7 +179,7 @@ func (l SfUtilLogic) IfDelivering(order *cachemodel.Order) {
 }
 
 func (l SfUtilLogic) IfReceived(order *cachemodel.Order) {
-	routelist := l.GetRoutesList(order.DeliverySn)
+	routelist := l.GetRoutesList(order)
 	for _, route := range routelist.Routes {
 		if route.OpCode == "80" || strings.Contains(route.Remark, "已签收") {
 			l.svcCtx.Order.UpdateReceivedByOrderSn(l.ctx, order.OrderSn)

@@ -44,6 +44,10 @@ func (l VoucherUtileLogic) CouponBindByCid(QrMsg *types.QrCode) (bool, string) {
 			return
 		}
 	}()
+	overtime, _ := time.Parse("2006-01-02 15:04:05", QrMsg.Parameter2)
+	if overtime.Before(time.Now()) {
+		return false, "过期了"
+	}
 	get, ok := l.svcCtx.LocalCache.Get(svc.CouponInfoMapKey)
 	if !ok {
 		return false, "no"
@@ -57,7 +61,7 @@ func (l VoucherUtileLogic) CouponBindByCid(QrMsg *types.QrCode) (bool, string) {
 	if ok {
 		_, ok := couponmap[Cid]
 		if ok {
-			couponmap[Cid][strconv.FormatInt(time.Now().UnixNano()+rand.Int63n(10000), 10)] = &types.CouponStoreInfo{CouponId: Cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*singleCouponInfo.EfficientPeriod)).Format("2006-01-02 15:04:05")}
+			return false, "不能重复扫码"
 		} else {
 			couponmap[Cid] = make(map[string]*types.CouponStoreInfo)
 			couponmap[Cid][strconv.FormatInt(time.Now().UnixNano()+rand.Int63n(10000), 10)] = &types.CouponStoreInfo{CouponId: Cid, DisabledTime: time.Now().Add(time.Hour * time.Duration(24*singleCouponInfo.EfficientPeriod)).Format("2006-01-02 15:04:05")}

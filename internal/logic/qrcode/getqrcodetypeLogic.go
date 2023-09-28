@@ -42,6 +42,10 @@ func (l *GetqrcodetypeLogic) Getqrcodetype(req *types.ScanQRcodeRes) (resp *type
 	case "voucher":
 		msg = &types.ScanQRcodeRp{Type: "voucher", Msg: randStr(10)}
 		return &types.GetQrCodeTypeResp{Code: "10000", Msg: "success", Data: msg}, nil
+	case "coupon":
+		msg = &types.ScanQRcodeRp{Type: "coupon", Msg: randStr(10)}
+		return &types.GetQrCodeTypeResp{Code: "10000", Msg: "success", Data: msg}, nil
+
 	}
 	return &types.GetQrCodeTypeResp{Code: "10000", Msg: "请检查二维码", Data: msg}, nil
 }

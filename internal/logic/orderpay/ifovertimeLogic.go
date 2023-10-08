@@ -49,9 +49,8 @@ func (l *IfovertimeLogic) Ifovertime(req *types.IfOvertimeRes) (resp *types.IfOv
 	return resp, nil
 }
 func (l IfovertimeLogic) GetOverTime(Order *cachemodel.Order, payinfo *cachemodel.PayInfo) (int64, bool) {
-	//OverTime := Order.CreateOrderTime.Add(time.Minute*15).UnixMilli() - time.Now().UnixMilli()
-
-	OverTime := Order.CreateOrderTime.Add(time.Second*30).UnixMilli() - time.Now().UnixMilli()
+	OverTime := Order.CreateOrderTime.Add(time.Minute*15).UnixMilli() - time.Now().UnixMilli()
+	//OverTime := Order.CreateOrderTime.Add(time.Second*30).UnixMilli() - time.Now().UnixMilli()
 	if OrderCanBeOvertime(Order, payinfo) {
 		l.svcCtx.Order.UpdateStatusByOrderSn(l.ctx, 8, Order.OrderSn)
 		return OverTime, true

@@ -186,6 +186,14 @@ func refresscache() {
 }
 
 func wxnmsl(svcCtx *svc.ServiceContext) {
+	RefreshGapOre := time.Second * time.Duration(rand.Intn(50)+10)
+	time.Sleep(RefreshGapOre)
+	OuTradeSnListHistory, _ := svcCtx.Order.FindDeliveredOuTradeSnHistory(context.Background())
+	for _, OutTradeSn := range OuTradeSnListHistory {
+		PayInfo, _ := svcCtx.PayInfo.FindOneByOutTradeNo(context.Background(), OutTradeSn)
+		giveMHTshit(svcCtx, PayInfo)
+		ConfirmMHTshit(svcCtx, PayInfo)
+	}
 	for true {
 		RefreshGap := time.Minute * time.Duration(rand.Intn(7)+1)
 		time.Sleep(RefreshGap)

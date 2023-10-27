@@ -65,6 +65,7 @@ type (
 		UpdateAddress(ctx context.Context, OrderSn, AddressStr string) error
 		FindAllPointsCouponOrder(ctx context.Context, phone string) ([]*Order, error)
 		FindDeliveredOuTradeSn(ctx context.Context, start, end time.Time) ([]string, error)
+		FindDeliveredOuTradeSnHistory(ctx context.Context) ([]string, error)
 		UpdateWeChatDeliveredByOutTradeSn(ctx context.Context, OutTradeNo string) error
 	}
 
@@ -526,10 +527,25 @@ func (m *defaultOrderModel) FindOneBySfSn(ctx context.Context, SfSn string) (*Or
 	}
 }
 
+func (m *defaultOrderModel) FindDeliveredOuTradeSnHistory(ctx context.Context) ([]string, error) {
+
+	var resp []string
+	query := fmt.Sprintf("select distinct `out_trade_no` from %s where  `order_status` in(1001,1002,1003,2,3,4) and `wexin_delivery_status`=0   and `wexin_pay_amount`>0 ", m.table)
+	err := m.conn.QueryRowsCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
 func (m *defaultOrderModel) FindDeliveredOuTradeSn(ctx context.Context, start, end time.Time) ([]string, error) {
 
 	var resp []string
-	query := fmt.Sprintf("select distinct `out_trade_no` from %s where  `wexin_delivery_status`==0 `delivery_time`>=? and `delivery_time`<=? and `order_status` in(1001,1002,1003,2,3,4) and `wexin_pay_amount`>0 ", m.table)
+	query := fmt.Sprintf("select distinct `out_trade_no` from %s where  `wexin_delivery_status`=0 `delivery_time`>=? and `delivery_time`<=? and `order_status` in(1001,1002,1003,2,3,4) and `wexin_pay_amount`>0 ", m.table)
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, start, end)
 	switch err {
 	case nil:

@@ -837,6 +837,7 @@ type QuantityInfoDB struct {
 	OriginalPrice  int64  `json:"originalPrice"`
 	Cut            int64  `json:"cut"`
 	SupplierCost   int64  `json:"supplierCost"`
+	SupplierName   string `json:"supplierName"`
 	IsDefault      bool   `json:"isDefault"`
 	WeightKG       int64  `json:"weightKg"`
 }

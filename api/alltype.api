@@ -861,6 +861,7 @@ type (
         // 市场价格
         Cut int64 `json:"cut"`
         SupplierCost int64 `json:"supplierCost"`
+        SupplierName string `json:"supplierName"`
         IsDefault bool `json:"isDefault"`
         WeightKG int64 `json:"weightKg"`
     }

@@ -245,7 +245,8 @@ func (l OrderUtilLogic) OriProPrice(ProductTinyList []*types.ProductTiny) (Origi
 	FreightAmount = int64(0)
 	ProductInfoForSf = ""
 	for _, tiny := range ProductTinyList {
-		ProductInfoForSf = fmt.Sprintf("%s%s %s * %d %s", ProductInfoForSf, l.ProductsMap[tiny.PId].ProductCategoryName, tiny.QuantityName, tiny.Amount, "\n")
+		//ProductInfoForSf = fmt.Sprintf("%s%s %s * %d %s", ProductInfoForSf, l.ProductsMap[tiny.PId].ProductCategoryName, tiny.QuantityName, tiny.Amount, "\n")
+		ProductInfoForSf = fmt.Sprintf("%s%s", l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].SupplierName, "\n")
 		OriginalAmount = OriginalAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].OriginalPrice*tiny.Amount
 		PromotionAmount = PromotionAmount + l.ProductQuantityInfoDB[tiny.PId][tiny.QuantityName].PromotionPrice*tiny.Amount
 		ActualAmount = ActualAmount + l.GetPromotionPrice(tiny)*tiny.Amount

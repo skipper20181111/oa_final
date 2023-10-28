@@ -198,7 +198,7 @@ func wxnmsl(svcCtx *svc.ServiceContext) {
 		RefreshGap := time.Minute * time.Duration(rand.Intn(7)+1)
 		time.Sleep(RefreshGap)
 		endtimestamp := time.Now()
-		starttimestamp := endtimestamp.Add(time.Minute - 10)
+		starttimestamp := endtimestamp.Add(time.Minute * (-10))
 		OuTradeSnList, _ := svcCtx.Order.FindDeliveredOuTradeSn(context.Background(), starttimestamp, endtimestamp)
 		for _, OutTradeSn := range OuTradeSnList {
 			PayInfo, _ := svcCtx.PayInfo.FindOneByOutTradeNo(context.Background(), OutTradeSn)

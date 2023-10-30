@@ -35,7 +35,6 @@ func NewConfirmorderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Conf
 }
 
 func (l *ConfirmorderLogic) Confirmorder(req *types.ConfirmOrderRes) (resp *types.ConfirmOrderResp, err error) {
-	l.userphone = "13918539500"
 	resp = &types.ConfirmOrderResp{
 		Code: "10000",
 		Msg:  "success",

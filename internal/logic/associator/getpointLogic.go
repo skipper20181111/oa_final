@@ -2,6 +2,7 @@ package associator
 
 import (
 	"context"
+	"oa_final/cachemodel"
 
 	"oa_final/internal/svc"
 	"oa_final/internal/types"
@@ -29,6 +30,12 @@ func (l *GetpointLogic) Getpoint(req *types.GetPointRes) (resp *types.GetPointRe
 	userpoint, _ := l.svcCtx.UserPoints.FindOneByPhone(l.ctx, userphone)
 	if userpoint != nil {
 		return &types.GetPointResp{Code: "10000", Msg: "success", Data: &types.GetPointRp{HistoryPoints: userpoint.HistoryPoints, AvailablePoints: userpoint.AvailablePoints}}, nil
+	} else {
+		l.svcCtx.UserPoints.Insert(l.ctx, &cachemodel.UserPoints{
+			HistoryPoints:   0,
+			AvailablePoints: 0,
+			Phone:           userphone,
+		})
 	}
 
 	return &types.GetPointResp{Code: "10000", Msg: "success", Data: &types.GetPointRp{HistoryPoints: 0, AvailablePoints: 0}}, nil

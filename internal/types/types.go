@@ -988,6 +988,19 @@ type Contact struct {
 	ReceiverContact  string `json:"receiver_contact"`
 }
 
+type GetWxStatusRes struct {
+	OutTradeNo string `json:"outTradeNo"`
+}
+
+type GetWxStatusRp struct {
+}
+
+type GetWxStatusResp struct {
+	Code string     `json:"code"`
+	Msg  string     `json:"msg"`
+	Data *MsgReturn `json:"data"`
+}
+
 type CreateOrderMsgData struct {
 	Language           string         `json:"language"`        // 必填
 	OrderId            string         `json:"orderId"`         // 必填

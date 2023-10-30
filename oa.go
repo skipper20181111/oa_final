@@ -44,6 +44,7 @@ func main() {
 	go IfReceived(ctx)
 	go delivering(ctx)
 	go wxnmsl(ctx)
+	go deleteInvalidOrder(ctx)
 	server.Start()
 }
 func delivering(ctx *svc.ServiceContext) {
@@ -128,6 +129,18 @@ func PrepareGoods(SvcCtx *svc.ServiceContext) {
 				sf.GetSfSn(order)
 			}
 		}
+	}
+}
+func deleteInvalidOrder(ctx *svc.ServiceContext) {
+	defer func() {
+		if e := recover(); e != nil {
+			return
+		}
+	}()
+	for true {
+		RefreshGap := time.Hour * time.Duration(rand.Intn(28)+10)
+		time.Sleep(RefreshGap)
+		ctx.Order.DeleteInvalidOrder(context.Background())
 	}
 }
 

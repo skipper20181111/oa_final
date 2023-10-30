@@ -67,6 +67,7 @@ type (
 		FindDeliveredOuTradeSn(ctx context.Context, start, end time.Time) ([]string, error)
 		FindDeliveredOuTradeSnHistory(ctx context.Context) ([]string, error)
 		UpdateWeChatDeliveredByOutTradeSn(ctx context.Context, OutTradeNo string) error
+		DeleteInvalidOrder(ctx context.Context) error
 	}
 
 	defaultOrderModel struct {
@@ -128,6 +129,11 @@ func newOrderModel(conn sqlx.SqlConn) *defaultOrderModel {
 func (m *defaultOrderModel) Delete(ctx context.Context, id int64) error {
 	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
+	return err
+}
+func (m *defaultOrderModel) DeleteInvalidOrder(ctx context.Context) error {
+	query := fmt.Sprintf("delete from %s where `order_status` in(8,9)", m.table)
+	_, err := m.conn.ExecCtx(ctx, query)
 	return err
 }
 

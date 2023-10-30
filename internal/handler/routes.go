@@ -164,6 +164,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/gettransactionid",
 				Handler: orderpay.GettransactionidHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/getwxstatus",
+				Handler: orderpay.GetwxstatusHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/orderpay"),

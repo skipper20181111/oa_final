@@ -38,7 +38,7 @@ func (l *GetpointlogLogic) Getpointlog(req *types.GetPointLogRes) (resp *types.G
 	cashlogmap["exchange"] = make([]*types.PointLogInfo, 0)
 	cashlogmap["achieve"] = make([]*types.PointLogInfo, 0)
 	//cashlogmap["全部"] = make([]*types.PointLogInfo, 0)
-	if limit15 == nil || len(limit15) <= 1 {
+	if limit15 == nil || len(limit15) < 1 {
 		return &types.GetPointLogResp{Code: "10000", Msg: "success", Data: cashlogmap}, nil
 	}
 	for _, cashLog := range limit15 {
